@@ -22,6 +22,11 @@ namespace ARPGEnemySystem.Common.Commands
         public override void Action(CommandCaller caller, string input, string[] args)
         {
             Main.NewText(WorldManager.levelCap);
+            foreach (var bossID in WorldManager.downedBossIDs)
+            {
+                Main.NewText($"Boss ID: {bossID}");
+                Main.NewText($"Boss Name: {Lang.GetNPCNameValue(bossID)}");
+            }
         }
     }
 }

@@ -56,7 +56,9 @@ namespace ARPGEnemySystem.Common.Systems
                 downedBossIDs = (List<int>)tag.GetList<int>("downedBossIDs");
             if (tag.ContainsKey("downedBossNum"))
                 downedBossNum = tag.GetAsInt("downedBossNum");
-            levelCap = 0 + downedBossIDs.Count * ModContent.GetInstance<Config>().LevelCapIncreasePerBossDowned;
+
+            // Fix for CS0019: Convert NPC.downedBoss2 (bool) to an integer (0 or 1) before addition
+            levelCap = 0 + (downedBossIDs.Count + (NPC.downedBoss2 ? 1 : 0)) * ModContent.GetInstance<Config>().LevelCapIncreasePerBossDowned;
         }
 
         public override void NetSend(BinaryWriter writer)
@@ -75,7 +77,7 @@ namespace ARPGEnemySystem.Common.Systems
             {
                 downedBossIDs.Add(reader.ReadInt32());
             }
-            levelCap = 0 + downedBossIDs.Count * ModContent.GetInstance<Config>().LevelCapIncreasePerBossDowned;
+            levelCap = 0 + (downedBossIDs.Count + (NPC.downedBoss2 ? 1 : 0)) * ModContent.GetInstance<Config>().LevelCapIncreasePerBossDowned;
         }
     }
 }

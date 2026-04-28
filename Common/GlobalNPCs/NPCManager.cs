@@ -88,15 +88,16 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 }
             }
         }
-        public override void AI(NPC npc)
+
+        public override bool PreAI(NPC npc)
         {
-            if (statChanged) return;
+            if (statChanged) return true;
             // Apply rarity
             npc.lifeMax += (int)(npc.lifeMax * rarity.magnitude[0] / 100f);
             npc.life = npc.lifeMax;
             npc.defense += (int)(npc.defense * rarity.magnitude[1] / 100f);
             npc.damage += (int)(npc.damage * rarity.magnitude[2] / 100f);
-            npc.value *= 1 + 1.5f*rarity.magnitude[0]/100f;
+            npc.value *= 1 + 1.5f * rarity.magnitude[0] / 100f;
 
             // Apply level
             npc.lifeMax += (int)(npc.lifeMax * level * ModContent.GetInstance<Config>().NormalEnemyHPIncreasePerLevel);
@@ -125,23 +126,13 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                     case ModifierType.Durable:
                         npc.defense += (int)(npc.defense * modifier.magnitude / 100f);
                         break;
-                }
-            }
-
-            statChanged = true;
-        }
-
-        public override bool PreAI(NPC npc)
-        {
-            foreach (var modifier in modifierList)
-            {
-                switch (modifier.modifierType)
-                {
                     case ModifierType.Quick:
                         npc.velocity /= new Vector2(1 + modifier.magnitude / 100f, 1f);
                         break;
                 }
             }
+
+            statChanged = true;
             return true;
         }
 
