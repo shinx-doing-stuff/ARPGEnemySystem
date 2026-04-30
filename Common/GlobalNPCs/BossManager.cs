@@ -43,13 +43,15 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 if (statChanged) return;
 
                 var cfg = ModContent.GetInstance<Config>();
-                float phaseRate = WorldManager.PhaseRates[WorldManager.GetScalingPhase()];
-                float multiplier = 1f + MathF.Pow(level, cfg.ScalingExponent) * phaseRate;
+                int phase = WorldManager.GetScalingPhase();
+                float multiplier    = 1f + MathF.Pow(level, cfg.ScalingExponent)            * WorldManager.PhaseRates[phase];
+                float defMultiplier = 1f + MathF.Pow(level, WorldManager.DefScalingExponent) * WorldManager.DefPhaseRates[phase];
 
                 npc.lifeMax = (int)(npc.lifeMax * multiplier);
                 npc.life    = npc.lifeMax;
-                npc.defense = (int)(npc.defense * multiplier);
                 npc.damage  = (int)(npc.damage  * multiplier);
+                npc.defense = Math.Max(npc.defense, (int)(level * WorldManager.DefenseFloor));
+                npc.defense = (int)(npc.defense * defMultiplier);
                 statChanged = true;
 
                 if (ModLoader.HasMod("ARPGItemSystem"))

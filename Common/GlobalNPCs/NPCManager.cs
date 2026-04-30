@@ -127,14 +127,17 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             if (statChanged) return true;
 
             var cfg = ModContent.GetInstance<Config>();
-            float phaseRate = WorldManager.PhaseRates[WorldManager.GetScalingPhase()];
-            float multiplier = 1f + MathF.Pow(level, cfg.ScalingExponent) * phaseRate;
+            int phase = WorldManager.GetScalingPhase();
+            float multiplier    = 1f + MathF.Pow(level, cfg.ScalingExponent)        * WorldManager.PhaseRates[phase];
+            float defMultiplier = 1f + MathF.Pow(level, WorldManager.DefScalingExponent) * WorldManager.DefPhaseRates[phase];
 
-            // Level scaling (exponential)
-            npc.lifeMax  = (int)(npc.lifeMax  * multiplier);
-            npc.life     = npc.lifeMax;
-            npc.defense  = (int)(npc.defense  * multiplier);
-            npc.damage   = (int)(npc.damage   * multiplier);
+            // Level scaling (exponential) — defense uses a steeper curve than HP/damage
+            npc.lifeMax = (int)(npc.lifeMax * multiplier);
+            npc.life    = npc.lifeMax;
+            npc.damage  = (int)(npc.damage  * multiplier);
+            // Floor ensures low-defense enemies (zombies, slimes) get baseline physRes
+            npc.defense = Math.Max(npc.defense, (int)(level * WorldManager.DefenseFloor));
+            npc.defense = (int)(npc.defense * defMultiplier);
 
             // Rarity bonus on top of scaled stats
             npc.lifeMax  += (int)(npc.lifeMax  * rarity.magnitude[0] / 100f);

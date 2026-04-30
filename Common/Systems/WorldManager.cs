@@ -21,7 +21,12 @@ namespace ARPGEnemySystem.Common.Systems
 
         // Hardcoded — these are game design values, not server-tuning knobs.
         // Phase 0 = pre-hardmode, 1 = post-WoF, 2 = post-all-mechs, 3 = post-Plantera.
-        public static readonly float[] PhaseRates = { 0.004f, 0.010f, 0.020f, 0.040f };
+        public static readonly float[] PhaseRates    = { 0.004f, 0.010f, 0.020f, 0.040f };
+        public static readonly float[] DefPhaseRates = { 0.006f, 0.015f, 0.030f, 0.060f };
+        public const float DefScalingExponent = 1.6f;
+        // Minimum effective defense = level × DefenseFloor, ensuring low-defense enemies
+        // (zombies, slimes) have meaningful physical resistance at all progression stages.
+        public const float DefenseFloor = 0.2f;
 
         public static int GetScalingPhase()
         {
