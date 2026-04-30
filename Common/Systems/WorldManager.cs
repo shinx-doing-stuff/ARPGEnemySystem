@@ -21,7 +21,7 @@ namespace ARPGEnemySystem.Common.Systems
 
         // Hardcoded — these are game design values, not server-tuning knobs.
         // Phase 0 = pre-hardmode, 1 = post-WoF, 2 = post-all-mechs, 3 = post-Plantera.
-        public static readonly float[] PhaseRates = { 0.02f, 0.05f, 0.10f, 0.18f };
+        public static readonly float[] PhaseRates = { 0.004f, 0.010f, 0.020f, 0.040f };
 
         public static int GetScalingPhase()
         {
