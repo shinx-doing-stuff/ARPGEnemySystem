@@ -25,7 +25,7 @@ namespace ARPGEnemySystem.Common.Systems
 
         public static int GetScalingPhase()
         {
-            if (downedBossIDs.Contains(NPCID.Plantera))                               return 3;
+            if (downedBossIDs.Contains(NPCID.Plantera) || NPC.downedPlantBoss)        return 3;
             if (NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3)    return 2;
             if (Main.hardMode)                                                         return 1;
             return 0;

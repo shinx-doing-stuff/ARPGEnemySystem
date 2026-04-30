@@ -17,48 +17,16 @@ namespace ARPGEnemySystem.Common.Configs
         [DefaultValue(10)]
         public int LevelCapIncreasePerBossDowned;
 
-        [Header("NormalEnemy")]
+        [Header("Scaling")]
 
         [DefaultValue(true)]
         public bool ModifierAllowed;
 
-        [Range(0.000f, 0.1f)]
-        [Increment(0.001f)]
+        [Range(0.5f, 3.0f)]
+        [Increment(0.1f)]
         [DrawTicks]
-        [DefaultValue(0.004f)]
-        public float NormalEnemyHPIncreasePerLevel;
-
-        [Range(0.000f, 0.2f)]
-        [Increment(0.002f)]
-        [DrawTicks]
-        [DefaultValue(0.02f)]
-        public float NormalEnemyDefenseIncreasePerLevel;
-
-        [Range(0.000f, 0.1f)]
-        [Increment(0.001f)]
-        [DrawTicks]
-        [DefaultValue(0.004f)]
-        public float NormalEnemyDamageIncreasePerLevel;
-
-        [Header("Boss")]
-
-        [Range(0.000f, 0.1f)]
-        [Increment(0.001f)]
-        [DrawTicks]
-        [DefaultValue(0.006f)]
-        public float BossHPIncreasePerLevel;
-
-        [Range(0.000f, 0.2f)]
-        [Increment(0.002f)]
-        [DrawTicks]
-        [DefaultValue(0.02f)]
-        public float BossDefenseIncreasePerLevel;
-
-        [Range(0.000f, 0.1f)]
-        [Increment(0.001f)]
-        [DrawTicks]
-        [DefaultValue(0.006f)]
-        public float BossDamageIncreasePerLevel;
+        [DefaultValue(1.5f)]
+        public float ScalingExponent;
 
         [Header("Elemental")]
 

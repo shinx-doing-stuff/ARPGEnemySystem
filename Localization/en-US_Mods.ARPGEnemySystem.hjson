@@ -2,50 +2,24 @@ Configs: {
 	Config: {
 		DisplayName: ARPG Enemy System Config
 
-		BossDamageIncreasePerLevel: {
-			Tooltip: x 100%
-			Label: Boss Damage Increase Per Level
-		}
-
-		BossDefenseIncreasePerLevel: {
-			Tooltip: x 100%
-			Label: Boss Defense Increase Per Level
-		}
-
-		BossHPIncreasePerLevel: {
-			Tooltip: x 100%
-			Label: Boss HP Increase Per Level
-		}
-
-		Headers: {
-			Boss: Boss Config
-			NormalEnemy: Normal Enemy Config
-			Elemental: Elemental Header
-		}
-
-		NormalEnemyDamageIncreasePerLevel: {
-			Tooltip: x 100%
-			Label: Normal Enemy Damage Increase Per Level
-		}
-
-		NormalEnemyDefenseIncreasePerLevel: {
-			Tooltip: x 100%
-			Label: Normal Enemy Defense Increase Per Level
-		}
-
-		NormalEnemyHPIncreasePerLevel: {
-			Tooltip: x 100%
-			Label: Normal Enemy HP Increase Per Level
-		}
-
 		LevelCapIncreasePerBossDowned: {
 			Tooltip: ""
 			Label: Level Cap Increase Per Boss Downed
 		}
 
+		Headers: {
+			Scaling: Scaling Config
+			Elemental: Elemental Config
+		}
+
 		ModifierAllowed: {
 			Label: Modifier Allowed
 			Tooltip: Toggle enemy modifier
+		}
+
+		ScalingExponent: {
+			Label: Scaling Exponent
+			Tooltip: "Exponent applied to enemy level in the scaling formula: 1 + level^exponent × phaseRate. Higher values = steeper growth curve."
 		}
 
 		ElementalResistanceCap: {
