@@ -49,17 +49,19 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
 
                 if (ModLoader.HasMod("ARPGItemSystem"))
                 {
+                    var cfg = ModContent.GetInstance<Config>();
+                    float cap = cfg.ElementalResistanceCap;
                     bool postPlantera = WorldManager.downedBossIDs.Contains(NPCID.Plantera);
                     int tier = postPlantera ? 2 : Main.hardMode ? 1 : 0;
 
                     float[] elemResValues   = { 25f, 50f, 75f };
                     float[] damagePctValues = { 25f, 50f, 75f };
 
-                    FireResistance      = elemResValues[tier];
-                    ColdResistance      = elemResValues[tier];
-                    LightningResistance = elemResValues[tier];
+                    FireResistance      = Math.Min(elemResValues[tier], cap);
+                    ColdResistance      = Math.Min(elemResValues[tier], cap);
+                    LightningResistance = Math.Min(elemResValues[tier], cap);
                     ElementalDamagePct  = damagePctValues[tier];
-                    ElementalDamageType = (Element)(Main.rand.Next(3) + 1); // Fire=1, Cold=2, Lightning=3
+                    ElementalDamageType = (Element)(Main.rand.Next(3) + 1);
                 }
             }
         }

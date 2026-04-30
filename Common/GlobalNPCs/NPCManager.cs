@@ -191,8 +191,8 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             if (!ModLoader.HasMod("ARPGItemSystem")) return;
 
             modifiers.Defense *= 0f;
-            modifiers.ScalingArmorPenetration += modifiers.ScalingArmorPenetration.Value * -1f;
-            modifiers.ArmorPenetration += modifiers.ArmorPenetration.Value * -1f;
+            // Armor penetration is left untouched — with defense=0, pen has no effect on the vanilla formula,
+            // and zeroing it would remove legitimate pen from vanilla accessories and other mods.
         }
 
         public override void OnHitPlayer(NPC npc, Player target, Player.HurtInfo hurtInfo)
