@@ -1,127 +1,50 @@
-﻿using ARPGEnemySystem.Common.Database;
-using Mono.Cecil;
+using ARPGEnemySystem.Common.Database;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
+using Terraria.ID;
 
 namespace ARPGEnemySystem.Common.GlobalNPCs
 {
     public enum Rarity
     {
-        None, // 0
-        Common, // 1
-        Uncommon, // 2
-        Rare, // 3
-        Exceptional, // 4
-        Elite, // 5
-        Champion, // 6
-        Master, // 7
-        Emperor, // 8
-        Legend, // 9
+        None,       // 0
+        Common,     // 1
+        Uncommon,   // 2
+        Rare,       // 3
+        Elite,      // 4
+        Legend,     // 5
     }
 
     public static class RarityDatabase
     {
-        // This contains the stat increase magnitude for each rarity
+        // List<int> entries: [0] = HP%, [1] = Defense%, [2] = Damage%
         public static Dictionary<Rarity, List<int>> rarityModifierDatabase = new Dictionary<Rarity, List<int>>()
         {
-            {Rarity.Common, new List<int>
-            {
-                0,0,0
-            } },
-            {Rarity.Uncommon, new List<int>
-            {
-                20,20,20
-            } },
-            {Rarity.Rare, new List<int>
-            {
-                40,40,40
-            } },
-
-            {Rarity.Exceptional, new List<int>
-            {
-                60,60,60
-            } },
-
-            {Rarity.Elite, new List<int>
-            {
-                80,80,80
-            } },
-
-            {Rarity.Champion, new List<int>
-            {
-                100,100,100
-            } },
-
-            {Rarity.Master, new List<int>
-            {
-                120,120,120
-            } },
-            {Rarity.Emperor, new List<int>
-            {
-                140,140,140
-            } },
-
-            {Rarity.Legend, new List<int>
-            {
-                160,160,160
-            } },
+            { Rarity.Common,   new List<int> {   0,   0,  0 } },
+            { Rarity.Uncommon, new List<int> {  20,  10, 10 } },
+            { Rarity.Rare,     new List<int> {  50,  25, 20 } },
+            { Rarity.Elite,    new List<int> { 100,  50, 35 } },
+            { Rarity.Legend,   new List<int> { 200, 100, 60 } },
         };
-        // This contains the weight for rolling each rarity
+
+        // 8 weight columns, one per boss milestone (matches GetWeightIndex()).
+        // Each column must sum to 100.
         public static Dictionary<Rarity, List<int>> rarityWeightDatabase = new Dictionary<Rarity, List<int>>()
         {
-            // Life // Defense // Damage
-            {Rarity.Common, new List<int>
-            {
-                50, 40, 35, 30, 20, 10, 10, 10
-            } },
-            {Rarity.Uncommon, new List<int>
-            {
-                30, 30, 30, 25, 15, 10, 10, 10
-            } },
-            {Rarity.Rare, new List<int>
-            {
-                10, 10, 10, 15, 20, 15, 13, 13
-            } },
-
-            {Rarity.Exceptional, new List<int>
-            {
-                10, 10, 10, 15, 20, 20, 18, 15
-            } },
-
-            {Rarity.Elite, new List<int>
-            {
-                0, 10, 10, 10, 15, 22, 22, 17
-            } },
-
-            {Rarity.Champion, new List<int>
-            {
-                0, 0, 5, 5, 5, 11, 13, 15
-            } },
-
-            {Rarity.Master, new List<int>
-            {
-                0, 0, 0, 5, 5, 11, 13, 15
-            } },
-            {Rarity.Emperor, new List<int>
-            {
-                0, 0, 0, 0, 0, 1, 1, 3
-            } },
-
-            {Rarity.Legend, new List<int>
-            {
-                0, 0, 0, 0, 0, 0, 0, 2
-            } },
+            //                          pre SlimeK  Skele   WoF  QSlime MechAny Golem Plant+
+            { Rarity.Common,   new List<int> { 70,  60,  55,  50,  40,  30,  20,  10 } },
+            { Rarity.Uncommon, new List<int> { 20,  25,  25,  25,  25,  25,  20,  15 } },
+            { Rarity.Rare,     new List<int> {  8,  10,  13,  15,  20,  22,  25,  25 } },
+            { Rarity.Elite,    new List<int> {  2,   4,   5,   8,  12,  17,  25,  30 } },
+            { Rarity.Legend,   new List<int> {  0,   1,   2,   2,   3,   6,  10,  20 } },
         };
     }
 
     public struct EnemyRarity
     {
         public Rarity rarity = Rarity.None;
-        public List<int> magnitude = new List<int> {0,0,0}; // Life // Defense // Damage
+        public List<int> magnitude = new List<int> { 0, 0, 0 }; // HP% // Defense% // Damage%
 
         public EnemyRarity(Rarity _rarity)
         {
@@ -133,7 +56,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         {
             int i = GetWeightIndex();
             Random random = new Random();
-            int roll = random.Next(0,100);
+            int roll = random.Next(0, 100);
             foreach (KeyValuePair<Rarity, List<int>> item in RarityDatabase.rarityWeightDatabase)
             {
                 if (roll > item.Value[i] - 1)
@@ -154,14 +77,13 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public int GetWeightIndex()
         {
             int weightIndex = 0;
-            if (NPC.downedSlimeKing) weightIndex += 1; // 1
-            if (NPC.downedBoss3) weightIndex += 1; // 2
-            if (Main.hardMode) weightIndex += 1; // 3
-            if (NPC.downedQueenSlime) weightIndex += 1; // 4
-            if (NPC.downedMechBossAny) weightIndex += 1; // 5
-            if (NPC.downedGolemBoss) weightIndex += 1; // 6
-            if (NPC.downedPlantBoss) weightIndex += 1; // 7
-
+            if (NPC.downedSlimeKing)    weightIndex += 1; // 1
+            if (NPC.downedBoss3)        weightIndex += 1; // 2
+            if (Main.hardMode)          weightIndex += 1; // 3
+            if (NPC.downedQueenSlime)   weightIndex += 1; // 4
+            if (NPC.downedMechBossAny)  weightIndex += 1; // 5
+            if (NPC.downedGolemBoss)    weightIndex += 1; // 6
+            if (NPC.downedPlantBoss)    weightIndex += 1; // 7
             return weightIndex;
         }
     }
