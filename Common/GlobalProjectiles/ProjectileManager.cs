@@ -9,9 +9,6 @@ using Terraria;
 using Terraria.ModLoader;
 using ARPGEnemySystem.Common.GlobalNPCs;
 using log4net.Core;
-using ARPGEnemySystem.Common.Configs;
-using Terraria.WorldBuilding;
-using Mono.Cecil;
 using Terraria.ModLoader.IO;
 using System.IO;
 
@@ -27,12 +24,12 @@ namespace ARPGEnemySystem.Common.GlobalProjectiles
 
         public override void OnSpawn(Projectile projectile, IEntitySource source)
         {
-            if (source is EntitySource_Parent parent && parent.Entity is NPC npc) 
+            if (source is EntitySource_Parent parent && parent.Entity is NPC npc)
             {
                 npcIndex = npc.whoAmI;
+
                 if (npc.TryGetGlobalNPC<NPCManager>(out modNPC))
                 {
-                    projectile.damage += (int)(projectile.damage * modNPC.level * ModContent.GetInstance<Config>().NormalEnemyDamageIncreasePerLevel);
                     foreach (var modifier in modNPC.modifierList)
                     {
                         switch (modifier.modifierType)
@@ -43,10 +40,9 @@ namespace ARPGEnemySystem.Common.GlobalProjectiles
                         }
                     }
                 }
-
-                else if (npc.TryGetGlobalNPC<BossManager>(out modBossNPC))
+                else
                 {
-                    projectile.damage += (int)(projectile.damage * modBossNPC.level * ModContent.GetInstance<Config>().BossDamageIncreasePerLevel);
+                    npc.TryGetGlobalNPC<BossManager>(out modBossNPC);
                 }
             }
         }

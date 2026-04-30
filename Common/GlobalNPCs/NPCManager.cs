@@ -125,20 +125,25 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public override bool PreAI(NPC npc)
         {
             if (statChanged) return true;
-            // Apply rarity
-            npc.lifeMax += (int)(npc.lifeMax * rarity.magnitude[0] / 100f);
-            npc.life = npc.lifeMax;
-            npc.defense += (int)(npc.defense * rarity.magnitude[1] / 100f);
-            npc.damage += (int)(npc.damage * rarity.magnitude[2] / 100f);
-            npc.value *= 1 + 1.5f * rarity.magnitude[0] / 100f;
 
-            // Apply level
-            npc.lifeMax += (int)(npc.lifeMax * level * ModContent.GetInstance<Config>().NormalEnemyHPIncreasePerLevel);
-            npc.life = npc.lifeMax;
-            npc.defense += (int)(npc.defense * level * ModContent.GetInstance<Config>().NormalEnemyDefenseIncreasePerLevel);
-            npc.damage += (int)(npc.damage * level * ModContent.GetInstance<Config>().NormalEnemyDamageIncreasePerLevel);
+            var cfg = ModContent.GetInstance<Config>();
+            float phaseRate = WorldManager.PhaseRates[WorldManager.GetScalingPhase()];
+            float multiplier = 1f + MathF.Pow(level, cfg.ScalingExponent) * phaseRate;
 
-            // Apply modifier
+            // Level scaling (exponential)
+            npc.lifeMax  = (int)(npc.lifeMax  * multiplier);
+            npc.life     = npc.lifeMax;
+            npc.defense  = (int)(npc.defense  * multiplier);
+            npc.damage   = (int)(npc.damage   * multiplier);
+
+            // Rarity bonus on top of scaled stats
+            npc.lifeMax  += (int)(npc.lifeMax  * rarity.magnitude[0] / 100f);
+            npc.life      = npc.lifeMax;
+            npc.defense  += (int)(npc.defense  * rarity.magnitude[1] / 100f);
+            npc.damage   += (int)(npc.damage   * rarity.magnitude[2] / 100f);
+            npc.value    *= 1 + 1.5f * rarity.magnitude[0] / 100f;
+
+            // Modifier effects
             foreach (var modifier in modifierList)
             {
                 switch (modifier.modifierType)
