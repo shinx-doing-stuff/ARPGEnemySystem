@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -17,6 +18,18 @@ namespace ARPGEnemySystem.Common.Systems
         public static List<int> downedBossIDs = new List<int>();
         public static int downedBossNum = 0;
         public static int levelCap = 0;
+
+        // Hardcoded — these are game design values, not server-tuning knobs.
+        // Phase 0 = pre-hardmode, 1 = post-WoF, 2 = post-all-mechs, 3 = post-Plantera.
+        public static readonly float[] PhaseRates = { 0.02f, 0.05f, 0.10f, 0.18f };
+
+        public static int GetScalingPhase()
+        {
+            if (downedBossIDs.Contains(NPCID.Plantera))                               return 3;
+            if (NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3)    return 2;
+            if (Main.hardMode)                                                         return 1;
+            return 0;
+        }
 
         public override void ClearWorld()
         {
