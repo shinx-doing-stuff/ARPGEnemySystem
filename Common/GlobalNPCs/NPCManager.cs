@@ -191,6 +191,8 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             if (!ModLoader.HasMod("ARPGItemSystem")) return;
 
             modifiers.Defense *= 0f;
+            modifiers.ScalingArmorPenetration += modifiers.ScalingArmorPenetration.Value * -1f;
+            modifiers.ArmorPenetration += modifiers.ArmorPenetration.Value * -1f;
         }
 
         public override void OnHitPlayer(NPC npc, Player target, Player.HurtInfo hurtInfo)
