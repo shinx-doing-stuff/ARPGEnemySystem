@@ -13,6 +13,7 @@ There are no automated tests. Testing requires running tModLoader with the mod l
 ## In-game Debug Commands
 
 - `/resetworld` — resets the world's `levelCap` and boss progression tracking to zero
+- `/setlevelcap <value>` — sets `WorldManager.levelCap` directly for testing high-level enemy spawns
 
 ## Cross-Mod Dependency
 
@@ -32,18 +33,55 @@ WorldManager.levelCap
 NPCManager.SetDefaults()  → rolls level + modifiers + elemental properties (if ARPGItemSystem loaded)
 BossManager.OnSpawn()     → rolls level + elemental properties (progression-tiered, if ARPGItemSystem loaded)
        ↓ (applied in)
-NPCManager.PreAI()        → multiplies base stats once (statChanged flag prevents re-entry)
-BossManager.OnSpawn()     → applies stats immediately on spawn
+NPCManager.PreAI()        → scales base stats once (statChanged flag prevents re-entry)
+BossManager.OnSpawn()     → scales stats immediately on spawn
 NPCManager.ModifyIncomingHit() → zeroes vanilla NPC defense (if ARPGItemSystem loaded)
        ↓ (propagated to)
-ProjectileManager.OnSpawn() → scales projectile damage from spawning NPC's level/modifiers
+ProjectileManager.OnSpawn() → applies Strong modifier bonus to NPC-sourced projectile damage
+                              (no level-based damage scaling here — NPC stat scaling already carries through)
 ```
+
+### Scaling Formulas
+
+HP and damage use a shared multiplier:
+```
+multiplier = 1 + level^ScalingExponent × PhaseRates[phase]
+```
+
+Defense uses a **separate steeper curve** plus an **additive level floor**:
+```
+npc.defense += (int)(level × DefenseFloor)          // floor: lifts all enemies, preserves relative gaps
+npc.defense  = (int)(npc.defense × defMultiplier)   // defMultiplier = 1 + level^DefScalingExponent × DefPhaseRates[phase]
+```
+
+The additive floor ensures low-defense enemies (slimes: 2 defense, zombies: 6 defense) have meaningful physical resistance at all progression stages. Without it, `physRes = defense × 0.5` would be near-zero for weak enemies while elemental resistances (level-based) would be 25–75%, making physical damage trivially effective against them. The steeper defense curve means armor penetration affixes become increasingly load-bearing at high levels.
+
+**All scaling constants are hardcoded in `WorldManager` — not in config.** These are game design values.
+
+| Constant | Value | Purpose |
+|---|---|---|
+| `PhaseRates` | `{0.004, 0.010, 0.020, 0.040}` | HP/damage scaling per phase |
+| `DefPhaseRates` | `{0.006, 0.015, 0.030, 0.060}` | Defense scaling per phase (steeper) |
+| `DefScalingExponent` | `1.6` | Defense exponent (higher than ScalingExponent) |
+| `DefenseFloor` | `0.2` | Additive min defense = level × 0.2 |
+
+`ScalingExponent` (default 1.3) lives in server config — shape of the HP/damage curve is a server-tuning knob.
+
+### Phase System
+
+`WorldManager.GetScalingPhase()` returns 0–3:
+- Phase 0 — pre-hardmode
+- Phase 1 — post-WoF (`Main.hardMode`)
+- Phase 2 — post-all-three-mechs (`NPC.downedMechBoss1 && downedMechBoss2 && downedMechBoss3`)
+- Phase 3 — post-Plantera (`downedBossIDs.Contains(NPCID.Plantera) || NPC.downedPlantBoss`)
+
+Phase changes produce discrete difficulty jumps: the same level enemy becomes significantly harder after each milestone. PhaseRates are the "bump" — same level, different rate, higher multiplier.
 
 ### Key Files
 
-- **`Common/Systems/WorldManager.cs`** — Tracks unique boss kills (`downedBossIDs`) and `levelCap` (`bosses downed × LevelCapIncreasePerBossDowned`). Persists to world save via `TagCompound` and syncs in multiplayer via `NetSend`/`NetReceive`.
+- **`Common/Systems/WorldManager.cs`** — Tracks unique boss kills (`downedBossIDs`) and `levelCap` (`bosses downed × LevelCapIncreasePerBossDowned`). Persists to world save via `TagCompound` and syncs in multiplayer via `NetSend`/`NetReceive`. Owns all hardcoded scaling constants (`PhaseRates`, `DefPhaseRates`, `DefScalingExponent`, `DefenseFloor`) and `GetScalingPhase()`.
 - **`Common/GlobalNPCs/NPCManager.cs`** — `GlobalNPC` for all regular enemies. Stores `level`, `rarity`, `modifierList`, plus elemental fields: `ElementalDamageType`, `ElementalDamagePct`, `FireResistance`, `ColdResistance`, `LightningResistance`. Elemental rolling is gated on `ModLoader.HasMod("ARPGItemSystem")`. `ModifyIncomingHit` zeroes vanilla defense (also gated). Sync appends 5 elemental values after existing fields: `(byte)ElementalDamageType`, then 4 floats — read order must match write order exactly.
-- **`Common/GlobalNPCs/BossManager.cs`** — `GlobalNPC` for bosses only. Level-only scaling applied in `OnSpawn`. Calls `WorldManager.DownedBoss()` on kill. Elemental properties are progression-tiered: pre-WoF=25%, post-WoF=50%, post-Plantera=75% (all elemental resistances + damage %). `PhysicalResistance` is NOT stored — derived at hit time from `npc.defense × DefenseToPhysResRatio`.
+- **`Common/GlobalNPCs/BossManager.cs`** — `GlobalNPC` for bosses only. Level + stat scaling applied in `OnSpawn` (safe for bosses — no negative netID variants). Calls `WorldManager.DownedBoss()` on kill. Elemental properties are progression-tiered: pre-WoF=25%, post-WoF=50%, post-Plantera=75% (all elemental resistances + damage %). `PhysicalResistance` is NOT stored — derived at hit time from `npc.defense × DefenseToPhysResRatio`.
 - **`Common/GlobalNPCs/Rarity.cs`** — `EnemyRarity` struct + `RarityDatabase`. Five rarities (Common / Uncommon / Rare / Elite / Legend). Roll weights (in `rarityWeightDatabase`) shift toward higher rarities across 8 columns, each tied to a boss milestone in `GetWeightIndex()`. Stat bonuses: Common 0/0/0, Uncommon 20/10/10, Rare 50/25/20, Elite 100/50/35, Legend 200/100/60 (HP%/Def%/Dmg%).
 - **`Common/GlobalNPCs/EnemyModifier.cs`** — `EnemyModifier` struct + `ModifierType` enum. An excludeList passed to `GenerateModifier` prevents duplicate modifier types on the same enemy.
 - **`Common/Database/TierDatabase.cs`** — Static dictionary: `ModifierType → List<Tier>(10 entries)`. Tier 0 = highest values, tier 9 = lowest. `Utils.GetTier()` returns an index based on boss progression (minimum and maximum tier both shrink as more bosses die).
@@ -51,7 +89,7 @@ ProjectileManager.OnSpawn() → scales projectile damage from spawning NPC's lev
 - **`Common/UI/UISystem.cs`** + **`Common/UI/NPCTooltip.cs`** — `UISystem` (ModSystem) hooks into `ModifyInterfaceLayers` to draw the overlay. `NPCUI` (UIState) rebuilds a `UITextPanel` on every update tick. Now shows: level, rarity, modifiers, defense, Phys Res (computed from `npc.defense × DefenseToPhysResRatio`), Fire/Cold/Lightning Res, and elemental damage type/pct. Controlled by `ConfigClient.EnableEnemyStatPanel`.
 - **`Common/Elements/Element.cs`** — `Element` enum (`Physical=0`, `Fire=1`, `Cold=2`, `Lightning=3`), byte-backed for efficient serialization.
 - **`Common/Elements/ElementalMath.cs`** — Static helpers: `ClampResistance(raw, cap)`, `ApplyResistance(damage, res%, cap)`, `ConvertDefenseToResistance(defense, ratio, cap)` = `min(defense × ratio, cap)`. The conversion formula is how vanilla `npc.defense` becomes a physical resistance percentage.
-- **`Common/Configs/Config.cs`** — Server-side: HP/defense/damage multipliers, `LevelCapIncreasePerBossDowned`, plus elemental entries: `ElementalResistanceCap` (default 75), `EnemyElementalChance` (default 67%), `EnemyBaseElementalAllocationPct` (default 25%), `DefenseToPhysResRatio` (default 0.5), `EnemyElemResPerLevel` (default 0.005). Client-side (`ConfigClient`): `EnableEnemyStatPanel`, `EnableElementalDamageLog` (debug toggle for chat hit log).
+- **`Common/Configs/Config.cs`** — Server-side: `LevelCapIncreasePerBossDowned`, `ScalingExponent` (default 1.3, controls HP/damage curve shape), `ModifierAllowed`, plus elemental entries: `ElementalResistanceCap` (default 75), `EnemyElementalChance` (default 67%), `EnemyBaseElementalAllocationPct` (default 25%), `DefenseToPhysResRatio` (default 0.5), `EnemyElemResPerLevel` (default 0.005). Client-side (`ConfigClient`): `EnableEnemyStatPanel`, `EnableElementalDamageLog` (debug toggle for chat hit log).
 
 ### Multiplayer Sync
 
@@ -67,15 +105,15 @@ ProjectileManager.OnSpawn() → scales projectile damage from spawning NPC's lev
 
 ### Adding a New Rarity
 
-Add a row to both `RarityDatabase.rarityModifierDatabase` (3-element list: HP%, defense%, damage% magnitudes) and `rarityWeightDatabase` (8-element weight list matching the 8 boss milestone columns in `GetWeightIndex()`). Weights across all rarities should sum to 100 per column.
+Add a row to both `RarityDatabase.rarityModifierDatabase` (3-element list: HP%, defense%, damage% magnitudes) and `rarityWeightDatabase` (8-element weight list matching the 8 boss milestone columns in `GetWeightIndex()`). Weights across all rarities must sum to 100 per column.
 
 ## NPC Fields — Scaling & Power Level
 
-Key NPC fields relevant to enemy scaling. Read these at `SetDefaults` time (before our `PreAI` multipliers run) to get vanilla baseline values.
+Key NPC fields relevant to enemy scaling. Read these in `PreAI` before applying multipliers — by then all mods' `SetDefaults` hooks have run and variant-specific stats (negative netID NPCs) are finalized.
 
 | Field | Type | Purpose | Notes |
 |---|---|---|---|
-| `npc.lifeMax` | int | Max health | Set in SetDefaults; use this, not `npc.life`, for baseline |
+| `npc.lifeMax` | int | Max health | Use this, not `npc.life`, for baseline |
 | `npc.damage` | int | Contact/projectile damage stat | Vanilla baseline before PreAI scaling |
 | `npc.defense` | int | Vanilla defense | Zeroed by ARPGItemSystem's ModifyIncomingHit when loaded |
 | `npc.npcSlots` | float | Spawn weight contribution | Bosses ≈ 6f, mini-bosses ≈ 2–3f, normal enemies = 1f, critters = 0.1–0.25f |
@@ -89,6 +127,6 @@ Many vanilla NPCs have negative netIDs (variant NPCs — e.g. slime variants −
 - **`OnSpawn`**: unreliable for negative-netID NPCs — level/stat changes set here will not apply to those variants.
 - **`PreAI` + `statChanged` flag** is the correct pattern for one-time stat application. By PreAI time `npc.netID` is stable and all variant stats are settled.
 
-Pattern: roll level/rarity in `SetDefaults` (no netID dependency). Compute coefficient and apply stat multiplications in `PreAI` before `statChanged = true`.
+Pattern: roll level/rarity in `SetDefaults` (no netID dependency). Apply stat multiplications in `PreAI` before `statChanged = true`.
 
 **`npc.rarity` is NOT a power-level indicator.** It is the Lifeform Analyzer detection priority (values 0–4), used only to decide which creature to display when multiple rare enemies are nearby. Do not use it for difficulty or coefficient calculations. Modders do not reliably set it.
