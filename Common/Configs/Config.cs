@@ -59,6 +59,32 @@ namespace ARPGEnemySystem.Common.Configs
         [DrawTicks]
         [DefaultValue(0.006f)]
         public float BossDamageIncreasePerLevel;
+
+        [Header("Elemental")]
+
+        [Range(1, 100)]
+        [DefaultValue(75)]
+        public int ElementalResistanceCap;
+
+        [Range(0, 100)]
+        [DefaultValue(67)]
+        public int EnemyElementalChance;
+
+        [Range(0, 100)]
+        [DefaultValue(25)]
+        public int EnemyBaseElementalAllocationPct;
+
+        [Range(0.000f, 2.0f)]
+        [Increment(0.05f)]
+        [DrawTicks]
+        [DefaultValue(0.5f)]
+        public float DefenseToPhysResRatio;
+
+        [Range(0.000f, 1.0f)]
+        [Increment(0.005f)]
+        [DrawTicks]
+        [DefaultValue(0.0025f)]
+        public float EnemyElemResPerLevel;
     }
 
     public class ConfigClient : ModConfig
