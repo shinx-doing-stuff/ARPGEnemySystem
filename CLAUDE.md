@@ -44,7 +44,7 @@ ProjectileManager.OnSpawn() → scales projectile damage from spawning NPC's lev
 - **`Common/Systems/WorldManager.cs`** — Tracks unique boss kills (`downedBossIDs`) and `levelCap` (`bosses downed × LevelCapIncreasePerBossDowned`). Persists to world save via `TagCompound` and syncs in multiplayer via `NetSend`/`NetReceive`.
 - **`Common/GlobalNPCs/NPCManager.cs`** — `GlobalNPC` for all regular enemies. Stores `level`, `rarity`, `modifierList`, plus elemental fields: `ElementalDamageType`, `ElementalDamagePct`, `FireResistance`, `ColdResistance`, `LightningResistance`. Elemental rolling is gated on `ModLoader.HasMod("ARPGItemSystem")`. `ModifyIncomingHit` zeroes vanilla defense (also gated). Sync appends 5 elemental values after existing fields: `(byte)ElementalDamageType`, then 4 floats — read order must match write order exactly.
 - **`Common/GlobalNPCs/BossManager.cs`** — `GlobalNPC` for bosses only. Level-only scaling applied in `OnSpawn`. Calls `WorldManager.DownedBoss()` on kill. Elemental properties are progression-tiered: pre-WoF=25%, post-WoF=50%, post-Plantera=75% (all elemental resistances + damage %). `PhysicalResistance` is NOT stored — derived at hit time from `npc.defense × DefenseToPhysResRatio`.
-- **`Common/GlobalNPCs/Rarity.cs`** — `EnemyRarity` struct + `RarityDatabase`. Nine rarities (Common → Legend). Roll weights (in `rarityWeightDatabase`) shift toward higher rarities across 8 columns, each tied to a boss milestone in `GetWeightIndex()`.
+- **`Common/GlobalNPCs/Rarity.cs`** — `EnemyRarity` struct + `RarityDatabase`. Five rarities (Common / Uncommon / Rare / Elite / Legend). Roll weights (in `rarityWeightDatabase`) shift toward higher rarities across 8 columns, each tied to a boss milestone in `GetWeightIndex()`. Stat bonuses: Common 0/0/0, Uncommon 20/10/10, Rare 50/25/20, Elite 100/50/35, Legend 200/100/60 (HP%/Def%/Dmg%).
 - **`Common/GlobalNPCs/EnemyModifier.cs`** — `EnemyModifier` struct + `ModifierType` enum. An excludeList passed to `GenerateModifier` prevents duplicate modifier types on the same enemy.
 - **`Common/Database/TierDatabase.cs`** — Static dictionary: `ModifierType → List<Tier>(10 entries)`. Tier 0 = highest values, tier 9 = lowest. `Utils.GetTier()` returns an index based on boss progression (minimum and maximum tier both shrink as more bosses die).
 - **`Common/DrawEffects/ModifierDrawEffect.cs`** — Dust particle helpers called from `NPCManager.DrawEffects()`. Each modifier with a visual has its own method.
@@ -68,3 +68,27 @@ ProjectileManager.OnSpawn() → scales projectile damage from spawning NPC's lev
 ### Adding a New Rarity
 
 Add a row to both `RarityDatabase.rarityModifierDatabase` (3-element list: HP%, defense%, damage% magnitudes) and `rarityWeightDatabase` (8-element weight list matching the 8 boss milestone columns in `GetWeightIndex()`). Weights across all rarities should sum to 100 per column.
+
+## NPC Fields — Scaling & Power Level
+
+Key NPC fields relevant to enemy scaling. Read these at `SetDefaults` time (before our `PreAI` multipliers run) to get vanilla baseline values.
+
+| Field | Type | Purpose | Notes |
+|---|---|---|---|
+| `npc.lifeMax` | int | Max health | Set in SetDefaults; use this, not `npc.life`, for baseline |
+| `npc.damage` | int | Contact/projectile damage stat | Vanilla baseline before PreAI scaling |
+| `npc.defense` | int | Vanilla defense | Zeroed by ARPGItemSystem's ModifyIncomingHit when loaded |
+| `npc.npcSlots` | float | Spawn weight contribution | Bosses ≈ 6f, mini-bosses ≈ 2–3f, normal enemies = 1f, critters = 0.1–0.25f |
+| `npc.value` | float | Coin drop value (in copper) | Rough economy proxy; set by vanilla per enemy type |
+
+### Negative netID NPCs
+
+Many vanilla NPCs have negative netIDs (variant NPCs — e.g. slime variants −10 to −5, zombie variants −55 to −26). `npc.netID` is assigned **after** `SetDefaults` completes, and variant-specific stats are finalized after that. Consequences:
+
+- **`SetDefaults`**: cannot check `npc.netID` (not yet assigned); variant-specific stats may be overwritten after this hook returns.
+- **`OnSpawn`**: unreliable for negative-netID NPCs — level/stat changes set here will not apply to those variants.
+- **`PreAI` + `statChanged` flag** is the correct pattern for one-time stat application. By PreAI time `npc.netID` is stable and all variant stats are settled.
+
+Pattern: roll level/rarity in `SetDefaults` (no netID dependency). Compute coefficient and apply stat multiplications in `PreAI` before `statChanged = true`.
+
+**`npc.rarity` is NOT a power-level indicator.** It is the Lifeform Analyzer detection priority (values 0–4), used only to decide which creature to display when multiple rare enemies are nearby. Do not use it for difficulty or coefficient calculations. Modders do not reliably set it.
