@@ -1,4 +1,5 @@
 ﻿using ARPGEnemySystem.Common.Configs;
+using ARPGEnemySystem.Common.Elements;
 using ARPGEnemySystem.Common.Systems;
 using Microsoft.Xna.Framework;
 using System;
@@ -17,6 +18,14 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public override bool InstancePerEntity => true;
         public int level = 0;
         public bool statChanged = false;
+
+        // Elemental — only populated when ARPGItemSystem is loaded
+        public Element ElementalDamageType  = Element.Physical;
+        public float   ElementalDamagePct   = 0f;
+        public float   FireResistance       = 0f;
+        public float   ColdResistance       = 0f;
+        public float   LightningResistance  = 0f;
+        // Physical resistance derived at hit time from npc.defense via ConvertDefenseToResistance
 
         // Only applies to normal enemy
         public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
@@ -37,7 +46,22 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 npc.defense += (int)(npc.defense * level * ModContent.GetInstance<Config>().BossDefenseIncreasePerLevel);
                 npc.damage += (int)(npc.damage * level * ModContent.GetInstance<Config>().BossDamageIncreasePerLevel);
                 statChanged = true;
-            }   
+
+                if (ModLoader.HasMod("ARPGItemSystem"))
+                {
+                    bool postPlantera = WorldManager.downedBossIDs.Contains(NPCID.Plantera);
+                    int tier = postPlantera ? 2 : Main.hardMode ? 1 : 0;
+
+                    float[] elemResValues   = { 25f, 50f, 75f };
+                    float[] damagePctValues = { 25f, 50f, 75f };
+
+                    FireResistance      = elemResValues[tier];
+                    ColdResistance      = elemResValues[tier];
+                    LightningResistance = elemResValues[tier];
+                    ElementalDamagePct  = damagePctValues[tier];
+                    ElementalDamageType = (Element)(Main.rand.Next(3) + 1); // Fire=1, Cold=2, Lightning=3
+                }
+            }
         }
 
         public override void OnKill(NPC npc)
@@ -52,6 +76,11 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             binaryWriter.Write7BitEncodedInt(npc.life);    
             binaryWriter.Write7BitEncodedInt(npc.defense);    
             binaryWriter.Write7BitEncodedInt(npc.damage);
+            binaryWriter.Write((byte)ElementalDamageType);
+            binaryWriter.Write(ElementalDamagePct);
+            binaryWriter.Write(FireResistance);
+            binaryWriter.Write(ColdResistance);
+            binaryWriter.Write(LightningResistance);
         }
 
         // Make sure you always read exactly as much data as you sent!
@@ -62,6 +91,11 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             npc.life = binaryReader.Read7BitEncodedInt();
             npc.defense = binaryReader.Read7BitEncodedInt();
             npc.damage = binaryReader.Read7BitEncodedInt();
+            ElementalDamageType  = (Element)binaryReader.ReadByte();
+            ElementalDamagePct   = binaryReader.ReadSingle();
+            FireResistance       = binaryReader.ReadSingle();
+            ColdResistance       = binaryReader.ReadSingle();
+            LightningResistance  = binaryReader.ReadSingle();
         }
     }
 }
