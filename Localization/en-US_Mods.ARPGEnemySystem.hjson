@@ -20,6 +20,7 @@ Configs: {
 		Headers: {
 			Boss: Boss Config
 			NormalEnemy: Normal Enemy Config
+			Elemental: Elemental Header
 		}
 
 		NormalEnemyDamageIncreasePerLevel: {
@@ -46,6 +47,31 @@ Configs: {
 			Label: Modifier Allowed
 			Tooltip: Toggle enemy modifier
 		}
+
+		ElementalResistanceCap: {
+			Label: Elemental Resistance Cap
+			Tooltip: ""
+		}
+
+		EnemyElementalChance: {
+			Label: Enemy Elemental Chance
+			Tooltip: ""
+		}
+
+		EnemyBaseElementalAllocationPct: {
+			Label: Enemy Base Elemental Allocation Pct
+			Tooltip: ""
+		}
+
+		DefenseToPhysResRatio: {
+			Label: Defense To Phys Res Ratio
+			Tooltip: ""
+		}
+
+		EnemyElemResPerLevel: {
+			Label: Enemy Elem Res Per Level
+			Tooltip: ""
+		}
 	}
 
 	ConfigClient: {
@@ -54,6 +80,11 @@ Configs: {
 		EnableEnemyStatPanel: {
 			Label: Enable Enemy Stat Panel
 			Tooltip: Enable or Disable Enemy Stat Panel
+		}
+
+		EnableElementalDamageLog: {
+			Label: Enable Elemental Damage Log
+			Tooltip: ""
 		}
 	}
 }
