@@ -13,6 +13,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Terraria.GameInput;
 using Terraria.GameContent.Events;
 using ARPGEnemySystem.Common.GlobalNPCs;
+using ARPGEnemySystem.Common.Elements;
+using ARPGEnemySystem.Common.Configs;
 
 namespace ARPGEnemySystem.Common.UI
 {
@@ -55,31 +57,53 @@ namespace ARPGEnemySystem.Common.UI
 
                 if (mouseRectangle.Intersects(npcPos))
                 {
+                    var cfg = ModContent.GetInstance<Config>();
+                    float physRes = ElementalMath.ConvertDefenseToResistance(
+                        npc.defense, cfg.DefenseToPhysResRatio, cfg.ElementalResistanceCap);
+
                     NPCManager modNpc;
                     BossManager bossNpc;
                     if (npc.TryGetGlobalNPC<NPCManager>(out modNpc))
                     {
+                        string elemDmgLine = modNpc.ElementalDamageType == Element.Physical
+                            ? "Elem Dmg: none"
+                            : $"Elem Dmg: {modNpc.ElementalDamageType} {modNpc.ElementalDamagePct:F0}%";
+
                         string tooltipText = npc.GivenOrTypeName +
                                             $"\nLevel: {modNpc.level} " +
                                             $"\nRarity: {modNpc.rarity.rarity} " +
                                             $"\nModifier: {String.Join(", ", modNpc.modifierList.Select(o => o.modifierType).ToList())}" +
-                                            $"\nDefense: {npc.defense}";
+                                            $"\nDefense: {npc.defense}" +
+                                            $"\nPhys Res: {physRes:F1}%" +
+                                            $"\nFire Res: {modNpc.FireResistance:F1}%" +
+                                            $"\nCold Res: {modNpc.ColdResistance:F1}%" +
+                                            $"\nLightning Res: {modNpc.LightningResistance:F1}%" +
+                                            $"\n{elemDmgLine}";
                         npcTooltip.SetText(tooltipText);
-                        npcTooltip.Width.Set(npcTooltip.TextSize.X, 0);
-                        npcTooltip.Height.Set(130, 0);
-                        npcTooltip.Left.Set(Main.screenWidth / 2 - npcTooltip.Width.Pixels/2, 0);
+                        npcTooltip.Width.Set(npcTooltip.TextSize.X + 20, 0);
+                        npcTooltip.Height.Set(240, 0);
+                        npcTooltip.Left.Set(Main.screenWidth / 2 - npcTooltip.Width.Pixels / 2, 0);
                         npcTooltip.Top.Set(Main.screenHeight / 10, 0);
                         npcTooltip.Recalculate();
                         npcTooltip.DrawPanel = true;
                     }
                     if (npc.TryGetGlobalNPC<BossManager>(out bossNpc))
                     {
+                        string elemDmgLine = bossNpc.ElementalDamageType == Element.Physical
+                            ? "Elem Dmg: none"
+                            : $"Elem Dmg: {bossNpc.ElementalDamageType} {bossNpc.ElementalDamagePct:F0}%";
+
                         string tooltipText = npc.GivenOrTypeName +
                                             $"\nLevel: {bossNpc.level} " +
-                                            $"\nDefense: {npc.defense}";
+                                            $"\nDefense: {npc.defense}" +
+                                            $"\nPhys Res: {physRes:F1}%" +
+                                            $"\nFire Res: {bossNpc.FireResistance:F1}%" +
+                                            $"\nCold Res: {bossNpc.ColdResistance:F1}%" +
+                                            $"\nLightning Res: {bossNpc.LightningResistance:F1}%" +
+                                            $"\n{elemDmgLine}";
                         npcTooltip.SetText(tooltipText);
-                        npcTooltip.Width.Set(npcTooltip.TextSize.X, 0);
-                        npcTooltip.Height.Set(80, 0);
+                        npcTooltip.Width.Set(npcTooltip.TextSize.X + 20, 0);
+                        npcTooltip.Height.Set(210, 0);
                         npcTooltip.Left.Set(Main.screenWidth / 2 - npcTooltip.Width.Pixels / 2, 0);
                         npcTooltip.Top.Set(Main.screenHeight / 10, 0);
                         npcTooltip.Recalculate();

@@ -94,5 +94,8 @@ namespace ARPGEnemySystem.Common.Configs
 
         [DefaultValue(true)]
         public bool EnableEnemyStatPanel;
+
+        [DefaultValue(false)]
+        public bool EnableElementalDamageLog;
     }
 }
