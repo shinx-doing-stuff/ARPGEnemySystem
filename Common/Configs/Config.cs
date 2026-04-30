@@ -83,7 +83,7 @@ namespace ARPGEnemySystem.Common.Configs
         [Range(0.000f, 1.0f)]
         [Increment(0.005f)]
         [DrawTicks]
-        [DefaultValue(0.0025f)]
+        [DefaultValue(0.005f)]
         public float EnemyElemResPerLevel;
     }
 
