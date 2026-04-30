@@ -182,6 +182,19 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             }
         }
 
+        public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers)
+        {
+            // Only bypass vanilla defense when ARPGItemSystem is loaded.
+            // Without it, vanilla defense math should be preserved.
+            // Hook ordering guarantee: ARPGItemSystem's ModifyHitNPC (attacker) reads
+            // target.defense BEFORE this defender hook zeroes it.
+            if (!ModLoader.HasMod("ARPGItemSystem")) return;
+
+            modifiers.Defense *= 0f;
+            modifiers.ScalingArmorPenetration += 0f;
+            modifiers.ArmorPenetration += 0f;
+        }
+
         public override void OnHitPlayer(NPC npc, Player target, Player.HurtInfo hurtInfo)
         {
             foreach (var modifier in modifierList)
