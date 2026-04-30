@@ -27,6 +27,16 @@ Configs: {
 			Tooltip: ""
 		}
 
+		PlayerPhysResCap: {
+			Label: Player Phys Res Cap
+			Tooltip: Maximum physical resistance % a player can reach. Default 80.
+		}
+
+		PhysResHalfPoint: {
+			Label: Phys Res Half Point
+			Tooltip: Defense value at which physRes reaches cap/2. Controls curve steepness. Default 30.
+		}
+
 		EnemyElementalChance: {
 			Label: Enemy Elemental Chance
 			Tooltip: ""
@@ -34,11 +44,6 @@ Configs: {
 
 		EnemyBaseElementalAllocationPct: {
 			Label: Enemy Base Elemental Allocation Pct
-			Tooltip: ""
-		}
-
-		DefenseToPhysResRatio: {
-			Label: Defense To Phys Res Ratio
 			Tooltip: ""
 		}
 

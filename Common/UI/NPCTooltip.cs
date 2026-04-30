@@ -59,7 +59,7 @@ namespace ARPGEnemySystem.Common.UI
                 {
                     var cfg = ModContent.GetInstance<Config>();
                     float physRes = ElementalMath.ConvertDefenseToResistance(
-                        npc.defense, cfg.DefenseToPhysResRatio, cfg.ElementalResistanceCap);
+                        npc.defense, cfg.PhysResHalfPoint, cfg.ElementalResistanceCap);
 
                     NPCManager modNpc;
                     BossManager bossNpc;

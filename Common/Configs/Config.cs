@@ -34,6 +34,14 @@ namespace ARPGEnemySystem.Common.Configs
         [DefaultValue(75)]
         public int ElementalResistanceCap;
 
+        [Range(1, 100)]
+        [DefaultValue(80)]
+        public int PlayerPhysResCap;
+
+        [Range(1, 200)]
+        [DefaultValue(30)]
+        public int PhysResHalfPoint;
+
         [Range(0, 100)]
         [DefaultValue(67)]
         public int EnemyElementalChance;
@@ -41,12 +49,6 @@ namespace ARPGEnemySystem.Common.Configs
         [Range(0, 100)]
         [DefaultValue(25)]
         public int EnemyBaseElementalAllocationPct;
-
-        [Range(0.000f, 2.0f)]
-        [Increment(0.05f)]
-        [DrawTicks]
-        [DefaultValue(0.5f)]
-        public float DefenseToPhysResRatio;
 
         [Range(0.000f, 1.0f)]
         [Increment(0.005f)]

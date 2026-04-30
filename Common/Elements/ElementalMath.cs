@@ -16,9 +16,11 @@ namespace ARPGEnemySystem.Common.Elements
             => damage * (1f - ClampResistance(resistancePct, cap) / 100f);
 
         // Converts vanilla defense stat to physical resistance %.
-        // Formula: min(defense × ratio, cap)
-        // Example with ratio=0.5, cap=75: 100 defense → 50% physRes, 150 defense → 75% (cap)
-        public static float ConvertDefenseToResistance(float defense, float ratio, float cap)
-            => ClampResistance(defense * ratio, cap);
+        // Formula: cap × defense / (defense + halfPoint)
+        // halfPoint is the defense value at which physRes = cap / 2.
+        // Example with halfPoint=30, cap=75: 30 defense → 37.5%, 60 defense → 50%, 200 defense → 57.7%
+        // The result is always strictly less than cap for any finite defense value.
+        public static float ConvertDefenseToResistance(float defense, float halfPoint, float cap)
+            => cap * defense / (defense + halfPoint);
     }
 }
