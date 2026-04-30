@@ -1,5 +1,6 @@
 ﻿using ARPGEnemySystem.Common.Configs;
 using ARPGEnemySystem.Common.DrawEffects;
+using ARPGEnemySystem.Common.Elements;
 using ARPGEnemySystem.Common.Systems;
 using Microsoft.Xna.Framework;
 using System;
@@ -24,6 +25,14 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public List<EnemyModifier> modifierList = new List<EnemyModifier>();
         public EnemyRarity rarity = new EnemyRarity();
 
+        // Elemental — only populated when ARPGItemSystem is loaded
+        public Element ElementalDamageType  = Element.Physical;
+        public float   ElementalDamagePct   = 0f;
+        public float   FireResistance       = 0f;
+        public float   ColdResistance       = 0f;
+        public float   LightningResistance  = 0f;
+        // Physical resistance is derived at hit time from npc.defense via ElementalMath.ConvertDefenseToResistance
+
         // Only applies to normal enemy
         public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
         {
@@ -43,6 +52,30 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 Random rand = new Random();
                 level = Math.Clamp(rand.Next((int)(WorldManager.levelCap*0.75f), (int)(WorldManager.levelCap*1.1f)), 1, (int)(WorldManager.levelCap * 1.1f) + 1);
                 if (ModContent.GetInstance<Config>().ModifierAllowed) AddModifier(entity);
+
+                if (ModLoader.HasMod("ARPGItemSystem"))
+                {
+                    var cfg = ModContent.GetInstance<Config>();
+                    float cap = cfg.ElementalResistanceCap;
+
+                    // Elemental resistances scale with level
+                    float elemRes = Math.Min(level * cfg.EnemyElemResPerLevel * 100f, cap);
+                    FireResistance      = elemRes;
+                    ColdResistance      = elemRes;
+                    LightningResistance = elemRes;
+
+                    // Random chance to deal elemental damage
+                    if (Main.rand.Next(100) < cfg.EnemyElementalChance)
+                    {
+                        ElementalDamageType = (Element)(Main.rand.Next(3) + 1); // 1=Fire 2=Cold 3=Lightning
+                        ElementalDamagePct  = cfg.EnemyBaseElementalAllocationPct;
+                    }
+                    else
+                    {
+                        ElementalDamageType = Element.Physical;
+                        ElementalDamagePct  = 0f;
+                    }
+                }
             }
         }
 
@@ -192,6 +225,11 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             {
                 binaryWriter.Write(modifierMagnitude);
             }
+            binaryWriter.Write((byte)ElementalDamageType);
+            binaryWriter.Write(ElementalDamagePct);
+            binaryWriter.Write(FireResistance);
+            binaryWriter.Write(ColdResistance);
+            binaryWriter.Write(LightningResistance);
         }
 
         // Make sure you always read exactly as much data as you sent!
@@ -218,6 +256,11 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             {
                 modifierList.Add(new EnemyModifier((ModifierType)modifierIDList[i], modifierMagnitudeList[i]));
             }
+            ElementalDamageType  = (Element)binaryReader.ReadByte();
+            ElementalDamagePct   = binaryReader.ReadSingle();
+            FireResistance       = binaryReader.ReadSingle();
+            ColdResistance       = binaryReader.ReadSingle();
+            LightningResistance  = binaryReader.ReadSingle();
         }
 
         private void SerializeData(out List<int> modifierIDList, out List<int> modifierMagnitudeList)
