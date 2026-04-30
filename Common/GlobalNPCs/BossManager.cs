@@ -41,16 +41,20 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 level = Math.Clamp(rand.Next(WorldManager.levelCap, (int)(WorldManager.levelCap * 1.25f)), 1, (int)(WorldManager.levelCap * 1.25f) + 1);
 
                 if (statChanged) return;
-                npc.lifeMax += (int)(npc.lifeMax * level * ModContent.GetInstance<Config>().BossHPIncreasePerLevel);
-                npc.life = npc.lifeMax;
-                npc.defense += (int)(npc.defense * level * ModContent.GetInstance<Config>().BossDefenseIncreasePerLevel);
-                npc.damage += (int)(npc.damage * level * ModContent.GetInstance<Config>().BossDamageIncreasePerLevel);
+
+                var cfg = ModContent.GetInstance<Config>();
+                float phaseRate = WorldManager.PhaseRates[WorldManager.GetScalingPhase()];
+                float multiplier = 1f + MathF.Pow(level, cfg.ScalingExponent) * phaseRate;
+
+                npc.lifeMax = (int)(npc.lifeMax * multiplier);
+                npc.life    = npc.lifeMax;
+                npc.defense = (int)(npc.defense * multiplier);
+                npc.damage  = (int)(npc.damage  * multiplier);
                 statChanged = true;
 
                 if (ModLoader.HasMod("ARPGItemSystem"))
                 {
-                    var cfg = ModContent.GetInstance<Config>();
-                    float cap = cfg.ElementalResistanceCap;
+                    var cap = cfg.ElementalResistanceCap;
                     bool postPlantera = WorldManager.downedBossIDs.Contains(NPCID.Plantera);
                     int tier = postPlantera ? 2 : Main.hardMode ? 1 : 0;
 
