@@ -50,8 +50,8 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 npc.lifeMax = (int)(npc.lifeMax * multiplier);
                 npc.life    = npc.lifeMax;
                 npc.damage  = (int)(npc.damage  * multiplier);
-                npc.defense = Math.Max(npc.defense, (int)(level * WorldManager.DefenseFloor));
-                npc.defense = (int)(npc.defense * defMultiplier);
+                npc.defense += (int)(level * WorldManager.DefenseFloor);
+                npc.defense  = (int)(npc.defense * defMultiplier);
                 statChanged = true;
 
                 if (ModLoader.HasMod("ARPGItemSystem"))
