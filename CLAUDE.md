@@ -58,14 +58,20 @@ The additive floor ensures low-defense enemies (slimes: 2 defense, zombies: 6 de
 
 **All scaling constants are hardcoded in `WorldManager` — not in config.** These are game design values.
 
+Hardcoded in `WorldManager` (game design values, phase-indexed arrays):
+
 | Constant | Value | Purpose |
 |---|---|---|
 | `PhaseRates` | `{0.003, 0.007, 0.015, 0.030}` | HP/damage scaling per phase |
 | `DefPhaseRates` | `{0.004, 0.010, 0.020, 0.040}` | Defense scaling per phase (steeper) |
-| `DefScalingExponent` | `1.3` | Defense exponent (higher than ScalingExponent) |
-| `DefenseFloor` | `0.15` | Additive min defense = level × 0.15 |
 
-`ScalingExponent` (default 1.2) lives in server config — shape of the HP/damage curve is a server-tuning knob.
+Server config knobs (tunable per-server):
+
+| Config field | Default | Purpose |
+|---|---|---|
+| `ScalingExponent` | `1.2` | HP/damage curve shape |
+| `DefScalingExponent` | `1.3` | Defense curve shape (steeper than ScalingExponent) |
+| `DefenseFloor` | `0.15` | Additive min defense = level × floor |
 
 **Reference values** (HP multiplier at key milestones with defaults):
 - Level 50, phase 0 (pre-HM): 1.33× (+33%)

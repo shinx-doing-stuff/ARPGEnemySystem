@@ -45,12 +45,12 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 var cfg = ModContent.GetInstance<Config>();
                 int phase = WorldManager.GetScalingPhase();
                 float multiplier    = 1f + MathF.Pow(level, cfg.ScalingExponent)            * WorldManager.PhaseRates[phase];
-                float defMultiplier = 1f + MathF.Pow(level, WorldManager.DefScalingExponent) * WorldManager.DefPhaseRates[phase];
+                float defMultiplier = 1f + MathF.Pow(level, cfg.DefScalingExponent) * WorldManager.DefPhaseRates[phase];
 
                 npc.lifeMax = (int)(npc.lifeMax * multiplier);
                 npc.life    = npc.lifeMax;
                 npc.damage  = (int)(npc.damage  * multiplier);
-                npc.defense += (int)(level * WorldManager.DefenseFloor);
+                npc.defense += (int)(level * cfg.DefenseFloor);
                 npc.defense  = (int)(npc.defense * defMultiplier);
                 statChanged = true;
 

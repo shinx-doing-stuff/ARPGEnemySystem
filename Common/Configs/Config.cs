@@ -28,6 +28,18 @@ namespace ARPGEnemySystem.Common.Configs
         [DefaultValue(1.2f)]
         public float ScalingExponent;
 
+        [Range(0.5f, 3.0f)]
+        [Increment(0.1f)]
+        [DrawTicks]
+        [DefaultValue(1.3f)]
+        public float DefScalingExponent;
+
+        [Range(0.0f, 1.0f)]
+        [Increment(0.05f)]
+        [DrawTicks]
+        [DefaultValue(0.15f)]
+        public float DefenseFloor;
+
         [Header("Elemental")]
 
         [Range(1, 100)]

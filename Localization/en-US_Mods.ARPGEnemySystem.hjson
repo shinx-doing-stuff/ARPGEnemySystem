@@ -19,7 +19,17 @@ Configs: {
 
 		ScalingExponent: {
 			Label: Scaling Exponent
-			Tooltip: Exponent applied to enemy level in the scaling formula: 1 + level^exponent × phaseRate. Higher values = steeper growth curve.
+			Tooltip: Exponent applied to enemy level in the HP/damage scaling formula: 1 + level^exponent × phaseRate. Higher values = steeper growth curve.
+		}
+
+		DefScalingExponent: {
+			Label: Defense Scaling Exponent
+			Tooltip: Exponent for the defense scaling curve. Higher than ScalingExponent keeps physRes meaningful at high levels.
+		}
+
+		DefenseFloor: {
+			Label: Defense Floor
+			Tooltip: Additive defense added per level (level × floor). Ensures low-defense enemies like slimes have non-trivial physRes.
 		}
 
 		ElementalResistanceCap: {
