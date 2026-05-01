@@ -1,5 +1,6 @@
 using ARPGEnemySystem.Common.Configs;
 using Microsoft.Xna.Framework;
+using Terraria.Localization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -85,7 +86,7 @@ namespace ARPGEnemySystem.Common.Systems
             levelCap += ModContent.GetInstance<Config>().LevelCapIncreasePerBossDowned;
 
             if (announce)
-                Main.NewText("Killing this enemy has released its power upon the world", Color.DarkRed);
+                Main.NewText(Language.GetTextValue("Mods.ARPGEnemySystem.BossKilledMessage"), Color.DarkRed);
         }
 
         public override void SaveWorldData(TagCompound tag)

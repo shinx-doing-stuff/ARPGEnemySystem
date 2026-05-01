@@ -1,3 +1,5 @@
+BossKilledMessage: Killing this enemy has released its power upon the world
+
 Configs: {
 	Config: {
 		DisplayName: ARPG Enemy System Config
