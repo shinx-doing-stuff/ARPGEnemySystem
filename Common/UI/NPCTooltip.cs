@@ -73,6 +73,7 @@ namespace ARPGEnemySystem.Common.UI
                                             $"\nLevel: {modNpc.level} " +
                                             $"\nRarity: {modNpc.rarity.rarity} " +
                                             $"\nModifier: {String.Join(", ", modNpc.modifierList.Select(o => o.modifierType).ToList())}" +
+                                            $"\nDamage: {npc.damage}" +
                                             $"\nDefense: {npc.defense}" +
                                             $"\nPhys Res: {physRes:F1}%" +
                                             $"\nFire Res: {modNpc.FireResistance:F1}%" +
@@ -81,7 +82,7 @@ namespace ARPGEnemySystem.Common.UI
                                             $"\n{elemDmgLine}";
                         npcTooltip.SetText(tooltipText);
                         npcTooltip.Width.Set(npcTooltip.TextSize.X + 20, 0);
-                        npcTooltip.Height.Set(240, 0);
+                        npcTooltip.Height.Set(265, 0);
                         npcTooltip.Left.Set(Main.screenWidth / 2 - npcTooltip.Width.Pixels / 2, 0);
                         npcTooltip.Top.Set(Main.screenHeight / 10, 0);
                         npcTooltip.Recalculate();
@@ -95,6 +96,7 @@ namespace ARPGEnemySystem.Common.UI
 
                         string tooltipText = npc.GivenOrTypeName +
                                             $"\nLevel: {bossNpc.level} " +
+                                            $"\nDamage: {npc.damage}" +
                                             $"\nDefense: {npc.defense}" +
                                             $"\nPhys Res: {physRes:F1}%" +
                                             $"\nFire Res: {bossNpc.FireResistance:F1}%" +
@@ -103,7 +105,7 @@ namespace ARPGEnemySystem.Common.UI
                                             $"\n{elemDmgLine}";
                         npcTooltip.SetText(tooltipText);
                         npcTooltip.Width.Set(npcTooltip.TextSize.X + 20, 0);
-                        npcTooltip.Height.Set(210, 0);
+                        npcTooltip.Height.Set(235, 0);
                         npcTooltip.Left.Set(Main.screenWidth / 2 - npcTooltip.Width.Pixels / 2, 0);
                         npcTooltip.Top.Set(Main.screenHeight / 10, 0);
                         npcTooltip.Recalculate();
