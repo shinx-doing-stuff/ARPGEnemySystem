@@ -1,4 +1,4 @@
-﻿using ARPGEnemySystem.Common.Configs;
+using ARPGEnemySystem.Common.Configs;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -40,23 +40,52 @@ namespace ARPGEnemySystem.Common.Systems
             levelCap = 0;
         }
 
+        // Primary kill path — called by BossManager.OnKill for any NPC with npc.boss == true.
+        // Handles all vanilla single-NPC bosses and all modded bosses.
+        // For vanilla multi-segment bosses (EoW, Destroyer) where the last dying segment may
+        // have npc.boss == false, BossFlagSync.OnKill calls SyncDownedFlags as a safety net.
         public static void DownedBoss(NPC npc)
         {
             if (npc.boss)
-            {
-                // Means that this boss was already killed before
-                if (downedBossIDs.Any(x => x == npc.type))
-                {
-                    return;
-                }
-                else
-                {
-                    downedBossNum++;
-                    downedBossIDs.Add(npc.type);
-                    levelCap += ModContent.GetInstance<Config>().LevelCapIncreasePerBossDowned;
-                    Main.NewText("Killing this enemy has released its power upon the world", Color.DarkRed);
-                }
-            }
+                RegisterBoss(npc.type, announce: true);
+        }
+
+        // Walks every vanilla NPC.downed* flag and registers any boss whose flag is set
+        // but whose NPC ID is not yet in downedBossIDs. Called:
+        //   - From BossFlagSync.OnKill (announce: true) — catches segment-death edge cases.
+        //   - From LoadWorldData (announce: false) — backfills kills missed in prior sessions.
+        public static void SyncDownedFlags(bool announce)
+        {
+            if (NPC.downedSlimeKing)      RegisterBoss(NPCID.KingSlime,       announce);
+            if (NPC.downedBoss1)          RegisterBoss(NPCID.EyeofCthulhu,    announce);
+            if (NPC.downedBoss2)          RegisterBoss(WorldGen.crimson ? NPCID.BrainofCthulhu : NPCID.EaterofWorldsHead, announce);
+            if (NPC.downedBoss3)          RegisterBoss(NPCID.SkeletronHead,   announce);
+            if (NPC.downedQueenBee)       RegisterBoss(NPCID.QueenBee,        announce);
+            if (NPC.downedDeerclops)      RegisterBoss(NPCID.Deerclops,       announce);
+            if (Main.hardMode)            RegisterBoss(NPCID.WallofFlesh,     announce);
+            if (NPC.downedQueenSlime)     RegisterBoss(NPCID.QueenSlimeBoss,  announce);
+            if (NPC.downedMechBoss1)      RegisterBoss(NPCID.TheDestroyer,    announce);
+            if (NPC.downedMechBoss2)      RegisterBoss(NPCID.Retinazer,       announce);
+            if (NPC.downedMechBoss3)      RegisterBoss(NPCID.SkeletronPrime,  announce);
+            if (NPC.downedPlantBoss)      RegisterBoss(NPCID.Plantera,        announce);
+            if (NPC.downedGolemBoss)      RegisterBoss(NPCID.Golem,           announce);
+            if (NPC.downedFishron)        RegisterBoss(NPCID.DukeFishron,     announce);
+            if (NPC.downedEmpressOfLight) RegisterBoss(NPCID.HallowBoss,      announce);
+            if (NPC.downedAncientCultist) RegisterBoss(NPCID.CultistBoss,     announce);
+            if (NPC.downedMoonlord)       RegisterBoss(NPCID.MoonLordCore,    announce);
+        }
+
+        private static void RegisterBoss(int npcType, bool announce)
+        {
+            if (downedBossIDs.Any(x => x == npcType))
+                return;
+
+            downedBossNum++;
+            downedBossIDs.Add(npcType);
+            levelCap += ModContent.GetInstance<Config>().LevelCapIncreasePerBossDowned;
+
+            if (announce)
+                Main.NewText("Killing this enemy has released its power upon the world", Color.DarkRed);
         }
 
         public override void SaveWorldData(TagCompound tag)
@@ -72,8 +101,11 @@ namespace ARPGEnemySystem.Common.Systems
             if (tag.ContainsKey("downedBossNum"))
                 downedBossNum = tag.GetAsInt("downedBossNum");
 
-            // Fix for CS0019: Convert NPC.downedBoss2 (bool) to an integer (0 or 1) before addition
-            levelCap = 0 + (downedBossIDs.Count + (NPC.downedBoss2 ? 1 : 0)) * ModContent.GetInstance<Config>().LevelCapIncreasePerBossDowned;
+            // Backfill from vanilla flags — catches vanilla multi-segment bosses (EoW, Destroyer)
+            // where the segment-death edge case prevented BossManager.OnKill from firing.
+            SyncDownedFlags(announce: false);
+
+            levelCap = downedBossIDs.Count * ModContent.GetInstance<Config>().LevelCapIncreasePerBossDowned;
         }
 
         public override void NetSend(BinaryWriter writer)
@@ -87,12 +119,13 @@ namespace ARPGEnemySystem.Common.Systems
 
         public override void NetReceive(BinaryReader reader)
         {
+            downedBossIDs.Clear();
             var idListCount = reader.ReadInt32();
             for (int i = 0; i < idListCount; i++)
             {
                 downedBossIDs.Add(reader.ReadInt32());
             }
-            levelCap = 0 + (downedBossIDs.Count + (NPC.downedBoss2 ? 1 : 0)) * ModContent.GetInstance<Config>().LevelCapIncreasePerBossDowned;
+            levelCap = downedBossIDs.Count * ModContent.GetInstance<Config>().LevelCapIncreasePerBossDowned;
         }
     }
 }
