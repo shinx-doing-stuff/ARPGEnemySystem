@@ -54,18 +54,24 @@ npc.defense += (int)(level × DefenseFloor)          // floor: lifts all enemies
 npc.defense  = (int)(npc.defense × defMultiplier)   // defMultiplier = 1 + level^DefScalingExponent × DefPhaseRates[phase]
 ```
 
-The additive floor ensures low-defense enemies (slimes: 2 defense, zombies: 6 defense) have meaningful physical resistance at all progression stages. Without it, `physRes = defense × 0.5` would be near-zero for weak enemies while elemental resistances (level-based) would be 25–75%, making physical damage trivially effective against them. The steeper defense curve means armor penetration affixes become increasingly load-bearing at high levels.
+The additive floor ensures low-defense enemies (slimes: 2 defense, zombies: 6 defense) have meaningful physical resistance at all progression stages. Without it, the hyperbolic conversion (`cap × defense / (defense + halfPoint)`) would yield near-zero physRes for weak enemies while elemental resistances (level-based) would be 25–75%, making physical damage trivially effective against them. The steeper defense curve means armor penetration affixes become increasingly load-bearing at high levels.
 
 **All scaling constants are hardcoded in `WorldManager` — not in config.** These are game design values.
 
 | Constant | Value | Purpose |
 |---|---|---|
-| `PhaseRates` | `{0.004, 0.010, 0.020, 0.040}` | HP/damage scaling per phase |
-| `DefPhaseRates` | `{0.006, 0.015, 0.030, 0.060}` | Defense scaling per phase (steeper) |
-| `DefScalingExponent` | `1.6` | Defense exponent (higher than ScalingExponent) |
-| `DefenseFloor` | `0.2` | Additive min defense = level × 0.2 |
+| `PhaseRates` | `{0.003, 0.007, 0.015, 0.030}` | HP/damage scaling per phase |
+| `DefPhaseRates` | `{0.004, 0.010, 0.020, 0.040}` | Defense scaling per phase (steeper) |
+| `DefScalingExponent` | `1.3` | Defense exponent (higher than ScalingExponent) |
+| `DefenseFloor` | `0.15` | Additive min defense = level × 0.15 |
 
-`ScalingExponent` (default 1.3) lives in server config — shape of the HP/damage curve is a server-tuning knob.
+`ScalingExponent` (default 1.2) lives in server config — shape of the HP/damage curve is a server-tuning knob.
+
+**Reference values** (HP multiplier at key milestones with defaults):
+- Level 50, phase 0 (pre-HM): 1.33× (+33%)
+- Level 50, phase 1 (post-WoF): 1.76× (+76%)
+- Level 100, phase 2 (post-mechs): 4.77× (+377%)
+- Level 150, phase 3 (post-Plantera): 12.91× (+1191%)
 
 ### Phase System
 

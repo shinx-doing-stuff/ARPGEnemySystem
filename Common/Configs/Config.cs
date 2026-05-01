@@ -25,7 +25,7 @@ namespace ARPGEnemySystem.Common.Configs
         [Range(0.5f, 3.0f)]
         [Increment(0.1f)]
         [DrawTicks]
-        [DefaultValue(1.3f)]
+        [DefaultValue(1.2f)]
         public float ScalingExponent;
 
         [Header("Elemental")]
