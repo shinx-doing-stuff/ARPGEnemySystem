@@ -55,20 +55,8 @@ namespace ARPGEnemySystem.Common.GlobalProjectiles
                 {
                     switch (modifier.modifierType)
                     {
-                        case ModifierType.Poisonous:
-                            target.AddBuff(BuffID.Poisoned, 300);
-                            break;
-                        case ModifierType.Burning:
-                            target.AddBuff(BuffID.OnFire, 300);
-                            break;
-                        case ModifierType.Frosty:
-                            target.AddBuff(BuffID.Frostburn, 120);
-                            break;
                         case ModifierType.SoulDrinker:
                             target.statMana -= modifier.magnitude;
-                            break;
-                        case ModifierType.Destroyer:
-                            target.AddBuff(BuffID.BrokenArmor, 120);
                             break;
                     }
                 }

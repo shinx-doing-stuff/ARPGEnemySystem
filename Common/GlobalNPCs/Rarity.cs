@@ -18,6 +18,18 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
 
     public static class RarityDatabase
     {
+        // Elemental resistance baseline per rarity — same value for all three elements.
+        // Stored as raw %; clamped to cap at hit time. Modifier bonuses stack on top.
+        public static Dictionary<Rarity, int> rarityElementalResDatabase = new Dictionary<Rarity, int>()
+        {
+            { Rarity.None,      0  },
+            { Rarity.Common,    0  },
+            { Rarity.Uncommon,  10 },
+            { Rarity.Rare,      20 },
+            { Rarity.Elite,     35 },
+            { Rarity.Legend,    50 },
+        };
+
         // List<int> entries: [0] = HP%, [1] = Defense%, [2] = Damage%
         public static Dictionary<Rarity, List<int>> rarityModifierDatabase = new Dictionary<Rarity, List<int>>()
         {

@@ -36,7 +36,7 @@ Configs: {
 
 		ElementalResistanceCap: {
 			Label: Elemental Resistance Cap
-			Tooltip: ""
+			Tooltip: Maximum elemental resistance % any enemy or player can have after clamping.
 		}
 
 		PlayerPhysResCap: {
@@ -47,21 +47,6 @@ Configs: {
 		PhysResHalfPoint: {
 			Label: Phys Res Half Point
 			Tooltip: Defense value at which physRes reaches cap/2. Controls curve steepness. Default 30.
-		}
-
-		EnemyElementalChance: {
-			Label: Enemy Elemental Chance
-			Tooltip: ""
-		}
-
-		EnemyBaseElementalAllocationPct: {
-			Label: Enemy Base Elemental Allocation Pct
-			Tooltip: ""
-		}
-
-		EnemyElemResPerLevel: {
-			Label: Enemy Elem Res Per Level
-			Tooltip: ""
 		}
 	}
 

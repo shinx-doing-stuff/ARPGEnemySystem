@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,13 +10,12 @@ namespace ARPGEnemySystem.Common.DrawEffects
 {
     public class ModifierDrawEffect
     {
-
-        internal static void DrawBurning(NPC npc)
+        internal static void DrawFlaming(NPC npc)
         {
             Random rand = new Random();
             if (rand.Next(0, 100) < 40)
             {
-                int dustType = 6;
+                int dustType = 6; // fire
                 var dust = Dust.NewDustDirect(npc.position, npc.width, npc.height, dustType);
 
                 dust.noGravity = true;
@@ -26,12 +25,13 @@ namespace ARPGEnemySystem.Common.DrawEffects
                 dust.scale *= 1f + Main.rand.NextFloat(-0.01f, 0.01f);
             }
         }
-        internal static void DrawVenom(NPC npc)
+
+        internal static void DrawGlacial(NPC npc)
         {
             Random rand = new Random();
             if (rand.Next(0, 100) < 40)
             {
-                int dustType = 46;
+                int dustType = 67; // ice/frost
                 var dust = Dust.NewDustDirect(npc.position, npc.width, npc.height, dustType);
 
                 dust.noGravity = true;
@@ -41,12 +41,13 @@ namespace ARPGEnemySystem.Common.DrawEffects
                 dust.scale *= 1f + Main.rand.NextFloat(-0.01f, 0.01f);
             }
         }
-        internal static void DrawFrost(NPC npc)
+
+        internal static void DrawCharged(NPC npc)
         {
             Random rand = new Random();
             if (rand.Next(0, 100) < 40)
             {
-                int dustType = 67;
+                int dustType = 226; // electric/lightning
                 var dust = Dust.NewDustDirect(npc.position, npc.width, npc.height, dustType);
 
                 dust.noGravity = true;
@@ -56,6 +57,7 @@ namespace ARPGEnemySystem.Common.DrawEffects
                 dust.scale *= 1f + Main.rand.NextFloat(-0.01f, 0.01f);
             }
         }
+
         internal static void DrawSoulDrinker(NPC npc)
         {
             Random rand = new Random();
@@ -71,6 +73,5 @@ namespace ARPGEnemySystem.Common.DrawEffects
                 dust.scale *= 1f + Main.rand.NextFloat(-0.01f, 0.01f);
             }
         }
-
     }
 }

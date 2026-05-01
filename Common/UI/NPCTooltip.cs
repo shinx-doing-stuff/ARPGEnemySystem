@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,9 +65,7 @@ namespace ARPGEnemySystem.Common.UI
                     BossManager bossNpc;
                     if (npc.TryGetGlobalNPC<NPCManager>(out modNpc))
                     {
-                        string elemDmgLine = modNpc.ElementalDamageType == Element.Physical
-                            ? "Elem Dmg: none"
-                            : $"Elem Dmg: {modNpc.ElementalDamageType} {modNpc.ElementalDamagePct:F0}%";
+                        string elemDmgLines = BuildElemDmgLines(modNpc.FireDamagePct, modNpc.ColdDamagePct, modNpc.LightningDamagePct);
 
                         string tooltipText = npc.GivenOrTypeName +
                                             $"\nLevel: {modNpc.level} " +
@@ -79,7 +77,7 @@ namespace ARPGEnemySystem.Common.UI
                                             $"\nFire Res: {modNpc.FireResistance:F1}%" +
                                             $"\nCold Res: {modNpc.ColdResistance:F1}%" +
                                             $"\nLightning Res: {modNpc.LightningResistance:F1}%" +
-                                            $"\n{elemDmgLine}";
+                                            elemDmgLines;
                         npcTooltip.SetText(tooltipText);
                         npcTooltip.Width.Set(npcTooltip.TextSize.X + 20, 0);
                         npcTooltip.Height.Set(265, 0);
@@ -90,9 +88,7 @@ namespace ARPGEnemySystem.Common.UI
                     }
                     if (npc.TryGetGlobalNPC<BossManager>(out bossNpc))
                     {
-                        string elemDmgLine = bossNpc.ElementalDamageType == Element.Physical
-                            ? "Elem Dmg: none"
-                            : $"Elem Dmg: {bossNpc.ElementalDamageType} {bossNpc.ElementalDamagePct:F0}%";
+                        string elemDmgLines = BuildElemDmgLines(bossNpc.FireDamagePct, bossNpc.ColdDamagePct, bossNpc.LightningDamagePct);
 
                         string tooltipText = npc.GivenOrTypeName +
                                             $"\nLevel: {bossNpc.level} " +
@@ -102,7 +98,7 @@ namespace ARPGEnemySystem.Common.UI
                                             $"\nFire Res: {bossNpc.FireResistance:F1}%" +
                                             $"\nCold Res: {bossNpc.ColdResistance:F1}%" +
                                             $"\nLightning Res: {bossNpc.LightningResistance:F1}%" +
-                                            $"\n{elemDmgLine}";
+                                            elemDmgLines;
                         npcTooltip.SetText(tooltipText);
                         npcTooltip.Width.Set(npcTooltip.TextSize.X + 20, 0);
                         npcTooltip.Height.Set(235, 0);
@@ -114,6 +110,16 @@ namespace ARPGEnemySystem.Common.UI
 
                 }
             }
+        }
+
+        private static string BuildElemDmgLines(float firePct, float coldPct, float lightPct)
+        {
+            var sb = new StringBuilder();
+            if (firePct > 0f)  sb.Append($"\nFire Dmg: {firePct:F0}%");
+            if (coldPct > 0f)  sb.Append($"\nCold Dmg: {coldPct:F0}%");
+            if (lightPct > 0f) sb.Append($"\nLightning Dmg: {lightPct:F0}%");
+            if (sb.Length == 0) sb.Append("\nElem Dmg: none");
+            return sb.ToString();
         }
     }
 }

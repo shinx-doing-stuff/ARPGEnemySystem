@@ -10,18 +10,19 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
 {
     public enum ModifierType
     {
-        None, // 0
-        Colossal, // 1 Increased Size + HP
-        Tiny, // 2 Decreased Size + HP
-        Poisonous, // 3 Inflict Poisoned
-        Burning, // 4 Inflict Burning
-        Strong, // 5 Inreased Damage
-        Durable, // 6 Increased Defense
-        Quick, // 7 Increased Speed
-        Frosty, // 8 Inflict Frostburn
-        SoulDrinker, // 9 Burn Mana
-        Destroyer, // 10 Defense Break
-
+        None,          // 0
+        Colossal,      // 1  Increased Size + HP
+        Tiny,          // 2  Decreased Size + HP
+        Strong,        // 3  Increased Damage
+        Durable,       // 4  Increased Defense
+        Quick,         // 5  Increased Speed
+        SoulDrinker,   // 6  Burn Mana
+        Flaming,       // 7  Deal Fire elemental damage
+        Glacial,       // 8  Deal Cold elemental damage
+        Charged,       // 9  Deal Lightning elemental damage
+        FireResistant,       // 10 Increased Fire Resistance
+        ColdResistant,       // 11 Increased Cold Resistance
+        LightningResistant,  // 12 Increased Lightning Resistance
     }
 
     public struct EnemyModifier

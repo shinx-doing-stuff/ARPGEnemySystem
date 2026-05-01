@@ -1,4 +1,4 @@
-﻿using ARPGEnemySystem.Common.Configs;
+using ARPGEnemySystem.Common.Configs;
 using ARPGEnemySystem.Common.Elements;
 using ARPGEnemySystem.Common.Systems;
 using Microsoft.Xna.Framework;
@@ -20,11 +20,12 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public bool statChanged = false;
 
         // Elemental — only populated when ARPGItemSystem is loaded
-        public Element ElementalDamageType  = Element.Physical;
-        public float   ElementalDamagePct   = 0f;
-        public float   FireResistance       = 0f;
-        public float   ColdResistance       = 0f;
-        public float   LightningResistance  = 0f;
+        public float FireDamagePct      = 0f;
+        public float ColdDamagePct      = 0f;
+        public float LightningDamagePct = 0f;
+        public float FireResistance     = 0f;
+        public float ColdResistance     = 0f;
+        public float LightningResistance = 0f;
         // Physical resistance derived at hit time from npc.defense via ConvertDefenseToResistance
 
         // Only applies to normal enemy
@@ -66,8 +67,12 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                     FireResistance      = Math.Min(elemResValues[tier], cap);
                     ColdResistance      = Math.Min(elemResValues[tier], cap);
                     LightningResistance = Math.Min(elemResValues[tier], cap);
-                    ElementalDamagePct  = damagePctValues[tier];
-                    ElementalDamageType = (Element)(Main.rand.Next(3) + 1);
+
+                    // Randomly assign one element type for elemental damage
+                    int elem = Main.rand.Next(3);
+                    if (elem == 0)      FireDamagePct      = damagePctValues[tier];
+                    else if (elem == 1) ColdDamagePct      = damagePctValues[tier];
+                    else                LightningDamagePct = damagePctValues[tier];
                 }
             }
         }
@@ -79,13 +84,14 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
 
         public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
         {
-            binaryWriter.Write7BitEncodedInt(level);    
-            binaryWriter.Write7BitEncodedInt(npc.lifeMax);    
-            binaryWriter.Write7BitEncodedInt(npc.life);    
-            binaryWriter.Write7BitEncodedInt(npc.defense);    
+            binaryWriter.Write7BitEncodedInt(level);
+            binaryWriter.Write7BitEncodedInt(npc.lifeMax);
+            binaryWriter.Write7BitEncodedInt(npc.life);
+            binaryWriter.Write7BitEncodedInt(npc.defense);
             binaryWriter.Write7BitEncodedInt(npc.damage);
-            binaryWriter.Write((byte)ElementalDamageType);
-            binaryWriter.Write(ElementalDamagePct);
+            binaryWriter.Write(FireDamagePct);
+            binaryWriter.Write(ColdDamagePct);
+            binaryWriter.Write(LightningDamagePct);
             binaryWriter.Write(FireResistance);
             binaryWriter.Write(ColdResistance);
             binaryWriter.Write(LightningResistance);
@@ -99,11 +105,12 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             npc.life = binaryReader.Read7BitEncodedInt();
             npc.defense = binaryReader.Read7BitEncodedInt();
             npc.damage = binaryReader.Read7BitEncodedInt();
-            ElementalDamageType  = (Element)binaryReader.ReadByte();
-            ElementalDamagePct   = binaryReader.ReadSingle();
-            FireResistance       = binaryReader.ReadSingle();
-            ColdResistance       = binaryReader.ReadSingle();
-            LightningResistance  = binaryReader.ReadSingle();
+            FireDamagePct       = binaryReader.ReadSingle();
+            ColdDamagePct       = binaryReader.ReadSingle();
+            LightningDamagePct  = binaryReader.ReadSingle();
+            FireResistance      = binaryReader.ReadSingle();
+            ColdResistance      = binaryReader.ReadSingle();
+            LightningResistance = binaryReader.ReadSingle();
         }
     }
 }

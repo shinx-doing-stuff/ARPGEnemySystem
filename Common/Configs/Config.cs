@@ -54,19 +54,6 @@ namespace ARPGEnemySystem.Common.Configs
         [DefaultValue(30)]
         public int PhysResHalfPoint;
 
-        [Range(0, 100)]
-        [DefaultValue(67)]
-        public int EnemyElementalChance;
-
-        [Range(0, 100)]
-        [DefaultValue(25)]
-        public int EnemyBaseElementalAllocationPct;
-
-        [Range(0.000f, 1.0f)]
-        [Increment(0.005f)]
-        [DrawTicks]
-        [DefaultValue(0.005f)]
-        public float EnemyElemResPerLevel;
     }
 
     public class ConfigClient : ModConfig
