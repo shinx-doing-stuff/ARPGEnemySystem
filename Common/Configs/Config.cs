@@ -25,13 +25,13 @@ namespace ARPGEnemySystem.Common.Configs
         [Range(0.5f, 3.0f)]
         [Increment(0.1f)]
         [DrawTicks]
-        [DefaultValue(1.2f)]
+        [DefaultValue(1.1f)]
         public float ScalingExponent;
 
         [Range(0.5f, 3.0f)]
         [Increment(0.1f)]
         [DrawTicks]
-        [DefaultValue(1.3f)]
+        [DefaultValue(1.25f)]
         public float DefScalingExponent;
 
         [Range(0.0f, 1.0f)]
