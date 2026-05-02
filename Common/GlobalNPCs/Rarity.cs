@@ -26,8 +26,8 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             { Rarity.Common,    0  },
             { Rarity.Uncommon,  10 },
             { Rarity.Rare,      20 },
-            { Rarity.Elite,     35 },
-            { Rarity.Legend,    50 },
+            { Rarity.Elite,     30 },
+            { Rarity.Legend,    40 },
         };
 
         // List<int> entries: [0] = HP%, [1] = Defense%, [2] = Damage%
@@ -36,8 +36,8 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             { Rarity.Common,   new List<int> {   0,   0,  0 } },
             { Rarity.Uncommon, new List<int> {  20,  10, 10 } },
             { Rarity.Rare,     new List<int> {  50,  25, 20 } },
-            { Rarity.Elite,    new List<int> { 100,  50, 35 } },
-            { Rarity.Legend,   new List<int> { 200, 100, 60 } },
+            { Rarity.Elite,    new List<int> { 70,  40, 30 } },
+            { Rarity.Legend,   new List<int> { 100, 70, 50 } },
         };
 
         // 8 weight columns, one per boss milestone (matches GetWeightIndex()).
@@ -49,7 +49,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             { Rarity.Uncommon, new List<int> { 20,  25,  25,  25,  25,  25,  20,  15 } },
             { Rarity.Rare,     new List<int> {  8,  10,  13,  15,  20,  22,  25,  25 } },
             { Rarity.Elite,    new List<int> {  2,   4,   5,   8,  12,  17,  25,  30 } },
-            { Rarity.Legend,   new List<int> {  0,   1,   2,   2,   3,   6,  10,  20 } },
+            { Rarity.Legend,   new List<int> {  0,   1,   2,   2,   3,   6,  10,  15 } },
         };
     }
 
