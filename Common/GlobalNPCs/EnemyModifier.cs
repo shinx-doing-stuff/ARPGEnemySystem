@@ -23,6 +23,10 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         FireResistant,       // 10 Increased Fire Resistance
         ColdResistant,       // 11 Increased Cold Resistance
         LightningResistant,  // 12 Increased Lightning Resistance
+        Searing,       // 13 Penetrates player Fire resistance
+        Shattering,    // 14 Penetrates player Cold resistance
+        Conductive,    // 15 Penetrates player Lightning resistance
+        Sundering,     // 16 Penetrates player effective defense (% subtraction before physRes)
     }
 
     public struct EnemyModifier
