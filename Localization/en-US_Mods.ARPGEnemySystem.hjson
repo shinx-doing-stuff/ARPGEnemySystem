@@ -14,11 +14,6 @@ Configs: {
 			Elemental: Elemental Config
 		}
 
-		ModifierAllowed: {
-			Label: Modifier Allowed
-			Tooltip: Toggle enemy modifier
-		}
-
 		ScalingExponent: {
 			Label: Scaling Exponent
 			Tooltip: Exponent applied to enemy level in the HP/damage scaling formula: 1 + level^exponent × phaseRate. Higher values = steeper growth curve.
@@ -66,8 +61,19 @@ Configs: {
 }
 
 NPCTooltip: {
-	FirePen: Fire Pen: {0}%
-	ColdPen: Cold Pen: {0}%
-	LightningPen: Lightning Pen: {0}%
-	Sundering: Sundering: {0}%
+	HeaderNormal: Level {0}  {1}  [{2}]
+	HeaderNormalNoMods: Level {0}  {1}
+	HeaderBoss: Level {0}
+	StatsLine: Damage: {0}   Defense: {1} (Phys Res {2}%)
+	Resistances: Resistances: Fire {0}%  Cold {1}%  Lightning {2}%
+	ElemDmgLabel: Elem Dmg:
+	PenLabel: Penetration:
+	ElemDmgNone: Elem Dmg: none
+	Fire: Fire {0}%
+	Cold: Cold {0}%
+	Lightning: Lightning {0}%
+	FirePen: Fire {0}
+	ColdPen: Cold {0}
+	LightningPen: Lightning {0}
+	Sundering: Sundering {0}
 }

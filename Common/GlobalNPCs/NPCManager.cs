@@ -59,7 +59,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             {
                 Random rand = new Random();
                 level = Math.Clamp(rand.Next((int)(WorldManager.levelCap*0.75f), (int)(WorldManager.levelCap*1.1f)), 1, (int)(WorldManager.levelCap * 1.1f) + 1);
-                if (ModContent.GetInstance<Config>().ModifierAllowed) AddModifier(entity);
+                AddModifier(entity);
 
                 if (ModLoader.HasMod("ARPGItemSystem"))
                 {

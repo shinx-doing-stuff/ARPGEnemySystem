@@ -19,9 +19,6 @@ namespace ARPGEnemySystem.Common.Configs
 
         [Header("Scaling")]
 
-        [DefaultValue(true)]
-        public bool ModifierAllowed;
-
         [Range(0.5f, 3.0f)]
         [Increment(0.1f)]
         [DrawTicks]
