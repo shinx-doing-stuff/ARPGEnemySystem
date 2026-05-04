@@ -43,7 +43,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         // Only applies to normal enemy
         public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
         {
-            return !entity.townNPC && !entity.CountsAsACritter && !entity.boss && entity.type != NPCID.TargetDummy;
+            return !entity.townNPC && !entity.friendly && !entity.CountsAsACritter && !entity.boss && entity.type != NPCID.TargetDummy;
         }
         public override GlobalNPC Clone(NPC from, NPC to)
         {
@@ -167,9 +167,6 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                     case ModifierType.Durable:
                         npc.defense += (int)(npc.defense * modifier.magnitude / 100f);
                         break;
-                    case ModifierType.Quick:
-                        npc.velocity /= new Vector2(1 + modifier.magnitude / 100f, 1f);
-                        break;
                     case ModifierType.Flaming:
                         FireDamagePct += modifier.magnitude;
                         break;
@@ -207,18 +204,6 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             return true;
         }
 
-        public override void PostAI(NPC npc)
-        {
-            foreach (var modifier in modifierList)
-            {
-                switch (modifier.modifierType)
-                {
-                    case ModifierType.Quick:
-                        npc.velocity *= new Vector2(1 + modifier.magnitude / 100f, 1f);
-                        break;
-                }
-            }
-        }
 
         public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers)
         {

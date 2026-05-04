@@ -28,7 +28,9 @@ ARPGEnemySystem and ARPGItemSystem are **mutually required** — neither will lo
 
 ### High-Level Concept
 
-Every non-boss, non-critter NPC is assigned a **level** and **EnemyRarity** on spawn, plus 0–2 random **EnemyModifiers**. Bosses receive a level only. The level cap grows with boss progression and is persisted per-world. The vanilla prefix/reforge system is not touched by this mod; it affects NPCs, not items.
+Every non-boss, non-critter, non-friendly enemy NPC is assigned a **level** and **EnemyRarity** on spawn, plus 0–2 random **EnemyModifiers**. Bosses receive a level only. The level cap grows with boss progression and is persisted per-world. The vanilla prefix/reforge system is not touched by this mod; it affects NPCs, not items.
+
+`NPCManager.AppliesToEntity` excludes: `townNPC`, `friendly`, `CountsAsACritter`, `boss`, and `TargetDummy`. The `friendly` guard is required in addition to `townNPC` because some NPCs (Skeleton Merchant, Old Man) are friendly but not flagged as town NPCs.
 
 ### Core Data Flow
 
@@ -121,9 +123,11 @@ Phase changes produce discrete difficulty jumps: the same level enemy becomes si
 
 1. Add an entry to `ModifierType` enum in `Common/GlobalNPCs/EnemyModifier.cs`
 2. Add 10 `Tier` entries to `TierDatabase.modifierTierDatabase` in `Common/Database/TierDatabase.cs`
-3. Add the stat effect in `NPCManager.PreAI()` (and `PostAI` for per-tick effects like Quick speed boost)
+3. Add the stat effect in `NPCManager.PreAI()`. All modifier effects belong in the one-time `PreAI` block (guarded by `statChanged`). There is no `PostAI` override — per-tick velocity manipulation was removed because it compounds uncontrollably for accumulation-based NPC AI.
 4. Add an `OnHitPlayer` case in both `NPCManager` and `ProjectileManager` for debuffs applied on hit
 5. Add a `ModifierDrawEffect` method and call it from `NPCManager.DrawEffects()` for visual feedback
+
+**Removing a modifier:** Delete its enum value from `ModifierType`, remove its entry from `TierDatabase.modifierTierDatabase`, and remove any switch cases in `PreAI`, `OnHitPlayer`, and `DrawEffects`. NPCs don't persist to disk and both sides of a multiplayer session always share the same mod version, so there is no save-migration or network-sync concern from renumbering the enum.
 
 ### Adding a New Rarity
 

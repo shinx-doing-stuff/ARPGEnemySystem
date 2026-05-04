@@ -15,18 +15,17 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         Tiny,          // 2  Decreased Size + HP
         Strong,        // 3  Increased Damage
         Durable,       // 4  Increased Defense
-        Quick,         // 5  Increased Speed
-        SoulDrinker,   // 6  Burn Mana
-        Flaming,       // 7  Deal Fire elemental damage
-        Glacial,       // 8  Deal Cold elemental damage
-        Charged,       // 9  Deal Lightning elemental damage
-        FireResistant,       // 10 Increased Fire Resistance
-        ColdResistant,       // 11 Increased Cold Resistance
-        LightningResistant,  // 12 Increased Lightning Resistance
-        Searing,       // 13 Penetrates player Fire resistance
-        Shattering,    // 14 Penetrates player Cold resistance
-        Conductive,    // 15 Penetrates player Lightning resistance
-        Sundering,     // 16 Penetrates player effective defense (% subtraction before physRes)
+        SoulDrinker,   // 5  Burn Mana
+        Flaming,       // 6  Deal Fire elemental damage
+        Glacial,       // 7  Deal Cold elemental damage
+        Charged,       // 8  Deal Lightning elemental damage
+        FireResistant,       // 9  Increased Fire Resistance
+        ColdResistant,       // 10 Increased Cold Resistance
+        LightningResistant,  // 11 Increased Lightning Resistance
+        Searing,       // 12 Penetrates player Fire resistance
+        Shattering,    // 13 Penetrates player Cold resistance
+        Conductive,    // 14 Penetrates player Lightning resistance
+        Sundering,     // 15 Penetrates player effective defense (% subtraction before physRes)
     }
 
     public struct EnemyModifier
@@ -52,8 +51,8 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             Random random = new Random();
 
             IDs.AddRange(Enumerable.Range(1, Enum.GetNames(typeof(ModifierType)).Length - 1));
-            // Exclude modifiers that already on the item
-            IDs = IDs.Where(val => !excludeList.Contains(val)).ToList();
+            // Exclude modifiers already on the NPC and any not present in TierDatabase (disabled modifiers)
+            IDs = IDs.Where(val => !excludeList.Contains(val) && TierDatabase.modifierTierDatabase.ContainsKey((ModifierType)val)).ToList();
             // Generate random prefix
             modifierType = (ModifierType)IDs[random.Next(0, IDs.Count)];
             // Get magnitude based on tier

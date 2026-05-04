@@ -35,16 +35,16 @@ namespace ARPGEnemySystem.Common.Database
             } },
             {ModifierType.Tiny, new List<Tier>
             {
-                new Tier(56,60),
-                new Tier(51,55),
-                new Tier(46,50),
-                new Tier(41,45),
                 new Tier(36,40),
-                new Tier(31,35),
-                new Tier(26,30),
-                new Tier(21,25),
-                new Tier(16,20),
-                new Tier(10,15)
+                new Tier(33,35),
+                new Tier(30,32),
+                new Tier(27,29),
+                new Tier(24,26),
+                new Tier(21,23),
+                new Tier(18,20),
+                new Tier(15,17),
+                new Tier(12,14),
+                new Tier(10,11)
             } },
             {ModifierType.Strong, new List<Tier>
             {
@@ -71,19 +71,6 @@ namespace ARPGEnemySystem.Common.Database
                 new Tier(21,25),
                 new Tier(16,20),
                 new Tier(10,15)
-            } },
-            {ModifierType.Quick, new List<Tier>
-            {
-                new Tier(36,40),
-                new Tier(33,35),
-                new Tier(30,32),
-                new Tier(27,29),
-                new Tier(24,26),
-                new Tier(21,23),
-                new Tier(18,20),
-                new Tier(15,17),
-                new Tier(12,14),
-                new Tier(10,11)
             } },
             {ModifierType.SoulDrinker, new List<Tier>
             {
