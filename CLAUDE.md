@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Development
 
 This is a tModLoader mod for Terraria targeting .NET 8. To build:
+
 - **In-game (recommended):** tModLoader → Workshop → Mod Sources → select `ARPGEnemySystem` → Build & Reload
 - **CLI compile check:** `dotnet build` (verifies compilation but does not deploy)
 
@@ -48,11 +49,13 @@ ProjectileManager.OnSpawn() → applies Strong modifier bonus to NPC-sourced pro
 ### Scaling Formulas
 
 HP and damage use a shared multiplier:
+
 ```
 multiplier = 1 + level^ScalingExponent × PhaseRates[phase]
 ```
 
 Defense uses a **separate steeper curve** plus an **additive level floor**:
+
 ```
 npc.defense += (int)(level × DefenseFloor)          // floor: lifts all enemies, preserves relative gaps
 npc.defense  = (int)(npc.defense × defMultiplier)   // defMultiplier = 1 + level^DefScalingExponent × DefPhaseRates[phase]
@@ -64,20 +67,21 @@ The additive floor ensures low-defense enemies (slimes: 2 defense, zombies: 6 de
 
 Hardcoded in `WorldManager` (game design values, phase-indexed arrays):
 
-| Constant | Value | Purpose |
-|---|---|---|
-| `PhaseRates` | `{0.003, 0.007, 0.015, 0.030}` | HP/damage scaling per phase |
+| Constant        | Value                          | Purpose                             |
+| --------------- | ------------------------------ | ----------------------------------- |
+| `PhaseRates`    | `{0.003, 0.007, 0.015, 0.030}` | HP/damage scaling per phase         |
 | `DefPhaseRates` | `{0.004, 0.010, 0.020, 0.040}` | Defense scaling per phase (steeper) |
 
 Server config knobs (tunable per-server):
 
-| Config field | Default | Purpose |
-|---|---|---|
-| `ScalingExponent` | `1.2` | HP/damage curve shape |
-| `DefScalingExponent` | `1.3` | Defense curve shape (steeper than ScalingExponent) |
-| `DefenseFloor` | `0.15` | Additive min defense = level × floor |
+| Config field         | Default | Purpose                                            |
+| -------------------- | ------- | -------------------------------------------------- |
+| `ScalingExponent`    | `1.13`  | HP/damage curve shape                              |
+| `DefScalingExponent` | `1.15`  | Defense curve shape (steeper than ScalingExponent) |
+| `DefenseFloor`       | `0.10`  | Additive min defense = level × floor               |
 
 **Reference values** (HP multiplier at key milestones with defaults):
+
 - Level 50, phase 0 (pre-HM): 1.33× (+33%)
 - Level 50, phase 1 (post-WoF): 1.76× (+76%)
 - Level 100, phase 2 (post-mechs): 4.77× (+377%)
@@ -86,6 +90,7 @@ Server config knobs (tunable per-server):
 ### Phase System
 
 `WorldManager.GetScalingPhase()` returns 0–3:
+
 - Phase 0 — pre-hardmode
 - Phase 1 — post-WoF (`Main.hardMode`)
 - Phase 2 — post-all-three-mechs (`NPC.downedMechBoss1 && downedMechBoss2 && downedMechBoss3`)
@@ -128,13 +133,13 @@ Add a row to both `RarityDatabase.rarityModifierDatabase` (3-element list: HP%, 
 
 Key NPC fields relevant to enemy scaling. Read these in `PreAI` before applying multipliers — by then all mods' `SetDefaults` hooks have run and variant-specific stats (negative netID NPCs) are finalized.
 
-| Field | Type | Purpose | Notes |
-|---|---|---|---|
-| `npc.lifeMax` | int | Max health | Use this, not `npc.life`, for baseline |
-| `npc.damage` | int | Contact/projectile damage stat | Vanilla baseline before PreAI scaling |
-| `npc.defense` | int | Vanilla defense | Zeroed by `NPCManager.ModifyIncomingHit` so all damage reduction goes through the elemental pipeline |
-| `npc.npcSlots` | float | Spawn weight contribution | Bosses ≈ 6f, mini-bosses ≈ 2–3f, normal enemies = 1f, critters = 0.1–0.25f |
-| `npc.value` | float | Coin drop value (in copper) | Rough economy proxy; set by vanilla per enemy type |
+| Field          | Type  | Purpose                        | Notes                                                                                                |
+| -------------- | ----- | ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `npc.lifeMax`  | int   | Max health                     | Use this, not `npc.life`, for baseline                                                               |
+| `npc.damage`   | int   | Contact/projectile damage stat | Vanilla baseline before PreAI scaling                                                                |
+| `npc.defense`  | int   | Vanilla defense                | Zeroed by `NPCManager.ModifyIncomingHit` so all damage reduction goes through the elemental pipeline |
+| `npc.npcSlots` | float | Spawn weight contribution      | Bosses ≈ 6f, mini-bosses ≈ 2–3f, normal enemies = 1f, critters = 0.1–0.25f                           |
+| `npc.value`    | float | Coin drop value (in copper)    | Rough economy proxy; set by vanilla per enemy type                                                   |
 
 ### Negative netID NPCs
 
