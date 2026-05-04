@@ -15,6 +15,7 @@ using Terraria.GameContent.Events;
 using ARPGEnemySystem.Common.GlobalNPCs;
 using ARPGEnemySystem.Common.Elements;
 using ARPGEnemySystem.Common.Configs;
+using Terraria.Localization;
 
 namespace ARPGEnemySystem.Common.UI
 {
@@ -66,6 +67,7 @@ namespace ARPGEnemySystem.Common.UI
                     if (npc.TryGetGlobalNPC<NPCManager>(out modNpc))
                     {
                         string elemDmgLines = BuildElemDmgLines(modNpc.FireDamagePct, modNpc.ColdDamagePct, modNpc.LightningDamagePct);
+                        string penLines = BuildPenLines(modNpc.FirePen, modNpc.ColdPen, modNpc.LightningPen, modNpc.SunderingPct);
 
                         string tooltipText = npc.GivenOrTypeName +
                                             $"\nLevel: {modNpc.level} " +
@@ -77,10 +79,11 @@ namespace ARPGEnemySystem.Common.UI
                                             $"\nFire Res: {modNpc.FireResistance:F1}%" +
                                             $"\nCold Res: {modNpc.ColdResistance:F1}%" +
                                             $"\nLightning Res: {modNpc.LightningResistance:F1}%" +
-                                            elemDmgLines;
+                                            elemDmgLines +
+                                            penLines;
                         npcTooltip.SetText(tooltipText);
                         npcTooltip.Width.Set(npcTooltip.TextSize.X + 20, 0);
-                        npcTooltip.Height.Set(265, 0);
+                        npcTooltip.Height.Set(npcTooltip.TextSize.Y + 20, 0);
                         npcTooltip.Left.Set(Main.screenWidth / 2 - npcTooltip.Width.Pixels / 2, 0);
                         npcTooltip.Top.Set(Main.screenHeight / 10, 0);
                         npcTooltip.Recalculate();
@@ -89,6 +92,7 @@ namespace ARPGEnemySystem.Common.UI
                     if (npc.TryGetGlobalNPC<BossManager>(out bossNpc))
                     {
                         string elemDmgLines = BuildElemDmgLines(bossNpc.FireDamagePct, bossNpc.ColdDamagePct, bossNpc.LightningDamagePct);
+                        string penLines = BuildPenLines(bossNpc.FirePen, bossNpc.ColdPen, bossNpc.LightningPen, bossNpc.SunderingPct);
 
                         string tooltipText = npc.GivenOrTypeName +
                                             $"\nLevel: {bossNpc.level} " +
@@ -98,10 +102,11 @@ namespace ARPGEnemySystem.Common.UI
                                             $"\nFire Res: {bossNpc.FireResistance:F1}%" +
                                             $"\nCold Res: {bossNpc.ColdResistance:F1}%" +
                                             $"\nLightning Res: {bossNpc.LightningResistance:F1}%" +
-                                            elemDmgLines;
+                                            elemDmgLines +
+                                            penLines;
                         npcTooltip.SetText(tooltipText);
                         npcTooltip.Width.Set(npcTooltip.TextSize.X + 20, 0);
-                        npcTooltip.Height.Set(235, 0);
+                        npcTooltip.Height.Set(npcTooltip.TextSize.Y + 20, 0);
                         npcTooltip.Left.Set(Main.screenWidth / 2 - npcTooltip.Width.Pixels / 2, 0);
                         npcTooltip.Top.Set(Main.screenHeight / 10, 0);
                         npcTooltip.Recalculate();
@@ -119,6 +124,16 @@ namespace ARPGEnemySystem.Common.UI
             if (coldPct > 0f)  sb.Append($"\nCold Dmg: {coldPct:F0}%");
             if (lightPct > 0f) sb.Append($"\nLightning Dmg: {lightPct:F0}%");
             if (sb.Length == 0) sb.Append("\nElem Dmg: none");
+            return sb.ToString();
+        }
+
+        private static string BuildPenLines(float firePen, float coldPen, float lightPen, float sunderingPct)
+        {
+            var sb = new StringBuilder();
+            if (firePen      > 0f) sb.Append("\n").Append(Language.GetTextValue("Mods.ARPGEnemySystem.NPCTooltip.FirePen",      firePen.ToString("F0")));
+            if (coldPen      > 0f) sb.Append("\n").Append(Language.GetTextValue("Mods.ARPGEnemySystem.NPCTooltip.ColdPen",      coldPen.ToString("F0")));
+            if (lightPen     > 0f) sb.Append("\n").Append(Language.GetTextValue("Mods.ARPGEnemySystem.NPCTooltip.LightningPen", lightPen.ToString("F0")));
+            if (sunderingPct > 0f) sb.Append("\n").Append(Language.GetTextValue("Mods.ARPGEnemySystem.NPCTooltip.Sundering",    sunderingPct.ToString("F0")));
             return sb.ToString();
         }
     }

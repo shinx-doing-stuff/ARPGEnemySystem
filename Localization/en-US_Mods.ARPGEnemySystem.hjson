@@ -63,4 +63,11 @@ Configs: {
 			Tooltip: ""
 		}
 	}
+
+	NPCTooltip: {
+		FirePen: "Fire Pen: {0}%"
+		ColdPen: "Cold Pen: {0}%"
+		LightningPen: "Lightning Pen: {0}%"
+		Sundering: "Sundering: {0}%"
+	}
 }
