@@ -34,6 +34,13 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public float LightningResistance = 0f;
         // Physical resistance is derived at hit time from npc.defense via ElementalMath.ConvertDefenseToResistance
 
+        // Penetration — only populated when ARPGItemSystem is loaded.
+        // Baseline from rarity (SetDefaults) + modifier-rolled magnitude (PreAI, +=).
+        public float FirePen      = 0f;
+        public float ColdPen      = 0f;
+        public float LightningPen = 0f;
+        public float SunderingPct = 0f;
+
         // Only applies to normal enemy
         public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
         {
@@ -64,6 +71,13 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                     ColdResistance      = rarityRes;
                     LightningResistance = rarityRes;
                     // Elemental damage percentages are set by Flaming/Glacial/Charged modifiers in PreAI.
+                    // Penetration baseline per rarity — same value for all four fields.
+                    // Modifier bonuses (Searing/Shattering/Conductive/Sundering) stack on top in PreAI.
+                    int rarityPen = RarityDatabase.rarityElementalPenDatabase[rarity.rarity];
+                    FirePen      = rarityPen;
+                    ColdPen      = rarityPen;
+                    LightningPen = rarityPen;
+                    SunderingPct = rarityPen;
                 }
             }
         }
@@ -71,7 +85,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public void AddModifier(NPC npc)
         {
             modifierList.Clear();
-            for (int i = 0; i < Utils.GetAmountOfEnemyModifier(); i++)
+            for (int i = 0; i < Utils.GetAmountOfEnemyModifier(rarity); i++)
             {
                 List<int> excludeList = Utils.CreateExcludeList(modifierList);
                 int tier = Utils.GetTier();
@@ -178,6 +192,18 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                     case ModifierType.LightningResistant:
                         LightningResistance += modifier.magnitude;
                         break;
+                    case ModifierType.Searing:
+                        FirePen += modifier.magnitude;
+                        break;
+                    case ModifierType.Shattering:
+                        ColdPen += modifier.magnitude;
+                        break;
+                    case ModifierType.Conductive:
+                        LightningPen += modifier.magnitude;
+                        break;
+                    case ModifierType.Sundering:
+                        SunderingPct += modifier.magnitude;
+                        break;
                 }
             }
 
@@ -248,6 +274,10 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             binaryWriter.Write(FireResistance);
             binaryWriter.Write(ColdResistance);
             binaryWriter.Write(LightningResistance);
+            binaryWriter.Write(FirePen);
+            binaryWriter.Write(ColdPen);
+            binaryWriter.Write(LightningPen);
+            binaryWriter.Write(SunderingPct);
         }
 
         // Make sure you always read exactly as much data as you sent!
@@ -280,6 +310,10 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             FireResistance      = binaryReader.ReadSingle();
             ColdResistance      = binaryReader.ReadSingle();
             LightningResistance = binaryReader.ReadSingle();
+            FirePen      = binaryReader.ReadSingle();
+            ColdPen      = binaryReader.ReadSingle();
+            LightningPen = binaryReader.ReadSingle();
+            SunderingPct = binaryReader.ReadSingle();
         }
 
         private void SerializeData(out List<int> modifierIDList, out List<int> modifierMagnitudeList)

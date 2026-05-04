@@ -1,5 +1,6 @@
 ﻿using ARPGEnemySystem.Common.Database;
 using ARPGEnemySystem.Common.GlobalNPCs;
+using ARPGEnemySystem.Common.Systems;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -27,10 +28,27 @@ namespace ARPGEnemySystem.Common
 
             return excludeListInt;
         }
-        internal static int GetAmountOfEnemyModifier()
+        internal static int GetAmountOfEnemyModifier(EnemyRarity rarity)
         {
-            Random random = new Random();
-            return random.Next(0, 3);
+            int rarityBonus = rarity.rarity switch
+            {
+                Rarity.Common    => 0,
+                Rarity.Uncommon  => 1,
+                Rarity.Rare      => 1,
+                Rarity.Elite     => 2,
+                Rarity.Legend    => 3,
+                _                => 0,
+            };
+            int floorByRarity = rarity.rarity switch
+            {
+                Rarity.Elite     => 1,
+                Rarity.Legend    => 2,
+                _                => 0,
+            };
+            int phase = WorldManager.GetScalingPhase(); // 0..3
+
+            int actualMax = Math.Min(8, 2 + rarityBonus + phase);
+            return new Random().Next(floorByRarity, actualMax + 1);
         }
         internal static int GetTier()
         {
