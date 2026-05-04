@@ -15,7 +15,7 @@ The more powerful your character becomes, the more the world keeps up. It's here
 ---------------------------------------------------------------------------------------------------
 
 Mod features:
-- Rewrote the whole damage/resitance system of terraria. Now you and enemies have elemental damage and elemental/physical resistance instead of the defense stat.
+- Rewrote the whole damage/resistance system of Terraria. Now you and enemies have elemental damage and elemental/physical resistance instead of the defense stat.
 - Every non-boss NPC gets a level based on how many bosses you've defeated, one of five rarities (Common → Legend), and up to two random modifiers — things like extra speed, regeneration, or on-hit debuffs. Bosses receive a level too, scaling with your progression. The further you push, the harder the world pushes back.
 - Enemy stats scale across four phases tied to major vanilla milestones (pre-Hardmode, post-Wall of Flesh, post-Mechs, post-Plantera)
 
