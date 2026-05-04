@@ -144,7 +144,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             npc.life      = npc.lifeMax;
             npc.defense  += (int)(npc.defense  * rarity.magnitude[1] / 100f);
             npc.damage   += (int)(npc.damage   * rarity.magnitude[2] / 100f);
-            npc.value    *= 1 + 1.5f * rarity.magnitude[0] / 100f;
+            npc.value    *= Utils.GetCoinMultiplier(rarity, level, modifierList.Count);
 
             // Modifier effects
             foreach (var modifier in modifierList)
