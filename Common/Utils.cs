@@ -72,9 +72,9 @@ namespace ARPGEnemySystem.Common
         }
         internal static float GetCoinMultiplier(EnemyRarity rarity, int level, int modifierCount)
         {
-            float rarityBonus   = 1.5f * rarity.magnitude[0] / 100f;
+            float rarityBonus   = 1.75f * rarity.magnitude[0] / 100f;
             float levelBonus    = 0.005f * level;
-            float modifierBonus = 0.1f * modifierCount;
+            float modifierBonus = 0.15f * modifierCount;
             return 1f + rarityBonus + levelBonus + modifierBonus;
         }
         internal static bool IsDummy(NPC npc)
