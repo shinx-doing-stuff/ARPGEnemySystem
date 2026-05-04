@@ -25,7 +25,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public List<EnemyModifier> modifierList = new List<EnemyModifier>();
         public EnemyRarity rarity = new EnemyRarity();
 
-        // Elemental — only populated when ARPGItemSystem is loaded
+        // Elemental
         public float FireDamagePct      = 0f;
         public float ColdDamagePct      = 0f;
         public float LightningDamagePct = 0f;
@@ -34,8 +34,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public float LightningResistance = 0f;
         // Physical resistance is derived at hit time from npc.defense via ElementalMath.ConvertDefenseToResistance
 
-        // Penetration — only populated when ARPGItemSystem is loaded.
-        // Baseline from rarity (SetDefaults) + modifier-rolled magnitude (PreAI, +=).
+        // Penetration — baseline from rarity (SetDefaults) + modifier-rolled magnitude (PreAI, +=).
         public float FirePen      = 0f;
         public float ColdPen      = 0f;
         public float LightningPen = 0f;
@@ -61,24 +60,21 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 level = Math.Clamp(rand.Next((int)(WorldManager.levelCap*0.75f), (int)(WorldManager.levelCap*1.1f)), 1, (int)(WorldManager.levelCap * 1.1f) + 1);
                 AddModifier(entity);
 
-                if (ModLoader.HasMod("ARPGItemSystem"))
-                {
-                    // Elemental resistance baseline from rarity — same value for all three elements.
-                    // Modifier bonuses (FireResistant/ColdResistant/LightningResistant) are additive on top,
-                    // applied in PreAI. Values may exceed the cap; clamping happens at hit time.
-                    int rarityRes = RarityDatabase.rarityElementalResDatabase[rarity.rarity];
-                    FireResistance      = rarityRes;
-                    ColdResistance      = rarityRes;
-                    LightningResistance = rarityRes;
-                    // Elemental damage percentages are set by Flaming/Glacial/Charged modifiers in PreAI.
-                    // Penetration baseline per rarity — same value for all four fields.
-                    // Modifier bonuses (Searing/Shattering/Conductive/Sundering) stack on top in PreAI.
-                    int rarityPen = RarityDatabase.rarityElementalPenDatabase[rarity.rarity];
-                    FirePen      = rarityPen;
-                    ColdPen      = rarityPen;
-                    LightningPen = rarityPen;
-                    SunderingPct = rarityPen;
-                }
+                // Elemental resistance baseline from rarity — same value for all three elements.
+                // Modifier bonuses (FireResistant/ColdResistant/LightningResistant) are additive on top,
+                // applied in PreAI. Values may exceed the cap; clamping happens at hit time.
+                int rarityRes = RarityDatabase.rarityElementalResDatabase[rarity.rarity];
+                FireResistance      = rarityRes;
+                ColdResistance      = rarityRes;
+                LightningResistance = rarityRes;
+                // Elemental damage percentages are set by Flaming/Glacial/Charged modifiers in PreAI.
+                // Penetration baseline per rarity — same value for all four fields.
+                // Modifier bonuses (Searing/Shattering/Conductive/Sundering) stack on top in PreAI.
+                int rarityPen = RarityDatabase.rarityElementalPenDatabase[rarity.rarity];
+                FirePen      = rarityPen;
+                ColdPen      = rarityPen;
+                LightningPen = rarityPen;
+                SunderingPct = rarityPen;
             }
         }
 
@@ -226,12 +222,8 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
 
         public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers)
         {
-            // Only bypass vanilla defense when ARPGItemSystem is loaded.
-            // Without it, vanilla defense math should be preserved.
             // Hook ordering guarantee: ARPGItemSystem's ModifyHitNPC (attacker) reads
             // target.defense BEFORE this defender hook zeroes it.
-            if (!ModLoader.HasMod("ARPGItemSystem")) return;
-
             modifiers.Defense *= 0f;
             // Armor penetration is left untouched — with defense=0, pen has no effect on the vanilla formula,
             // and zeroing it would remove legitimate pen from vanilla accessories and other mods.

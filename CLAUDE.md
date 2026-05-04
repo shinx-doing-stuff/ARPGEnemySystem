@@ -17,7 +17,11 @@ There are no automated tests. Testing requires running tModLoader with the mod l
 
 ## Cross-Mod Dependency
 
-ARPGItemSystem depends on ARPGEnemySystem (one-way). ARPGEnemySystem has **zero** knowledge of ARPGItemSystem. All elemental system code in this mod is gated on `ModLoader.HasMod("ARPGItemSystem")` — when that mod is absent, vanilla defense math is preserved and no elemental properties are assigned to enemies.
+ARPGEnemySystem and ARPGItemSystem are **mutually required** — neither will load without the other.
+
+- `ARPGItemSystem.build.txt` declares `modReferences = ARPGEnemySystem` (sets load order: EnemySystem loads first).
+- The reverse direction cannot use `modReferences` without creating a load-order cycle. Instead, `ARPGEnemySystem.cs` does a runtime `HasMod("ARPGItemSystem")` check in `PostSetupContent` and throws an `Exception` if absent. `PostSetupContent` runs after every mod's `Load()` so the check sees the final loaded set.
+- Because the requirement is enforced, elemental-system code is **no longer gated** on `HasMod("ARPGItemSystem")` — it always runs. Don't reintroduce those guards.
 
 ## Architecture
 
@@ -30,12 +34,12 @@ Every non-boss, non-critter NPC is assigned a **level** and **EnemyRarity** on s
 ```
 WorldManager.levelCap
        ↓ (consumed by)
-NPCManager.SetDefaults()  → rolls level + modifiers + elemental properties (if ARPGItemSystem loaded)
-BossManager.OnSpawn()     → rolls level + elemental properties (progression-tiered, if ARPGItemSystem loaded)
+NPCManager.SetDefaults()  → rolls level + modifiers + elemental properties
+BossManager.OnSpawn()     → rolls level + elemental properties (progression-tiered)
        ↓ (applied in)
 NPCManager.PreAI()        → scales base stats once (statChanged flag prevents re-entry)
 BossManager.OnSpawn()     → scales stats immediately on spawn
-NPCManager.ModifyIncomingHit() → zeroes vanilla NPC defense (if ARPGItemSystem loaded)
+NPCManager.ModifyIncomingHit() → zeroes vanilla NPC defense
        ↓ (propagated to)
 ProjectileManager.OnSpawn() → applies Strong modifier bonus to NPC-sourced projectile damage
                               (no level-based damage scaling here — NPC stat scaling already carries through)
@@ -93,7 +97,7 @@ Phase changes produce discrete difficulty jumps: the same level enemy becomes si
 
 - **`Common/Systems/WorldManager.cs`** — Tracks unique boss kills (`downedBossIDs`) and `levelCap` (`bosses downed × LevelCapIncreasePerBossDowned`). Persists to world save via `TagCompound` and syncs in multiplayer via `NetSend`/`NetReceive`. Owns all hardcoded scaling constants (`PhaseRates`, `DefPhaseRates`) and `GetScalingPhase()`. `DownedBoss(npc)` is the primary kill-registration path (called from `BossManager.OnKill`). `SyncDownedFlags(announce)` is a supplemental vanilla-flag backfill that catches multi-segment boss kills (EoW especially) where the last dying segment has `npc.boss == false`; called from `BossFlagSync.OnKill` (live) and `LoadWorldData` (on world load).
 - **`Common/GlobalNPCs/BossFlagSync.cs`** — Trivial `GlobalNPC` (applies to all NPCs) that calls `WorldManager.SyncDownedFlags(announce: true)` in `OnKill`. Safety net for vanilla multi-segment bosses; modded bosses go through `BossManager.OnKill` unchanged.
-- **`Common/GlobalNPCs/NPCManager.cs`** — `GlobalNPC` for all regular enemies. Stores `level`, `rarity`, `modifierList`, plus elemental fields: `ElementalDamageType`, `ElementalDamagePct`, `FireResistance`, `ColdResistance`, `LightningResistance`. Elemental rolling is gated on `ModLoader.HasMod("ARPGItemSystem")`. `ModifyIncomingHit` zeroes vanilla defense (also gated). Sync appends 5 elemental values after existing fields: `(byte)ElementalDamageType`, then 4 floats — read order must match write order exactly.
+- **`Common/GlobalNPCs/NPCManager.cs`** — `GlobalNPC` for all regular enemies. Stores `level`, `rarity`, `modifierList`, plus elemental fields: `ElementalDamageType`, `ElementalDamagePct`, `FireResistance`, `ColdResistance`, `LightningResistance`. Elemental rolling and `ModifyIncomingHit` defense-zeroing always run (ARPGItemSystem is a hard mutual requirement — see Cross-Mod Dependency). Sync appends 5 elemental values after existing fields: `(byte)ElementalDamageType`, then 4 floats — read order must match write order exactly.
 - **`Common/GlobalNPCs/BossManager.cs`** — `GlobalNPC` for bosses only. Level + stat scaling applied in `OnSpawn` (safe for bosses — no negative netID variants). Calls `WorldManager.DownedBoss()` on kill. Elemental properties are progression-tiered: pre-WoF=25%, post-WoF=50%, post-Plantera=75% (all elemental resistances + damage %). `PhysicalResistance` is NOT stored — derived at hit time via `ConvertDefenseToResistance(npc.defense, PhysResHalfPoint, ElementalResistanceCap)`.
 - **`Common/GlobalNPCs/Rarity.cs`** — `EnemyRarity` struct + `RarityDatabase`. Five rarities (Common / Uncommon / Rare / Elite / Legend). Roll weights (in `rarityWeightDatabase`) shift toward higher rarities across 8 columns, each tied to a boss milestone in `GetWeightIndex()`. Stat bonuses: Common 0/0/0, Uncommon 20/10/10, Rare 50/25/20, Elite 100/50/35, Legend 200/100/60 (HP%/Def%/Dmg%).
 - **`Common/GlobalNPCs/EnemyModifier.cs`** — `EnemyModifier` struct + `ModifierType` enum. An excludeList passed to `GenerateModifier` prevents duplicate modifier types on the same enemy.
@@ -128,7 +132,7 @@ Key NPC fields relevant to enemy scaling. Read these in `PreAI` before applying 
 |---|---|---|---|
 | `npc.lifeMax` | int | Max health | Use this, not `npc.life`, for baseline |
 | `npc.damage` | int | Contact/projectile damage stat | Vanilla baseline before PreAI scaling |
-| `npc.defense` | int | Vanilla defense | Zeroed by ARPGItemSystem's ModifyIncomingHit when loaded |
+| `npc.defense` | int | Vanilla defense | Zeroed by `NPCManager.ModifyIncomingHit` so all damage reduction goes through the elemental pipeline |
 | `npc.npcSlots` | float | Spawn weight contribution | Bosses ≈ 6f, mini-bosses ≈ 2–3f, normal enemies = 1f, critters = 0.1–0.25f |
 | `npc.value` | float | Coin drop value (in copper) | Rough economy proxy; set by vanilla per enemy type |
 

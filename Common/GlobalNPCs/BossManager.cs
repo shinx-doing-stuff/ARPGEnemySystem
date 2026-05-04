@@ -19,7 +19,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public int level = 0;
         public bool statChanged = false;
 
-        // Elemental — only populated when ARPGItemSystem is loaded
+        // Elemental
         public float FireDamagePct      = 0f;
         public float ColdDamagePct      = 0f;
         public float LightningDamagePct = 0f;
@@ -28,7 +28,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public float LightningResistance = 0f;
         // Physical resistance derived at hit time from npc.defense via ConvertDefenseToResistance
 
-        // Penetration — only populated when ARPGItemSystem is loaded.
+        // Penetration
         // Bosses don't roll modifiers, so this is the only source of pen for them.
         public float FirePen      = 0f;
         public float ColdPen      = 0f;
@@ -62,33 +62,30 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 npc.defense  = (int)(npc.defense * defMultiplier);
                 statChanged = true;
 
-                if (ModLoader.HasMod("ARPGItemSystem"))
-                {
-                    var cap = cfg.ElementalResistanceCap;
-                    bool postPlantera = WorldManager.downedBossIDs.Contains(NPCID.Plantera);
-                    int tier = postPlantera ? 2 : Main.hardMode ? 1 : 0;
+                var cap = cfg.ElementalResistanceCap;
+                bool postPlantera = WorldManager.downedBossIDs.Contains(NPCID.Plantera);
+                int tier = postPlantera ? 2 : Main.hardMode ? 1 : 0;
 
-                    float[] elemResValues   = { 25f, 50f, 75f };
-                    float[] damageValues    = { 15f, 30f, 45f };
-                    float[] penValues       = { 15f, 30f, 45f };
+                float[] elemResValues   = { 25f, 50f, 75f };
+                float[] damageValues    = { 15f, 30f, 45f };
+                float[] penValues       = { 15f, 30f, 45f };
 
-                    FireResistance      = Math.Min(elemResValues[tier], cap);
-                    ColdResistance      = Math.Min(elemResValues[tier], cap);
-                    LightningResistance = Math.Min(elemResValues[tier], cap);
+                FireResistance      = Math.Min(elemResValues[tier], cap);
+                ColdResistance      = Math.Min(elemResValues[tier], cap);
+                LightningResistance = Math.Min(elemResValues[tier], cap);
 
-                    // All three elemental damage types simultaneously (was: single random element).
-                    // Damage values reduced from {25, 50, 75} → {15, 30, 45} to compensate for
-                    // bonus model in PlayerHurtPipeline (no longer eats physical portion).
-                    FireDamagePct      = damageValues[tier];
-                    ColdDamagePct      = damageValues[tier];
-                    LightningDamagePct = damageValues[tier];
+                // All three elemental damage types simultaneously (was: single random element).
+                // Damage values reduced from {25, 50, 75} → {15, 30, 45} to compensate for
+                // bonus model in PlayerHurtPipeline (no longer eats physical portion).
+                FireDamagePct      = damageValues[tier];
+                ColdDamagePct      = damageValues[tier];
+                LightningDamagePct = damageValues[tier];
 
-                    // Penetration baseline tied to progression phase.
-                    FirePen      = penValues[tier];
-                    ColdPen      = penValues[tier];
-                    LightningPen = penValues[tier];
-                    SunderingPct = penValues[tier];
-                }
+                // Penetration baseline tied to progression phase.
+                FirePen      = penValues[tier];
+                ColdPen      = penValues[tier];
+                LightningPen = penValues[tier];
+                SunderingPct = penValues[tier];
             }
         }
 
