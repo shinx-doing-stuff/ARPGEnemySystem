@@ -8,6 +8,7 @@ using Terraria.ModLoader;
 using Terraria;
 using Terraria.UI;
 using Microsoft.Xna.Framework;
+using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Terraria.GameInput;
@@ -82,8 +83,9 @@ namespace ARPGEnemySystem.Common.UI
                                             elemDmgLines +
                                             penLines;
                         npcTooltip.SetText(tooltipText);
-                        npcTooltip.Width.Set(npcTooltip.TextSize.X + 20, 0);
-                        npcTooltip.Height.Set(npcTooltip.TextSize.Y + 20, 0);
+                        Vector2 npcTextSize = FontAssets.MouseText.Value.MeasureString(tooltipText);
+                        npcTooltip.Width.Set(npcTextSize.X + 20, 0);
+                        npcTooltip.Height.Set(npcTextSize.Y + 20, 0);
                         npcTooltip.Left.Set(Main.screenWidth / 2 - npcTooltip.Width.Pixels / 2, 0);
                         npcTooltip.Top.Set(Main.screenHeight / 10, 0);
                         npcTooltip.Recalculate();
@@ -105,8 +107,9 @@ namespace ARPGEnemySystem.Common.UI
                                             elemDmgLines +
                                             penLines;
                         npcTooltip.SetText(tooltipText);
-                        npcTooltip.Width.Set(npcTooltip.TextSize.X + 20, 0);
-                        npcTooltip.Height.Set(npcTooltip.TextSize.Y + 20, 0);
+                        Vector2 bossTextSize = FontAssets.MouseText.Value.MeasureString(tooltipText);
+                        npcTooltip.Width.Set(bossTextSize.X + 20, 0);
+                        npcTooltip.Height.Set(bossTextSize.Y + 20, 0);
                         npcTooltip.Left.Set(Main.screenWidth / 2 - npcTooltip.Width.Pixels / 2, 0);
                         npcTooltip.Top.Set(Main.screenHeight / 10, 0);
                         npcTooltip.Recalculate();
