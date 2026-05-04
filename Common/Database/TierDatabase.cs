@@ -178,6 +178,61 @@ namespace ARPGEnemySystem.Common.Database
                 new Tier(12,14),
                 new Tier(10,11)
             } },
+            // Penetration modifiers — magnitude = flat % subtracted from player resistance
+            // (or % of statDefense reduced for Sundering, before physRes is computed).
+            // Tier shape matches Flaming/Glacial/Charged/FireResistant exactly.
+            {ModifierType.Searing, new List<Tier>
+            {
+                new Tier(36,40),
+                new Tier(33,35),
+                new Tier(30,32),
+                new Tier(27,29),
+                new Tier(24,26),
+                new Tier(21,23),
+                new Tier(18,20),
+                new Tier(15,17),
+                new Tier(12,14),
+                new Tier(10,11)
+            } },
+            {ModifierType.Shattering, new List<Tier>
+            {
+                new Tier(36,40),
+                new Tier(33,35),
+                new Tier(30,32),
+                new Tier(27,29),
+                new Tier(24,26),
+                new Tier(21,23),
+                new Tier(18,20),
+                new Tier(15,17),
+                new Tier(12,14),
+                new Tier(10,11)
+            } },
+            {ModifierType.Conductive, new List<Tier>
+            {
+                new Tier(36,40),
+                new Tier(33,35),
+                new Tier(30,32),
+                new Tier(27,29),
+                new Tier(24,26),
+                new Tier(21,23),
+                new Tier(18,20),
+                new Tier(15,17),
+                new Tier(12,14),
+                new Tier(10,11)
+            } },
+            {ModifierType.Sundering, new List<Tier>
+            {
+                new Tier(36,40),
+                new Tier(33,35),
+                new Tier(30,32),
+                new Tier(27,29),
+                new Tier(24,26),
+                new Tier(21,23),
+                new Tier(18,20),
+                new Tier(15,17),
+                new Tier(12,14),
+                new Tier(10,11)
+            } },
         };
     }
 }
