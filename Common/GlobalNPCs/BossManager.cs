@@ -28,6 +28,13 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public float LightningResistance = 0f;
         // Physical resistance derived at hit time from npc.defense via ConvertDefenseToResistance
 
+        // Penetration — only populated when ARPGItemSystem is loaded.
+        // Bosses don't roll modifiers, so this is the only source of pen for them.
+        public float FirePen      = 0f;
+        public float ColdPen      = 0f;
+        public float LightningPen = 0f;
+        public float SunderingPct = 0f;
+
         // Only applies to normal enemy
         public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
         {
@@ -62,17 +69,25 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                     int tier = postPlantera ? 2 : Main.hardMode ? 1 : 0;
 
                     float[] elemResValues   = { 25f, 50f, 75f };
-                    float[] damagePctValues = { 25f, 50f, 75f };
+                    float[] damageValues    = { 15f, 30f, 45f };
+                    float[] penValues       = { 15f, 30f, 45f };
 
                     FireResistance      = Math.Min(elemResValues[tier], cap);
                     ColdResistance      = Math.Min(elemResValues[tier], cap);
                     LightningResistance = Math.Min(elemResValues[tier], cap);
 
-                    // Randomly assign one element type for elemental damage
-                    int elem = Main.rand.Next(3);
-                    if (elem == 0)      FireDamagePct      = damagePctValues[tier];
-                    else if (elem == 1) ColdDamagePct      = damagePctValues[tier];
-                    else                LightningDamagePct = damagePctValues[tier];
+                    // All three elemental damage types simultaneously (was: single random element).
+                    // Damage values reduced from {25, 50, 75} → {15, 30, 45} to compensate for
+                    // bonus model in PlayerHurtPipeline (no longer eats physical portion).
+                    FireDamagePct      = damageValues[tier];
+                    ColdDamagePct      = damageValues[tier];
+                    LightningDamagePct = damageValues[tier];
+
+                    // Penetration baseline tied to progression phase.
+                    FirePen      = penValues[tier];
+                    ColdPen      = penValues[tier];
+                    LightningPen = penValues[tier];
+                    SunderingPct = penValues[tier];
                 }
             }
         }
@@ -95,6 +110,10 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             binaryWriter.Write(FireResistance);
             binaryWriter.Write(ColdResistance);
             binaryWriter.Write(LightningResistance);
+            binaryWriter.Write(FirePen);
+            binaryWriter.Write(ColdPen);
+            binaryWriter.Write(LightningPen);
+            binaryWriter.Write(SunderingPct);
         }
 
         // Make sure you always read exactly as much data as you sent!
@@ -111,6 +130,10 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             FireResistance      = binaryReader.ReadSingle();
             ColdResistance      = binaryReader.ReadSingle();
             LightningResistance = binaryReader.ReadSingle();
+            FirePen      = binaryReader.ReadSingle();
+            ColdPen      = binaryReader.ReadSingle();
+            LightningPen = binaryReader.ReadSingle();
+            SunderingPct = binaryReader.ReadSingle();
         }
     }
 }
