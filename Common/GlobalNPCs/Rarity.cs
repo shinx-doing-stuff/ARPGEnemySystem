@@ -30,6 +30,19 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             { Rarity.Legend,    40 },
         };
 
+        // Penetration baseline per rarity — same value for all four pen fields.
+        // Modifier-rolled pen (Searing/Shattering/Conductive/Sundering) stacks +=
+        // on top in PreAI. Worst case Legend + max-roll Sundering = 20 + 40 = 60% pen.
+        public static Dictionary<Rarity, int> rarityElementalPenDatabase = new Dictionary<Rarity, int>()
+        {
+            { Rarity.None,      0  },
+            { Rarity.Common,    0  },
+            { Rarity.Uncommon,  5  },
+            { Rarity.Rare,      10 },
+            { Rarity.Elite,     15 },
+            { Rarity.Legend,    20 },
+        };
+
         // List<int> entries: [0] = HP%, [1] = Defense%, [2] = Damage%
         public static Dictionary<Rarity, List<int>> rarityModifierDatabase = new Dictionary<Rarity, List<int>>()
         {
