@@ -58,7 +58,7 @@ namespace ARPGEnemySystem.Common.Configs
 
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
-        [DefaultValue(true)]
+        [DefaultValue(false)]
         public bool EnableEnemyStatPanel;
 
         [DefaultValue(false)]
