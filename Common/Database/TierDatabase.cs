@@ -88,42 +88,42 @@ namespace ARPGEnemySystem.Common.Database
             // Elemental damage modifiers — magnitude = % of base damage dealt as that element
             {ModifierType.Flaming, new List<Tier>
             {
-                new Tier(36,40),
-                new Tier(33,35),
-                new Tier(30,32),
-                new Tier(27,29),
-                new Tier(24,26),
-                new Tier(21,23),
-                new Tier(18,20),
-                new Tier(15,17),
-                new Tier(12,14),
-                new Tier(10,11)
+                new Tier(59,65),
+                new Tier(53,57),
+                new Tier(49,52),
+                new Tier(44,47),
+                new Tier(39,43),
+                new Tier(34,38),
+                new Tier(30,33),
+                new Tier(25,27),
+                new Tier(20,23),
+                new Tier(17,18)
             } },
             {ModifierType.Glacial, new List<Tier>
             {
-                new Tier(36,40),
-                new Tier(33,35),
-                new Tier(30,32),
-                new Tier(27,29),
-                new Tier(24,26),
-                new Tier(21,23),
-                new Tier(18,20),
-                new Tier(15,17),
-                new Tier(12,14),
-                new Tier(10,11)
+                new Tier(59,65),
+                new Tier(53,57),
+                new Tier(49,52),
+                new Tier(44,47),
+                new Tier(39,43),
+                new Tier(34,38),
+                new Tier(30,33),
+                new Tier(25,27),
+                new Tier(20,23),
+                new Tier(17,18)
             } },
             {ModifierType.Charged, new List<Tier>
             {
-                new Tier(36,40),
-                new Tier(33,35),
-                new Tier(30,32),
-                new Tier(27,29),
-                new Tier(24,26),
-                new Tier(21,23),
-                new Tier(18,20),
-                new Tier(15,17),
-                new Tier(12,14),
-                new Tier(10,11)
+                new Tier(59,65),
+                new Tier(53,57),
+                new Tier(49,52),
+                new Tier(44,47),
+                new Tier(39,43),
+                new Tier(34,38),
+                new Tier(30,33),
+                new Tier(25,27),
+                new Tier(20,23),
+                new Tier(17,18)
             } },
             // Elemental resistance modifiers — magnitude = flat % added to that element's resistance
             {ModifierType.FireResistant, new List<Tier>
