@@ -77,6 +77,18 @@ namespace ARPGEnemySystem.Common
             float modifierBonus = 0.15f * modifierCount;
             return 1f + rarityBonus + levelBonus + modifierBonus;
         }
+        /// <summary>
+        /// XP multiplier from rarity, level, and modifier count. Initially identical to
+        /// <see cref="GetCoinMultiplier"/>; kept as a separate symbol so coin and XP
+        /// yields can be tuned independently.
+        /// </summary>
+        public static float GetXPMultiplier(EnemyRarity rarity, int level, int modifierCount)
+        {
+            float rarityBonus   = 1.75f * rarity.magnitude[0] / 100f;
+            float levelBonus    = 0.005f * level;
+            float modifierBonus = 0.15f * modifierCount;
+            return 1f + rarityBonus + levelBonus + modifierBonus;
+        }
         internal static bool IsDummy(NPC npc)
         {
             var nameSpan = NPCID.Search.GetName(npc.type).AsSpan();

@@ -156,3 +156,7 @@ Many vanilla NPCs have negative netIDs (variant NPCs — e.g. slime variants −
 Pattern: roll level/rarity in `SetDefaults` (no netID dependency). Apply stat multiplications in `PreAI` before `statChanged = true`.
 
 **`npc.rarity` is NOT a power-level indicator.** It is the Lifeform Analyzer detection priority (values 0–4), used only to decide which creature to display when multiple rare enemies are nearby. Do not use it for difficulty or coefficient calculations. Modders do not reliably set it.
+
+### Cross-Mod Integration Points
+
+- **`Common/Utils.cs`** — `GetXPMultiplier(rarity, level, modifierCount)`: integration point for `ARPGCharacterSystem`'s XP math. Initially returns the same value as `GetCoinMultiplier`; symbols are separate so coin and XP yields can diverge.
