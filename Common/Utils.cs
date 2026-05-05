@@ -89,7 +89,7 @@ namespace ARPGEnemySystem.Common
             float modifierBonus = 0.15f * modifierCount;
             return 1f + rarityBonus + levelBonus + modifierBonus;
         }
-        internal static bool IsDummy(NPC npc)
+        public static bool IsDummy(NPC npc)
         {
             var nameSpan = NPCID.Search.GetName(npc.type).AsSpan();
             var index = nameSpan.IndexOf('/');
