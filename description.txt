@@ -1,4 +1,4 @@
-v0.9.0 — Elemental Update (Public Testing)
+[h1]v0.9.0 — Elemental Update (Public Testing)[/h1]
 
 This update adds a full elemental system to enemies. Higher-level enemies can now deal Fire, Cold, or Lightning damage, and every enemy has physical and elemental resistances derived from their level and defense stats. Elemental resistances are displayed on the enemy stat panel alongside level, rarity, and modifiers. This system is designed to work hand-in-hand with my other mod ARPG Item System
 
@@ -7,26 +7,25 @@ This is a public testing release (v0.9.0). Some values and formulas are still be
 SET CONFIG BACK TO DEFAULT FIRST. If you want to tweak the settings, the easiest is to change how much the level cap increases upon new downed boss. By default it's 10 for vanilla. If you are playing with ONE content mod, make it 5. If you are playing with TWO, make it 3. You get the idea.
 
 ---------------------------------------------------------------------------------------------------
+[h1]INTRO[/h1]
 Terraria is a great game, but once you start stacking powerful mods — extra classes, overpowered weapons, damage buffs — vanilla enemies stop being a threat pretty quickly. ARPG Enemy System fixes that by giving every enemy in the game a level, a rarity, and random modifiers that grow alongside your boss progression, similar to how enemies scale in ARPG games.
 
 The more powerful your character becomes, the more the world keeps up. It's here to make sure enemies don't become completely irrelevant.
 ---------------------------------------------------------------------------------------------------
-
-Mod features:
-- Rewrote the whole damage/resistance system of Terraria. Now you and enemies have elemental damage and elemental/physical resistance instead of the defense stat.
+[h1]MOD FEATURES[/h1]
+- Rewrite the whole damage/resistance system of Terraria. Now you and enemies have elemental damage and elemental/physical resistance instead of the defense stat.
 - Every non-boss NPC gets a level based on how many bosses you've defeated, one of five rarities (Common → Legend), and up to two random modifiers — things like extra speed, regeneration, or on-hit debuffs. Bosses receive a level too, scaling with your progression. The further you push, the harder the world pushes back.
 - Enemy stats scale across four phases tied to major vanilla milestones (pre-Hardmode, post-Wall of Flesh, post-Mechs, post-Plantera)
 - Enemy defense stat now matters.
 - Stronger enemies drop more coins.
 
-All my mods are built with multiplayer and mod compatibility in mind
+[b]All my mods are built with multiplayer and mod compatibility in mind[/b]
 
 ---------------------------------------------------------------------------------------------------
-
-CREDIT
-
+[h1]CREDIT[/h1]
 Big thanks to the super helpful tModloader Community for all the help.
 Thank you Michaelsoftman for the level desync issue.
 And finally my appreciation towards Plexus, developer of the super cool Another RPG Mod which heavily inspired me to make this mod. He was very kind to expose his entire source code so I and the others can learn.
 
-[quote=Michaelsoftman]Remember to credit me as co-dev[/quote]
+[quote=Michaelsoftman]Remember to credit me as co-dev[/quote][quote=tModLoader ARPGEnemySystem]
+Developed By Shinx[/quote]
