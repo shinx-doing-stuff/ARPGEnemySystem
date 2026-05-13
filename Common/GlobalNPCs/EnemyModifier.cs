@@ -26,6 +26,9 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         Shattering,    // 13 Penetrates player Cold resistance
         Conductive,    // 14 Penetrates player Lightning resistance
         Sundering,     // 15 Penetrates player effective defense (% subtraction before physRes)
+        ChaosInfused,       // 16 Deal Chaos elemental damage
+        ChaosResistant,     // 17 Increased Chaos resistance
+        ChaosPenetrating,   // 18 Penetrates player Chaos resistance
     }
 
     public struct EnemyModifier

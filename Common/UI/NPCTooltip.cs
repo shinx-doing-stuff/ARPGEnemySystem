@@ -102,9 +102,9 @@ namespace ARPGEnemySystem.Common.UI
             else
                 sb.Append(Language.GetTextValue(LocPrefix + "HeaderNormalNoMods", modNpc.level, modNpc.rarity.rarity));
 
-            AppendCommonStats(sb, npc, modNpc.FireResistance, modNpc.ColdResistance, modNpc.LightningResistance,
-                              modNpc.FireDamagePct, modNpc.ColdDamagePct, modNpc.LightningDamagePct,
-                              modNpc.FirePen, modNpc.ColdPen, modNpc.LightningPen, modNpc.SunderingPct, physRes);
+            AppendCommonStats(sb, npc, modNpc.FireResistance, modNpc.ColdResistance, modNpc.LightningResistance, modNpc.ChaosResistance,
+                              modNpc.FireDamagePct, modNpc.ColdDamagePct, modNpc.LightningDamagePct, modNpc.ChaosDamagePct,
+                              modNpc.FirePen, modNpc.ColdPen, modNpc.LightningPen, modNpc.SunderingPct, modNpc.ChaosPen, physRes);
 
             return sb.ToString();
         }
@@ -117,17 +117,17 @@ namespace ARPGEnemySystem.Common.UI
             sb.Append('\n');
             sb.Append(Language.GetTextValue(LocPrefix + "HeaderBoss", bossNpc.level));
 
-            AppendCommonStats(sb, npc, bossNpc.FireResistance, bossNpc.ColdResistance, bossNpc.LightningResistance,
-                              bossNpc.FireDamagePct, bossNpc.ColdDamagePct, bossNpc.LightningDamagePct,
-                              bossNpc.FirePen, bossNpc.ColdPen, bossNpc.LightningPen, bossNpc.SunderingPct, physRes);
+            AppendCommonStats(sb, npc, bossNpc.FireResistance, bossNpc.ColdResistance, bossNpc.LightningResistance, bossNpc.ChaosResistance,
+                              bossNpc.FireDamagePct, bossNpc.ColdDamagePct, bossNpc.LightningDamagePct, bossNpc.ChaosDamagePct,
+                              bossNpc.FirePen, bossNpc.ColdPen, bossNpc.LightningPen, bossNpc.SunderingPct, bossNpc.ChaosPen, physRes);
 
             return sb.ToString();
         }
 
         private static void AppendCommonStats(StringBuilder sb, NPC npc,
-            float fireRes, float coldRes, float lightRes,
-            float fireDmg, float coldDmg, float lightDmg,
-            float firePen, float coldPen, float lightPen, float sunderingPct,
+            float fireRes, float coldRes, float lightRes, float chaosRes,
+            float fireDmg, float coldDmg, float lightDmg, float chaosDmg,
+            float firePen, float coldPen, float lightPen, float sunderingPct, float chaosPen,
             float physRes)
         {
             sb.Append('\n');
@@ -135,15 +135,15 @@ namespace ARPGEnemySystem.Common.UI
 
             sb.Append('\n');
             sb.Append(Language.GetTextValue(LocPrefix + "Resistances",
-                fireRes.ToString("F0"), coldRes.ToString("F0"), lightRes.ToString("F0")));
+                fireRes.ToString("F0"), coldRes.ToString("F0"), lightRes.ToString("F0"), chaosRes.ToString("F0")));
 
-            AppendElemDmg(sb, fireDmg, coldDmg, lightDmg);
-            AppendPen(sb, firePen, coldPen, lightPen, sunderingPct);
+            AppendElemDmg(sb, fireDmg, coldDmg, lightDmg, chaosDmg);
+            AppendPen(sb, firePen, coldPen, lightPen, sunderingPct, chaosPen);
         }
 
-        private static void AppendElemDmg(StringBuilder sb, float fire, float cold, float light)
+        private static void AppendElemDmg(StringBuilder sb, float fire, float cold, float light, float chaos)
         {
-            bool any = fire > 0f || cold > 0f || light > 0f;
+            bool any = fire > 0f || cold > 0f || light > 0f || chaos > 0f;
             if (!any)
             {
                 sb.Append('\n').Append(Language.GetTextValue(LocPrefix + "ElemDmgNone"));
@@ -154,11 +154,12 @@ namespace ARPGEnemySystem.Common.UI
             if (fire  > 0f) sb.Append("  ").Append(Language.GetTextValue(LocPrefix + "Fire",      fire.ToString("F0")));
             if (cold  > 0f) sb.Append("  ").Append(Language.GetTextValue(LocPrefix + "Cold",      cold.ToString("F0")));
             if (light > 0f) sb.Append("  ").Append(Language.GetTextValue(LocPrefix + "Lightning", light.ToString("F0")));
+            if (chaos > 0f) sb.Append("  ").Append(Language.GetTextValue(LocPrefix + "Chaos",     chaos.ToString("F0")));
         }
 
-        private static void AppendPen(StringBuilder sb, float fire, float cold, float light, float sundering)
+        private static void AppendPen(StringBuilder sb, float fire, float cold, float light, float sundering, float chaos)
         {
-            bool any = fire > 0f || cold > 0f || light > 0f || sundering > 0f;
+            bool any = fire > 0f || cold > 0f || light > 0f || sundering > 0f || chaos > 0f;
             if (!any) return;
 
             sb.Append('\n').Append(Language.GetTextValue(LocPrefix + "PenLabel"));
@@ -166,6 +167,7 @@ namespace ARPGEnemySystem.Common.UI
             if (cold      > 0f) sb.Append("  ").Append(Language.GetTextValue(LocPrefix + "ColdPen",      cold.ToString("F0")));
             if (light     > 0f) sb.Append("  ").Append(Language.GetTextValue(LocPrefix + "LightningPen", light.ToString("F0")));
             if (sundering > 0f) sb.Append("  ").Append(Language.GetTextValue(LocPrefix + "Sundering",    sundering.ToString("F0")));
+            if (chaos     > 0f) sb.Append("  ").Append(Language.GetTextValue(LocPrefix + "ChaosPen",     chaos.ToString("F0")));
         }
     }
 }

@@ -6,5 +6,6 @@ namespace ARPGEnemySystem.Common.Elements
         Fire      = 1,
         Cold      = 2,
         Lightning = 3,
+        Chaos     = 4,
     }
 }

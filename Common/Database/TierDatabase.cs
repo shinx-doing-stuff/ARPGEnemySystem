@@ -220,6 +220,45 @@ namespace ARPGEnemySystem.Common.Database
                 new Tier(12,14),
                 new Tier(10,11)
             } },
+            {ModifierType.ChaosInfused, new List<Tier>
+            {
+                new Tier(19,21),
+                new Tier(17,19),
+                new Tier(16,17),
+                new Tier(14,16),
+                new Tier(13,14),
+                new Tier(11,13),
+                new Tier(10,11),
+                new Tier(8,9),
+                new Tier(7,8),
+                new Tier(5,6)
+            } },
+            {ModifierType.ChaosResistant, new List<Tier>
+            {
+                new Tier(9,10),
+                new Tier(8,9),
+                new Tier(8,8),
+                new Tier(7,7),
+                new Tier(6,7),
+                new Tier(5,6),
+                new Tier(5,5),
+                new Tier(4,4),
+                new Tier(3,4),
+                new Tier(3,3)
+            } },
+            {ModifierType.ChaosPenetrating, new List<Tier>
+            {
+                new Tier(18,20),
+                new Tier(17,18),
+                new Tier(15,16),
+                new Tier(14,15),
+                new Tier(12,13),
+                new Tier(11,12),
+                new Tier(9,10),
+                new Tier(8,9),
+                new Tier(6,7),
+                new Tier(5,6)
+            } },
         };
     }
 }

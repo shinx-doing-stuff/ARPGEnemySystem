@@ -73,5 +73,21 @@ namespace ARPGEnemySystem.Common.DrawEffects
                 dust.scale *= 1f + Main.rand.NextFloat(-0.01f, 0.01f);
             }
         }
+
+        internal static void DrawChaosInfused(NPC npc)
+        {
+            Random rand = new Random();
+            if (rand.Next(0, 100) < 40)
+            {
+                int dustType = 75; // shadowflame (purple-black flame, fits chaos theme)
+                var dust = Dust.NewDustDirect(npc.position, npc.width, npc.height, dustType);
+
+                dust.noGravity = true;
+                dust.velocity.X += Main.rand.NextFloat(-0.02f, 0.02f);
+                dust.velocity.Y += Main.rand.NextFloat(-0.02f, 0.02f);
+
+                dust.scale *= 1f + Main.rand.NextFloat(-0.01f, 0.01f);
+            }
+        }
     }
 }

@@ -65,15 +65,17 @@ NPCTooltip: {
 	HeaderNormalNoMods: Level {0}  {1}
 	HeaderBoss: Level {0}
 	StatsLine: Damage: {0}   Defense: {1} (Phys Res {2}%)
-	Resistances: Resistances: Fire {0}%  Cold {1}%  Lightning {2}%
+	Resistances: Resistances: Fire {0}%  Cold {1}%  Lightning {2}%  Chaos {3}%
 	ElemDmgLabel: Elem Dmg:
 	PenLabel: Penetration:
 	ElemDmgNone: Elem Dmg: none
 	Fire: Fire {0}%
 	Cold: Cold {0}%
 	Lightning: Lightning {0}%
+	Chaos: Chaos {0}%
 	FirePen: Fire {0}
 	ColdPen: Cold {0}
 	LightningPen: Lightning {0}
 	Sundering: Sundering {0}
+	ChaosPen: Chaos {0}
 }

@@ -43,6 +43,30 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             { Rarity.Legend,    20 },
         };
 
+        // Chaos resistance baseline per rarity — intentionally lower than F/C/L (~25%).
+        // Modifier bonus (ChaosResistant) stacks += on top in PreAI.
+        public static Dictionary<Rarity, int> rarityChaosResDatabase = new Dictionary<Rarity, int>()
+        {
+            { Rarity.None,      0  },
+            { Rarity.Common,    0  },
+            { Rarity.Uncommon,  3  },
+            { Rarity.Rare,      5  },
+            { Rarity.Elite,     8  },
+            { Rarity.Legend,    10 },
+        };
+
+        // Chaos pen baseline per rarity — same scale as F/C/L pen (~50%).
+        // Modifier bonus (ChaosPenetrating) stacks += on top in PreAI.
+        public static Dictionary<Rarity, int> rarityChaosPenDatabase = new Dictionary<Rarity, int>()
+        {
+            { Rarity.None,      0  },
+            { Rarity.Common,    0  },
+            { Rarity.Uncommon,  3  },
+            { Rarity.Rare,      5  },
+            { Rarity.Elite,     8  },
+            { Rarity.Legend,    10 },
+        };
+
         // List<int> entries: [0] = HP%, [1] = Defense%, [2] = Damage%
         public static Dictionary<Rarity, List<int>> rarityModifierDatabase = new Dictionary<Rarity, List<int>>()
         {

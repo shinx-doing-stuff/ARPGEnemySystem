@@ -40,6 +40,11 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public float LightningPen = 0f;
         public float SunderingPct = 0f;
 
+        // Chaos — intentionally low magnitude (see 2026-05-13-chaos-damage-type-design spec)
+        public float ChaosDamagePct  = 0f;
+        public float ChaosResistance = 0f;
+        public float ChaosPen        = 0f;
+
         // Only applies to normal enemy
         public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
         {
@@ -75,6 +80,9 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 ColdPen      = rarityPen;
                 LightningPen = rarityPen;
                 SunderingPct = rarityPen;
+                // Chaos uses separate rarity dictionaries (lower magnitudes than F/C/L)
+                ChaosResistance = RarityDatabase.rarityChaosResDatabase[rarity.rarity];
+                ChaosPen        = RarityDatabase.rarityChaosPenDatabase[rarity.rarity];
             }
         }
 
@@ -116,6 +124,9 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                         break;
                     case ModifierType.SoulDrinker:
                         ModifierDrawEffect.DrawSoulDrinker(npc);
+                        break;
+                    case ModifierType.ChaosInfused:
+                        ModifierDrawEffect.DrawChaosInfused(npc);
                         break;
                 }
             }
@@ -197,6 +208,15 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                     case ModifierType.Sundering:
                         SunderingPct += modifier.magnitude;
                         break;
+                    case ModifierType.ChaosInfused:
+                        ChaosDamagePct += modifier.magnitude;
+                        break;
+                    case ModifierType.ChaosResistant:
+                        ChaosResistance += modifier.magnitude;
+                        break;
+                    case ModifierType.ChaosPenetrating:
+                        ChaosPen += modifier.magnitude;
+                        break;
                 }
             }
 
@@ -255,6 +275,9 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             binaryWriter.Write(ColdPen);
             binaryWriter.Write(LightningPen);
             binaryWriter.Write(SunderingPct);
+            binaryWriter.Write(ChaosDamagePct);
+            binaryWriter.Write(ChaosResistance);
+            binaryWriter.Write(ChaosPen);
         }
 
         // Make sure you always read exactly as much data as you sent!
@@ -290,7 +313,10 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             FirePen      = binaryReader.ReadSingle();
             ColdPen      = binaryReader.ReadSingle();
             LightningPen = binaryReader.ReadSingle();
-            SunderingPct = binaryReader.ReadSingle();
+            SunderingPct    = binaryReader.ReadSingle();
+            ChaosDamagePct  = binaryReader.ReadSingle();
+            ChaosResistance = binaryReader.ReadSingle();
+            ChaosPen        = binaryReader.ReadSingle();
         }
 
         private void SerializeData(out List<int> modifierIDList, out List<int> modifierMagnitudeList)

@@ -35,6 +35,11 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public float LightningPen = 0f;
         public float SunderingPct = 0f;
 
+        // Chaos — intentionally low magnitude per 2026-05-13-chaos-damage-type-design spec
+        public float ChaosDamagePct  = 0f;
+        public float ChaosResistance = 0f;
+        public float ChaosPen        = 0f;
+
         // Only applies to normal enemy
         public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
         {
@@ -86,6 +91,15 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 ColdPen      = penValues[tier];
                 LightningPen = penValues[tier];
                 SunderingPct = penValues[tier];
+
+                // Chaos values: damage ~33%, res ~25%, pen ~50% of F/C/L
+                float[] chaosResValues    = { 6f,  13f, 19f };
+                float[] chaosDamageValues = { 5f,  10f, 15f };
+                float[] chaosPenValues    = { 8f,  15f, 23f };
+
+                ChaosResistance = Math.Min(chaosResValues[tier], cap);
+                ChaosDamagePct  = chaosDamageValues[tier];
+                ChaosPen        = chaosPenValues[tier];
             }
         }
 
@@ -111,6 +125,9 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             binaryWriter.Write(ColdPen);
             binaryWriter.Write(LightningPen);
             binaryWriter.Write(SunderingPct);
+            binaryWriter.Write(ChaosDamagePct);
+            binaryWriter.Write(ChaosResistance);
+            binaryWriter.Write(ChaosPen);
         }
 
         // Make sure you always read exactly as much data as you sent!
@@ -130,7 +147,10 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             FirePen      = binaryReader.ReadSingle();
             ColdPen      = binaryReader.ReadSingle();
             LightningPen = binaryReader.ReadSingle();
-            SunderingPct = binaryReader.ReadSingle();
+            SunderingPct    = binaryReader.ReadSingle();
+            ChaosDamagePct  = binaryReader.ReadSingle();
+            ChaosResistance = binaryReader.ReadSingle();
+            ChaosPen        = binaryReader.ReadSingle();
         }
     }
 }
