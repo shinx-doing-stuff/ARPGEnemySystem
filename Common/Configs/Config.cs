@@ -22,7 +22,7 @@ namespace ARPGEnemySystem.Common.Configs
         [Range(1.0f, 2.0f)]
         [Increment(0.01f)]
         [DrawTicks]
-        [DefaultValue(1.13f)]
+        [DefaultValue(1.14f)]
         public float ScalingExponent;
 
         [Range(1.0f, 2.0f)]
@@ -34,7 +34,7 @@ namespace ARPGEnemySystem.Common.Configs
         [Range(0.0f, 1.0f)]
         [Increment(0.01f)]
         [DrawTicks]
-        [DefaultValue(0.10f)]
+        [DefaultValue(0.7f)]
         public float DefenseFloor;
 
         [Header("Elemental")]
