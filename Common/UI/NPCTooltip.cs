@@ -61,7 +61,7 @@ namespace ARPGEnemySystem.Common.UI
 
                 var cfg = ModContent.GetInstance<Config>();
                 float physRes = ElementalMath.ConvertDefenseToResistance(
-                    npc.defense, cfg.PhysResHalfPoint, cfg.ElementalResistanceCap);
+                    npc.defense, cfg.PhysResHalfPoint, ElementalMath.ElementCap);
 
                 string tooltipText = null;
 

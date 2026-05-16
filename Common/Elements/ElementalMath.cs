@@ -4,6 +4,11 @@ namespace ARPGEnemySystem.Common.Elements
 {
     public static class ElementalMath
     {
+        // Global resistance caps (game-design values, not exposed to players).
+        // Player-side max-resistance class stats add ON TOP of these baselines per-player.
+        public const float ElementCap = 75f;
+        public const float PlayerPhysCap = 80f;
+
         // Clamps resistance to (-inf, cap]. Negative values allowed (vulnerability).
         public static float ClampResistance(float raw, float cap)
         {

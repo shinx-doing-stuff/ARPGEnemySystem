@@ -29,16 +29,6 @@ Configs: {
 			Tooltip: Additive defense added per level (level × floor). Ensures low-defense enemies like slimes have non-trivial physRes.
 		}
 
-		ElementalResistanceCap: {
-			Label: Elemental Resistance Cap
-			Tooltip: Maximum elemental resistance % any enemy or player can have after clamping.
-		}
-
-		PlayerPhysResCap: {
-			Label: Player Phys Res Cap
-			Tooltip: Maximum physical resistance % a player can reach. Default 80.
-		}
-
 		PhysResHalfPoint: {
 			Label: Phys Res Half Point
 			Tooltip: Defense value at which physRes reaches cap/2. Controls curve steepness. Default 30.

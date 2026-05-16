@@ -67,7 +67,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 npc.defense  = (int)(npc.defense * defMultiplier);
                 statChanged = true;
 
-                var cap = cfg.ElementalResistanceCap;
+                var cap = ElementalMath.ElementCap;
                 bool postPlantera = WorldManager.downedBossIDs.Contains(NPCID.Plantera);
                 int tier = postPlantera ? 2 : Main.hardMode ? 1 : 0;
 
