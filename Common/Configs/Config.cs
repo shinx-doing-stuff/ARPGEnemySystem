@@ -39,16 +39,8 @@ namespace ARPGEnemySystem.Common.Configs
 
         [Header("Elemental")]
 
-        [Range(1, 100)]
-        [DefaultValue(75)]
-        public int ElementalResistanceCap;
-
-        [Range(1, 100)]
-        [DefaultValue(80)]
-        public int PlayerPhysResCap;
-
         [Range(1, 200)]
-        [DefaultValue(30)]
+        [DefaultValue(60)]
         public int PhysResHalfPoint;
 
     }
