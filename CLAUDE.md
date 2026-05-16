@@ -109,7 +109,6 @@ Phase changes produce discrete difficulty jumps: the same level enemy becomes si
 - **`Common/GlobalNPCs/Rarity.cs`** — `EnemyRarity` struct + `RarityDatabase`. Five rarities (Common / Uncommon / Rare / Elite / Legend). Roll weights (in `rarityWeightDatabase`) shift toward higher rarities across 8 columns, each tied to a boss milestone in `GetWeightIndex()`. Stat bonuses: Common 0/0/0, Uncommon 20/10/10, Rare 50/25/20, Elite 100/50/35, Legend 200/100/60 (HP%/Def%/Dmg%).
 - **`Common/GlobalNPCs/EnemyModifier.cs`** — `EnemyModifier` struct + `ModifierType` enum. An excludeList passed to `GenerateModifier` prevents duplicate modifier types on the same enemy.
 - **`Common/Database/TierDatabase.cs`** — Static dictionary: `ModifierType → List<Tier>(10 entries)`. Tier 0 = highest values, tier 9 = lowest. `Utils.GetTier()` returns an index based on boss progression (minimum and maximum tier both shrink as more bosses die).
-- **`Common/DrawEffects/ModifierDrawEffect.cs`** — Dust particle helpers called from `NPCManager.DrawEffects()`. Each modifier with a visual has its own method.
 - **`Common/UI/UISystem.cs`** + **`Common/UI/NPCTooltip.cs`** — `UISystem` (ModSystem) hooks into `ModifyInterfaceLayers` to draw the overlay. `NPCUI` (UIState) rebuilds a `UITextPanel` on every update tick. Now shows: level, rarity, modifiers, defense, Phys Res (computed via `ConvertDefenseToResistance(npc.defense, PhysResHalfPoint, ElementalResistanceCap)`), Fire/Cold/Lightning Res, and elemental damage type/pct. Controlled by `ConfigClient.EnableEnemyStatPanel`.
 - **`Common/Elements/Element.cs`** — `Element` enum (`Physical=0`, `Fire=1`, `Cold=2`, `Lightning=3`), byte-backed for efficient serialization.
 - **`Common/Elements/ElementalMath.cs`** — Static helpers: `ClampResistance(raw, cap)`, `ApplyResistance(damage, res%, cap)`, `ConvertDefenseToResistance(defense, halfPoint, cap)` = `cap × defense / (defense + halfPoint)`. A hyperbolic curve: `halfPoint` is the defense value at which physRes reaches `cap / 2`. The conversion formula is how vanilla `npc.defense` becomes a physical resistance percentage.
@@ -125,9 +124,8 @@ Phase changes produce discrete difficulty jumps: the same level enemy becomes si
 2. Add 10 `Tier` entries to `TierDatabase.modifierTierDatabase` in `Common/Database/TierDatabase.cs`
 3. Add the stat effect in `NPCManager.PreAI()`. All modifier effects belong in the one-time `PreAI` block (guarded by `statChanged`). There is no `PostAI` override — per-tick velocity manipulation was removed because it compounds uncontrollably for accumulation-based NPC AI.
 4. Add an `OnHitPlayer` case in both `NPCManager` and `ProjectileManager` for debuffs applied on hit
-5. Add a `ModifierDrawEffect` method and call it from `NPCManager.DrawEffects()` for visual feedback
 
-**Removing a modifier:** Delete its enum value from `ModifierType`, remove its entry from `TierDatabase.modifierTierDatabase`, and remove any switch cases in `PreAI`, `OnHitPlayer`, and `DrawEffects`. NPCs don't persist to disk and both sides of a multiplayer session always share the same mod version, so there is no save-migration or network-sync concern from renumbering the enum.
+**Removing a modifier:** Delete its enum value from `ModifierType`, remove its entry from `TierDatabase.modifierTierDatabase`, and remove any switch cases in `PreAI` and `OnHitPlayer`. NPCs don't persist to disk and both sides of a multiplayer session always share the same mod version, so there is no save-migration or network-sync concern from renumbering the enum.
 
 ### Adding a New Rarity
 

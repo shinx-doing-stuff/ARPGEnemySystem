@@ -1,5 +1,4 @@
 using ARPGEnemySystem.Common.Configs;
-using ARPGEnemySystem.Common.DrawEffects;
 using ARPGEnemySystem.Common.Elements;
 using ARPGEnemySystem.Common.Systems;
 using Microsoft.Xna.Framework;
@@ -94,41 +93,6 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 List<int> excludeList = Utils.CreateExcludeList(modifierList);
                 int tier = Utils.GetTier();
                 modifierList.Add(new EnemyModifier(excludeList, tier));
-            }
-        }
-
-        public override void DrawEffects(NPC npc, ref Color drawColor)
-        {
-            foreach (var modifier in modifierList)
-            {
-                switch (modifier.modifierType)
-                {
-                    case ModifierType.Flaming:
-                        ModifierDrawEffect.DrawFlaming(npc);
-                        break;
-                    case ModifierType.Glacial:
-                        ModifierDrawEffect.DrawGlacial(npc);
-                        break;
-                    case ModifierType.Charged:
-                        ModifierDrawEffect.DrawCharged(npc);
-                        break;
-                    case ModifierType.Durable:
-                        drawColor.R = 75;
-                        drawColor.G = 75;
-                        drawColor.B = 75;
-                        break;
-                    case ModifierType.Strong:
-                        drawColor.R = 255;
-                        drawColor.G = 80;
-                        drawColor.B = 80;
-                        break;
-                    case ModifierType.SoulDrinker:
-                        ModifierDrawEffect.DrawSoulDrinker(npc);
-                        break;
-                    case ModifierType.ChaosInfused:
-                        ModifierDrawEffect.DrawChaosInfused(npc);
-                        break;
-                }
             }
         }
 
