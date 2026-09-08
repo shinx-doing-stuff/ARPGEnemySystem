@@ -47,6 +47,11 @@ Configs: {
 			Label: Enable Elemental Damage Log
 			Tooltip: ""
 		}
+
+		EnableReapLog: {
+			Label: Enable Reap Log
+			Tooltip: Chat breakdown of every reap: gate, stacks, multiplier, element and final damage.
+		}
 	}
 }
 

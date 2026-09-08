@@ -55,5 +55,8 @@ namespace ARPGEnemySystem.Common.Configs
 
         [DefaultValue(false)]
         public bool EnableElementalDamageLog;
+
+        [DefaultValue(false)]
+        public bool EnableReapLog;
     }
 }
