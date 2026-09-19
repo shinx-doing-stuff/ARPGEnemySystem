@@ -1,4 +1,9 @@
+using ARPGEnemySystem.Common.Network;
+using ARPGEnemySystem.Common.Systems;
 using System;
+using System.IO;
+using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace ARPGEnemySystem
@@ -13,6 +18,22 @@ namespace ARPGEnemySystem
 		{
 			if (!ModLoader.HasMod("ARPGItemSystem"))
 				throw new Exception("ARPG Enemy System requires ARPG Item System to be installed and enabled.");
+		}
+
+		public override void HandlePacket(BinaryReader reader, int whoAmI)
+		{
+			EnemyPacketType type = (EnemyPacketType)reader.ReadByte();
+			switch (type)
+			{
+				case EnemyPacketType.LevelCap:
+					int levelCap = reader.ReadInt32();
+					if (Main.netMode == NetmodeID.MultiplayerClient)
+						WorldManager.levelCap = levelCap;
+					break;
+				default:
+					Logger.Warn($"Unknown packet type {type}");
+					break;
+			}
 		}
 	}
 }

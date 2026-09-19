@@ -4,11 +4,6 @@ Configs: {
 	Config: {
 		DisplayName: ARPG Enemy System Config
 
-		LevelCapIncreasePerBossDowned: {
-			Tooltip: ""
-			Label: Level Cap Increase Per Boss Downed
-		}
-
 		Headers: {
 			Scaling: Scaling Config
 			Elemental: Elemental Config

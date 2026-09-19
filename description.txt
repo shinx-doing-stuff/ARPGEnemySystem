@@ -1,10 +1,10 @@
 [h1]v0.9.0 — Elemental Update (Public Testing)[/h1]
 
-This update adds a full elemental system to enemies. Higher-level enemies can now deal Fire, Cold, or Lightning damage, and every enemy has physical and elemental resistances derived from their level and defense stats. Elemental resistances are displayed on the enemy stat panel alongside level, rarity, and modifiers. This system is designed to work hand-in-hand with my other mod ARPG Item System
+This update adds a full elemental system to enemies. Higher-level enemies can now deal Fire, Cold, or Lightning damage, and every enemy has physical and elemental resistances derived from their level and defense stats. Elemental resistances are displayed on the enemy stat panel alongside level, rarity, and modifiers. This system is designed to work hand-in-hand with my other mod ARPG Item System, and now also requires Boss Checklist to be installed and enabled.
 
 This is a public testing release (v0.9.0). Some values and formulas are still being tuned. Feedback is very much welcome. You can enable logging feature in client config to help testing feature.
 
-SET CONFIG BACK TO DEFAULT FIRST. If you want to tweak the settings, the easiest is to change how much the level cap increases upon new downed boss. By default it's 10 for vanilla. If you are playing with ONE content mod, make it 5. If you are playing with TWO, make it 3. You get the idea.
+The world level now runs from 10 on a fresh world up to 200 once every boss in your installed mod set is defeated, and it automatically divides that range across however many bosses you have installed — so there's nothing to reconfigure when you add or remove content mods.
 
 ---------------------------------------------------------------------------------------------------
 [h1]INTRO[/h1]

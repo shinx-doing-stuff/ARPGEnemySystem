@@ -68,7 +68,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 statChanged = true;
 
                 var cap = ElementalMath.ElementCap;
-                bool postPlantera = WorldManager.downedBossIDs.Contains(NPCID.Plantera);
+                bool postPlantera = NPC.downedPlantBoss;
                 int tier = postPlantera ? 2 : Main.hardMode ? 1 : 0;
 
                 float[] elemResValues   = { 25f, 50f, 75f };
@@ -101,11 +101,6 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 ChaosDamagePct  = chaosDamageValues[tier];
                 ChaosPen        = chaosPenValues[tier];
             }
-        }
-
-        public override void OnKill(NPC npc)
-        {
-            WorldManager.DownedBoss(npc);
         }
 
         public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)

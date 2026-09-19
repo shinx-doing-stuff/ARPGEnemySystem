@@ -754,9 +754,9 @@ World level roster: <N> bosses.
 
 Create a fresh world with only the three ARPG mods and Boss Checklist enabled. Run `/checklevelcap`.
 
-Expected: `World level 10 — 0/18 bosses downed, 10.56 levels each.`
+Expected: `World level 10 — 0/19 bosses downed, 10 levels each.`
 
-`N = 18` is the expectation, not a verified fact — Boss Checklist's `isBoss` flag could not be confirmed from source for Betsy, Ogre, Dark Mage or Martian Saucer. **A different `N` is not a failure.** Record the actual number and the entry list; if it is not 18, report which unexpected entries appear so `MaxLevel` can be re-judged before tuning.
+`N = 19` was resolved by counting `EntryType.Boss` entries directly in the extracted Boss Checklist 2.2.3.1 assembly: King Slime, Eye of Cthulhu, Eater of Worlds, Brain of Cthulhu, Queen Bee, Skeletron, Deerclops, Wall of Flesh, Queen Slime, The Twins, The Destroyer, Skeletron Prime, Plantera, Golem, Betsy, Empress of Light, Duke Fishron, Lunatic Cultist, Moon Lord — giving `LevelsPerBoss() == 10.00` exactly. **A different `N` is not a failure** — the player's installed Boss Checklist version may differ from the one inspected — but it must be recorded. Record the actual number and the entry list; if it is not 19, report which entries differ so `MaxLevel` can be re-judged before tuning.
 
 - [ ] **Step 3: Confirm the double-counting fix**
 
@@ -764,7 +764,7 @@ The whole point of the change. With `/setlevelcap auto` active:
 
 1. Note `levelCap`, summon and kill **The Twins**, wait two seconds, run `/checklevelcap`. The downed count must rise by **1**, not 2, and `levelCap` by one boss's worth.
 2. Note `levelCap`, kill **Moon Lord**, wait two seconds, run `/checklevelcap`. The downed count must rise by **1**, not 3.
-3. Kill the **Eater of Worlds**. It must register despite the last segment having `npc.boss == false` — this is the case `BossFlagSync` used to cover.
+3. Kill the **Eater of Worlds**. It must register despite the last segment having `npc.boss == false` — this is the case `BossFlagSync` used to cover. Note that the downed count rises by **2**, not 1: Eater of Worlds and Brain of Cthulhu are two separate roster entries that both read `NPC.downedBoss2`, so killing either flips both at once. This is expected, documented behaviour, not a bug to report.
 
 - [ ] **Step 4: Confirm there is no stale-level window**
 
@@ -789,3 +789,23 @@ Run `/setlevelcap 150`, wait at least three seconds, then `/checklevelcap`. It m
 - [ ] **Step 8: Sanity-check the defense curve fix**
 
 Compare a post-Wall-of-Flesh enemy's defense against a post-mechs enemy of a similar level using the enemy stat panel (`ConfigClient.EnableEnemyStatPanel`). Defense scaling must increase across phases. Before the `DefPhaseRates[1]` fix it spiked after Wall of Flesh and dropped after the mechs.
+
+- [ ] **Step 9: The fresh-world difficulty change**
+
+Under the old model a brand-new world had `levelCap = 0`, so every enemy rolled level 1. It is now 10, so enemies roll level 7–10 from the first minute and `NPCManager` adds `level × DefenseFloor` = +7 flat defense before the multiplier — a zombie goes from 6 defense to 13. HP and damage barely move (×1.04). Play the first ten minutes of a brand-new world and confirm a starting character can still fight.
+
+- [ ] **Step 10: Migration from a pre-branch save**
+
+Load a world created before this branch and confirm it loads clean (the stale `downedBossIDs` tag is simply never read now), then open the server config and confirm no phantom `LevelCapIncreasePerBossDowned` entry appears.
+
+- [ ] **Step 11: Boss Checklist absent**
+
+Force-disable Boss Checklist and confirm the load failure is the readable message from `BossRoster.cs:28`, not an opaque crash.
+
+- [ ] **Step 12: Run the commands from a multiplayer client, not only the host**
+
+`CommandType.World` means a client's `/setlevelcap` is forwarded to the server. Confirm the reply comes back to the calling player and the command is not echoed to other players as ordinary chat.
+
+- [ ] **Step 13: `/checklevelcap` output length**
+
+It replies one chat line per downed entry; with a large content mod and a full clear that is 50+ lines. Confirm it is tolerable.

@@ -68,8 +68,12 @@ This is what fixes the counting bug. `BossManager.AppliesToEntity` is `entity.bo
 `DownedBoss(npc)` registers `npc.type`, so killing The Twins registers Retinazer *and* Spazmatism
 (+20 levels) and killing Moon Lord registers Head, Hand *and* Core (+30). A full vanilla clear
 reaches 220 rather than the 170 the 17-entry `SyncDownedFlags` list implies. Boss Checklist's
-entries are already one-per-boss, and counting downed *states* instead of kill *events* makes
-double-counting impossible rather than merely fixed.
+entries are already one-per-boss, so the vanilla double-counting this change was built to fix —
+the Twins as two NPC types, Moon Lord as three — is genuinely impossible now: each is one roster
+entry behind one predicate. That is not an unconditional guarantee: Eater of Worlds and Brain of
+Cthulhu are two roster entries sharing a single predicate, `NPC.downedBoss2`, so killing either
+still counts twice. The count is bounded by the roster rather than by how many NPCs a boss spawns,
+which is the fix that matters.
 
 ### Components
 

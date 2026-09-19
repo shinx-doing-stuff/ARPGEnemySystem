@@ -14,9 +14,6 @@ namespace ARPGEnemySystem.Common.Configs
 
         public override ConfigScope Mode => ConfigScope.ServerSide;
 
-        [DefaultValue(10)]
-        public int LevelCapIncreasePerBossDowned;
-
         [Header("Scaling")]
 
         [Range(1.0f, 2.0f)]

@@ -8,6 +8,7 @@ Most of the time, RPG mods made for Terraria only add power up for player in for
 From this reason, I came up with this mod in hope of having a more balanced playthrough. The mod itself adds a scaling system for enemies in form of level, modifier, rank and that's it. It does not provide any RPG modification to the player, thus everyone can use this mod along with their favorite RPG mod. 
 
 ## Features
+- Requires Boss Checklist to be installed and enabled — it supplies the boss roster that drives enemy level scaling.
 - Enemies now have level. For each downed boss they become stronger.
 - Enemies now have modifiers that give them special power like siphoning player's mana on hit. (bosses excluded)
 - Enemies now have ranks that boost their stat accordingly. (bosses excluded)

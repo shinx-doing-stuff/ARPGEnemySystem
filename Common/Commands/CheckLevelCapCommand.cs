@@ -1,11 +1,4 @@
-﻿using ARPGEnemySystem.Common.Systems;
-using log4net.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria;
+using ARPGEnemySystem.Common.Systems;
 using Terraria.ModLoader;
 
 namespace ARPGEnemySystem.Common.Commands
@@ -13,19 +6,24 @@ namespace ARPGEnemySystem.Common.Commands
     public class CheckLevelCapCommand : ModCommand
     {
         public override CommandType Type
-            => CommandType.Chat;
+            => CommandType.World;
         public override string Command
             => "checklevelcap";
         public override string Description
-            => "Check current world level cap";
+            => "Report the world level and the boss roster it is derived from";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
-            Main.NewText(WorldManager.levelCap);
-            foreach (var bossID in WorldManager.downedBossIDs)
+            int downed = BossRoster.DownedCount();
+            caller.Reply($"World level {WorldManager.levelCap} — {downed}/{BossRoster.Count} bosses downed, {WorldManager.LevelsPerBoss():0.##} levels each.");
+
+            if (WorldManager.levelCapOverride >= 0)
+                caller.Reply($"Held at {WorldManager.levelCapOverride} by /setlevelcap. Use /setlevelcap auto to release.");
+
+            foreach (BossEntry entry in BossRoster.Entries)
             {
-                Main.NewText($"Boss ID: {bossID}");
-                Main.NewText($"Boss Name: {Lang.GetNPCNameValue(bossID)}");
+                if (BossRoster.IsDowned(entry))
+                    caller.Reply(entry.Key);
             }
         }
     }

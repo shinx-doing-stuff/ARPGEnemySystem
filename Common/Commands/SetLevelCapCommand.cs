@@ -6,21 +6,32 @@ namespace ARPGEnemySystem.Common.Commands
     public class SetLevelCapCommand : ModCommand
     {
         public override CommandType Type
-            => CommandType.Chat;
+            => CommandType.World;
         public override string Command
             => "setlevelcap";
         public override string Description
-            => "Set world level cap for testing. Usage: /setlevelcap <value>";
+            => "Hold the world level for testing. Usage: /setlevelcap <value> | auto";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
-            if (args.Length == 0 || !int.TryParse(args[0], out int value) || value < 0)
+            if (args.Length > 0 && args[0] == "auto")
             {
-                caller.Reply("Usage: /setlevelcap <value>  (non-negative integer)");
+                WorldManager.levelCapOverride = -1;
+                WorldManager.Recompute(announce: false);
+                caller.Reply($"World level follows boss progression again ({WorldManager.levelCap}).");
                 return;
             }
+
+            if (args.Length == 0 || !int.TryParse(args[0], out int value) || value < 0)
+            {
+                caller.Reply("Usage: /setlevelcap <value> | auto");
+                return;
+            }
+
+            WorldManager.levelCapOverride = value;
             WorldManager.levelCap = value;
-            caller.Reply($"Level cap set to {value}. New enemies will spawn at level ~{value}.");
+            WorldManager.SendLevelCap();
+            caller.Reply($"World level held at {value}. New enemies will spawn at level ~{value}.");
         }
     }
 }
