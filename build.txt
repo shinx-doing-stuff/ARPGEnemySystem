@@ -2,3 +2,4 @@ displayName = ARPG Enemy System
 author = Shinx
 version = 0.9.3.0
 modReferences = BossChecklist
+buildIgnore = docs/*, CLAUDE.md, README.md, Properties/*
