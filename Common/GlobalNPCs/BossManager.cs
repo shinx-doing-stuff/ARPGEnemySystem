@@ -66,6 +66,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 npc.defense += (int)(level * cfg.DefenseFloor);
                 npc.defense  = (int)(npc.defense * defMultiplier);
                 statChanged = true;
+                Mod.Logger.Info($"Boss final life: {npc.FullName} ({npc.type}), level {level}, life {npc.lifeMax}");
 
                 var cap = ElementalMath.ElementCap;
                 bool postPlantera = NPC.downedPlantBoss;

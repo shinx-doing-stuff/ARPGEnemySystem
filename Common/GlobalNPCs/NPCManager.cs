@@ -185,6 +185,8 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             }
 
             statChanged = true;
+            if (BossRoster.ScalesWithPlayers(npc.type))
+                Mod.Logger.Info($"Boss final life: {npc.FullName} ({npc.type}), level {level}, rarity {rarity.rarity}, {modifierList.Count} modifier(s), life {npc.lifeMax}");
             return true;
         }
 

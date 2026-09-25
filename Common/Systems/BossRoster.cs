@@ -17,12 +17,18 @@ namespace ARPGEnemySystem.Common.Systems
 
         private static readonly List<BossEntry> entries = new List<BossEntry>();
 
+        // NPC types of every boss and miniboss entry; BossPlayerScaling gives these full per-player life.
+        private static readonly HashSet<int> playerScaledTypes = new HashSet<int>();
+
         public static IReadOnlyList<BossEntry> Entries => entries;
         public static int Count => entries.Count;
+
+        public static bool ScalesWithPlayers(int npcType) => playerScaledTypes.Contains(npcType);
 
         public override void PostAddRecipes()
         {
             entries.Clear();
+            playerScaledTypes.Clear();
 
             if (!ModLoader.TryGetMod("BossChecklist", out Mod bossChecklist))
                 throw new Exception("ARPG Enemy System requires Boss Checklist to be installed and enabled.");
@@ -37,7 +43,13 @@ namespace ARPGEnemySystem.Common.Systems
             {
                 Dictionary<string, object> info = boss.Value;
 
-                if (!info.TryGetValue("isBoss", out object isBoss) || !(bool)isBoss)
+                bool isBoss = info.TryGetValue("isBoss", out object bossFlag) && (bool)bossFlag;
+                bool isMiniboss = info.TryGetValue("isMiniboss", out object minibossFlag) && (bool)minibossFlag;
+
+                if ((isBoss || isMiniboss) && info.TryGetValue("npcIDs", out object npcIDs) && npcIDs is List<int> types)
+                    playerScaledTypes.UnionWith(types);
+
+                if (!isBoss)
                     continue;
                 if (!info.TryGetValue("downed", out object downed))
                     continue;
@@ -46,11 +58,13 @@ namespace ARPGEnemySystem.Common.Systems
             }
 
             Mod.Logger.Info($"World level roster: {entries.Count} bosses.");
+            Mod.Logger.Info($"Player-scaled boss NPC types: {playerScaledTypes.Count}.");
         }
 
         public override void Unload()
         {
             entries.Clear();
+            playerScaledTypes.Clear();
         }
 
         // Third-party delegates are polled every second; a mod that throws is dropped
