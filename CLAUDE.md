@@ -26,6 +26,8 @@ ARPGEnemySystem and ARPGItemSystem are **mutually required** — neither will lo
 
 **Boss Checklist** is a hard requirement declared the normal way — `modReferences = BossChecklist` in `build.txt`. No load-order cycle exists, so no runtime `HasMod` check is needed for load ordering — but `BossRoster` still throws if the mod is missing (`Common/Systems/BossRoster.cs:27-28`), as a defensive guard against a force-disabled dependency. It is the sole source of the boss roster that drives world level: `BossRoster` calls `GetBossInfoDictionary` (API version `1.6`) in `PostAddRecipes` and keeps each `isBoss` entry's `downed` predicate. No `.csproj` `Reference` is needed because the integration is `Mod.Call` returning `object`.
 
+**`Mod.Call` API (added 2026-09-21):** `Call("GetEnemyInfo", NPC npc)` → `int[] { level, rarityTier }` (`rarityTier` is `(int)Rarity`, 0 = None; a boss reports its `BossManager` level with tier 0) or `null` for an NPC neither manager applies to; a returned `level` of 0 means the NPC is managed but its level has not yet synced to this client, so the caller should keep polling until it is non-zero rather than displaying it. Read-only, consumed by the standalone Fancy Healthbar mod for its rarity frame and level badge; keep the shape stable or version the name.
+
 ## Architecture
 
 ### High-Level Concept

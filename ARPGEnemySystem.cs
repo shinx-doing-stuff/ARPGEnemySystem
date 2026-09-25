@@ -1,3 +1,4 @@
+using ARPGEnemySystem.Common.GlobalNPCs;
 using ARPGEnemySystem.Common.Network;
 using ARPGEnemySystem.Common.Systems;
 using System;
@@ -18,6 +19,24 @@ namespace ARPGEnemySystem
 		{
 			if (!ModLoader.HasMod("ARPGItemSystem"))
 				throw new Exception("ARPG Enemy System requires ARPG Item System to be installed and enabled.");
+		}
+
+		// Read-only info for presentation mods (Fancy Healthbar). Returns null for an NPC this mod does not manage.
+		public override object Call(params object[] args)
+		{
+			if (args.Length >= 1 && args[0] is string name && name == "GetEnemyInfo")
+			{
+				if (args.Length >= 2 && args[1] is NPC npc)
+				{
+					if (npc.boss && npc.TryGetGlobalNPC(out BossManager boss))
+						return new int[] { boss.level, 0 };
+					if (npc.TryGetGlobalNPC(out NPCManager manager))
+						return new int[] { manager.level, (int)manager.rarity.rarity };
+				}
+				return null;
+			}
+			Logger.Warn($"Unknown Mod.Call: {(args.Length > 0 ? args[0] : "<none>")}");
+			return null;
 		}
 
 		public override void HandlePacket(BinaryReader reader, int whoAmI)
