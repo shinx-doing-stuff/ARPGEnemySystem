@@ -1,5 +1,11 @@
+using ARPGEnemySystem.Common.Configs;
+using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using Terraria;
+using Terraria.Chat;
 using Terraria.DataStructures;
+using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace ARPGEnemySystem.Common.Systems
@@ -10,12 +16,21 @@ namespace ARPGEnemySystem.Common.Systems
     // mid-fight joins stay vanilla.
     public class BossPlayerScaling : ModSystem
     {
+        // Worm bosses spawn many segments of one type at once; announce each type once.
+        private const uint AnnounceCooldownTicks = 60;
+        private static readonly Dictionary<int, uint> lastAnnounced = new Dictionary<int, uint>();
+
         public override void Load()
         {
             On_NPC.ScaleStats += ScaleStats;
         }
 
-        private void ScaleStats(On_NPC.orig_ScaleStats orig, NPC self, int? activePlayersCount, GameModeData gameModeData, float? strengthOverride)
+        public override void ClearWorld()
+        {
+            lastAnnounced.Clear();
+        }
+
+        private static void ScaleStats(On_NPC.orig_ScaleStats orig, NPC self, int? activePlayersCount, GameModeData gameModeData, float? strengthOverride)
         {
             if (!BossRoster.ScalesWithPlayers(self.type))
             {
@@ -26,34 +41,35 @@ namespace ARPGEnemySystem.Common.Systems
             // Scale as a solo fight so vanilla's and the boss mod's own difficulty tuning still apply.
             int players = activePlayersCount ?? NPC.GetActivePlayerCount();
             orig(self, 1, gameModeData, strengthOverride);
-            int soloLife = self.lifeMax;
 
             // Vanilla only records a player count when it ran its Expert multiplayer step (never in Normal mode).
-            bool expert = self.statsAreScaledForThisManyPlayers == 1;
-            if (expert && players > 1)
-            {
-                // Golem's AI and the NPC spawn packet read the stored count, so it must be the real one.
-                self.statsAreScaledForThisManyPlayers = players;
-                self.lifeMax *= players;
-                self.life = self.lifeMax;
-            }
+            if (self.statsAreScaledForThisManyPlayers != 1 || players <= 1)
+                return;
 
-            if (IsWorldNpc(self))
-            {
-                string note = expert ? "before level scaling" : "Normal mode, not player-scaled";
-                Mod.Logger.Info($"Boss player scaling: {self.FullName} ({self.type}), {players} player(s), solo life {soloLife} -> {self.lifeMax} ({note})");
-            }
+            // Golem's AI and the NPC spawn packet read the stored count, so it must be the real one.
+            self.statsAreScaledForThisManyPlayers = players;
+            self.lifeMax *= players;
+            self.life = self.lifeMax;
         }
 
-        // Moon Lord's boss bar, the bestiary and content samples scale throwaway NPC copies; only log real ones.
-        private static bool IsWorldNpc(NPC npc)
+        // Debug chat line, called once a boss's level scaling is applied.
+        public static void Announce(NPC npc, int lifeBeforeLevel, int level)
         {
-            for (int i = 0; i < Main.maxNPCs; i++)
-            {
-                if (Main.npc[i] == npc)
-                    return true;
-            }
-            return false;
+            if (Main.netMode == NetmodeID.MultiplayerClient || !BossRoster.ScalesWithPlayers(npc.type))
+                return;
+            if (!ModContent.GetInstance<Config>().EnableBossScalingLog)
+                return;
+
+            if (lastAnnounced.TryGetValue(npc.type, out uint tick) && Main.GameUpdateCount - tick < AnnounceCooldownTicks)
+                return;
+            lastAnnounced[npc.type] = Main.GameUpdateCount;
+
+            int players = npc.statsAreScaledForThisManyPlayers;
+            NetworkText text = players >= 1
+                ? NetworkText.FromKey("Mods.ARPGEnemySystem.BossScaling.Expert", npc.GetFullNetName(), players, lifeBeforeLevel / players, lifeBeforeLevel, npc.lifeMax, level)
+                : NetworkText.FromKey("Mods.ARPGEnemySystem.BossScaling.Normal", npc.GetFullNetName(), npc.lifeMax, level);
+
+            ChatHelper.BroadcastChatMessage(text, Color.Orange);
         }
     }
 }

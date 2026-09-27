@@ -1,5 +1,10 @@
 BossKilledMessage: Killing this enemy has released its power upon the world
 
+BossScaling: {
+	Expert: "{0}: {1} player(s), solo life {2}, after player scaling {3}, final life {4} (level {5})"
+	Normal: "{0}: Normal mode, no player scaling, final life {1} (level {2})"
+}
+
 Configs: {
 	Config: {
 		DisplayName: ARPG Enemy System Config
@@ -7,6 +12,7 @@ Configs: {
 		Headers: {
 			Scaling: Scaling Config
 			Elemental: Elemental Config
+			Debug: Debug
 		}
 
 		ScalingExponent: {
@@ -27,6 +33,11 @@ Configs: {
 		PhysResHalfPoint: {
 			Label: Phys Res Half Point
 			Tooltip: Defense value at which physRes reaches cap/2. Controls curve steepness. Default 30.
+		}
+
+		EnableBossScalingLog: {
+			Label: Enable Boss Scaling Log
+			Tooltip: Chat line when a boss spawns: player count, solo life, life after player scaling, final life and level.
 		}
 	}
 
