@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Converters;
+﻿using ARPGEnemySystem.Common.Scaling;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,26 +20,31 @@ namespace ARPGEnemySystem.Common.Configs
         [Range(1.0f, 2.0f)]
         [Increment(0.01f)]
         [DrawTicks]
-        [DefaultValue(1.14f)]
+        [DefaultValue(ScalingDefaults.ScalingExponent)]
         public float ScalingExponent;
 
         [Range(1.0f, 2.0f)]
         [Increment(0.01f)]
         [DrawTicks]
-        [DefaultValue(1.15f)]
+        [DefaultValue(ScalingDefaults.DefScalingExponent)]
         public float DefScalingExponent;
 
         [Range(0.0f, 1.0f)]
         [Increment(0.01f)]
         [DrawTicks]
-        [DefaultValue(0.7f)]
+        [DefaultValue(ScalingDefaults.DefenseFloor)]
         public float DefenseFloor;
 
         [Header("Elemental")]
 
         [Range(1, 200)]
-        [DefaultValue(60)]
+        [DefaultValue(ScalingDefaults.PhysResHalfPoint)]
         public int PhysResHalfPoint;
+
+        [Header("Debug")]
+
+        [DefaultValue(false)]
+        public bool EnableBossScalingLog;
 
     }
 

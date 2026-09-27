@@ -1,6 +1,6 @@
 ﻿using ARPGEnemySystem.Common.Database;
 using ARPGEnemySystem.Common.GlobalNPCs;
-using ARPGEnemySystem.Common.Systems;
+using ARPGEnemySystem.Common.Scaling;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -45,7 +45,7 @@ namespace ARPGEnemySystem.Common
                 Rarity.Legend    => 2,
                 _                => 0,
             };
-            int phase = WorldManager.GetScalingPhase(); // 0..3
+            int phase = ScalingMath.GetScalingPhase(); // 0..3
 
             int actualMax = Math.Min(8, 2 + rarityBonus + phase);
             return new Random().Next(floorByRarity, actualMax + 1);

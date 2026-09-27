@@ -1,5 +1,6 @@
 using ARPGEnemySystem.Common.Configs;
 using ARPGEnemySystem.Common.Elements;
+using ARPGEnemySystem.Common.Scaling;
 using ARPGEnemySystem.Common.Systems;
 using Microsoft.Xna.Framework;
 using System;
@@ -56,51 +57,35 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 if (statChanged) return;
 
                 var cfg = ModContent.GetInstance<Config>();
-                int phase = WorldManager.GetScalingPhase();
-                float multiplier    = 1f + MathF.Pow(level, cfg.ScalingExponent)            * WorldManager.PhaseRates[phase];
-                float defMultiplier = 1f + MathF.Pow(level, cfg.DefScalingExponent) * WorldManager.DefPhaseRates[phase];
+                int phase = ScalingMath.GetScalingPhase();
 
-                npc.lifeMax = (int)(npc.lifeMax * multiplier);
+                var s = new EnemyStatBlock { LifeMax = npc.lifeMax, Damage = npc.damage, Defense = npc.defense };
+
+                int lifeBeforeLevel = npc.lifeMax;
+                EnemyScaling.ApplyLevelScaling(ref s, level, phase, cfg.ScalingExponent, cfg.DefScalingExponent, cfg.DefenseFloor);
+
+                npc.lifeMax = s.LifeMax;
                 npc.life    = npc.lifeMax;
-                npc.damage  = (int)(npc.damage  * multiplier);
-                npc.defense += (int)(level * cfg.DefenseFloor);
-                npc.defense  = (int)(npc.defense * defMultiplier);
+                npc.damage  = s.Damage;
+                npc.defense = s.Defense;
                 statChanged = true;
-                Mod.Logger.Info($"Boss final life: {npc.FullName} ({npc.type}), level {level}, life {npc.lifeMax}");
+                BossPlayerScaling.Announce(npc, lifeBeforeLevel, level);
 
-                var cap = ElementalMath.ElementCap;
-                bool postPlantera = NPC.downedPlantBoss;
-                int tier = postPlantera ? 2 : Main.hardMode ? 1 : 0;
+                EnemyScaling.ApplyBossElementals(ref s, EnemyScaling.BossElementalTier());
 
-                float[] elemResValues   = { 25f, 50f, 75f };
-                float[] damageValues    = { 15f, 30f, 45f };
-                float[] penValues       = { 15f, 30f, 45f };
-
-                FireResistance      = Math.Min(elemResValues[tier], cap);
-                ColdResistance      = Math.Min(elemResValues[tier], cap);
-                LightningResistance = Math.Min(elemResValues[tier], cap);
-
-                // All three elemental damage types simultaneously (was: single random element).
-                // Damage values reduced from {25, 50, 75} → {15, 30, 45} to compensate for
-                // bonus model in PlayerHurtPipeline (no longer eats physical portion).
-                FireDamagePct      = damageValues[tier];
-                ColdDamagePct      = damageValues[tier];
-                LightningDamagePct = damageValues[tier];
-
-                // Penetration baseline tied to progression phase.
-                FirePen      = penValues[tier];
-                ColdPen      = penValues[tier];
-                LightningPen = penValues[tier];
-                SunderingPct = penValues[tier];
-
-                // Chaos values: damage ~33%, res ~25%, pen ~50% of F/C/L
-                float[] chaosResValues    = { 6f,  13f, 19f };
-                float[] chaosDamageValues = { 5f,  10f, 15f };
-                float[] chaosPenValues    = { 8f,  15f, 23f };
-
-                ChaosResistance = Math.Min(chaosResValues[tier], cap);
-                ChaosDamagePct  = chaosDamageValues[tier];
-                ChaosPen        = chaosPenValues[tier];
+                FireResistance      = s.FireResistance;
+                ColdResistance      = s.ColdResistance;
+                LightningResistance = s.LightningResistance;
+                FireDamagePct       = s.FireDamagePct;
+                ColdDamagePct       = s.ColdDamagePct;
+                LightningDamagePct  = s.LightningDamagePct;
+                FirePen      = s.FirePen;
+                ColdPen      = s.ColdPen;
+                LightningPen = s.LightningPen;
+                SunderingPct = s.SunderingPct;
+                ChaosResistance = s.ChaosResistance;
+                ChaosDamagePct  = s.ChaosDamagePct;
+                ChaosPen        = s.ChaosPen;
             }
         }
 

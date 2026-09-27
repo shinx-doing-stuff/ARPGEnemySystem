@@ -1,4 +1,5 @@
 using ARPGEnemySystem.Common.Network;
+using ARPGEnemySystem.Common.Scaling;
 using Microsoft.Xna.Framework;
 using System;
 using System.IO;
@@ -12,8 +13,8 @@ namespace ARPGEnemySystem.Common.Systems
 {
     public class WorldManager : ModSystem
     {
-        public const int BaseLevel = 10;
-        public const int MaxLevel  = 200;
+        public const int BaseLevel = ScalingMath.BaseLevel;
+        public const int MaxLevel  = ScalingMath.MaxLevel;
 
         public static int levelCap = BaseLevel;
 
@@ -22,35 +23,22 @@ namespace ARPGEnemySystem.Common.Systems
 
         // Hardcoded — these are game design values, not server-tuning knobs.
         // Phase 0 = pre-hardmode, 1 = post-WoF, 2 = post-all-mechs, 3 = post-Plantera.
-        public static readonly float[] PhaseRates    = { 0.003f, 0.006f, 0.010f, 0.015f };
-        public static readonly float[] DefPhaseRates = { 0.004f, 0.008f, 0.013f, 0.020f };
+        public static readonly float[] PhaseRates    = ScalingMath.PhaseRates;
+        public static readonly float[] DefPhaseRates = ScalingMath.DefPhaseRates;
 
         private const int RecomputeInterval = 60;
         private int ticksUntilRecompute;
 
-        public static int GetScalingPhase()
-        {
-            if (NPC.downedPlantBoss)                                               return 3;
-            if (NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3) return 2;
-            if (Main.hardMode)                                                     return 1;
-            return 0;
-        }
+        public static int GetScalingPhase() => ScalingMath.GetScalingPhase();
 
-        public static float LevelsPerBoss()
-        {
-            int bossCount = BossRoster.Count;
-            if (bossCount == 0)
-                return 0f;
-
-            return (float)(MaxLevel - BaseLevel) / bossCount;
-        }
+        public static float LevelsPerBoss() => ScalingMath.LevelsPerBoss(BossRoster.Count);
 
         public static void Recompute(bool announce)
         {
             if (levelCapOverride >= 0)
                 return;
 
-            int newCap = BaseLevel + (int)MathF.Round(LevelsPerBoss() * BossRoster.DownedCount());
+            int newCap = ScalingMath.LevelCap(BossRoster.Count, BossRoster.DownedCount());
             if (newCap == levelCap)
                 return;
 

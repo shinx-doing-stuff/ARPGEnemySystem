@@ -1,5 +1,6 @@
 using ARPGEnemySystem.Common.Configs;
 using ARPGEnemySystem.Common.Elements;
+using ARPGEnemySystem.Common.Scaling;
 using ARPGEnemySystem.Common.Systems;
 using Microsoft.Xna.Framework;
 using System;
@@ -64,24 +65,19 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
                 level = Math.Clamp(rand.Next((int)(WorldManager.levelCap*0.75f), (int)(WorldManager.levelCap*1.1f)), 1, (int)(WorldManager.levelCap * 1.1f) + 1);
                 AddModifier(entity);
 
-                // Elemental resistance baseline from rarity — same value for all three elements.
-                // Modifier bonuses (FireResistant/ColdResistant/LightningResistant) are additive on top,
-                // applied in PreAI. Values may exceed the cap; clamping happens at hit time.
-                int rarityRes = RarityDatabase.rarityElementalResDatabase[rarity.rarity];
-                FireResistance      = rarityRes;
-                ColdResistance      = rarityRes;
-                LightningResistance = rarityRes;
-                // Elemental damage percentages are set by Flaming/Glacial/Charged modifiers in PreAI.
-                // Penetration baseline per rarity — same value for all four fields.
-                // Modifier bonuses (Searing/Shattering/Conductive/Sundering) stack on top in PreAI.
-                int rarityPen = RarityDatabase.rarityElementalPenDatabase[rarity.rarity];
-                FirePen      = rarityPen;
-                ColdPen      = rarityPen;
-                LightningPen = rarityPen;
-                SunderingPct = rarityPen;
-                // Chaos uses separate rarity dictionaries (lower magnitudes than F/C/L)
-                ChaosResistance = RarityDatabase.rarityChaosResDatabase[rarity.rarity];
-                ChaosPen        = RarityDatabase.rarityChaosPenDatabase[rarity.rarity];
+                // Elemental resistance/pen baseline from rarity. Modifier bonuses (FireResistant/
+                // Searing/etc.) are additive on top, applied in PreAI.
+                var s = new EnemyStatBlock();
+                EnemyScaling.ApplyRarityElementals(ref s, rarity.rarity);
+                FireResistance      = s.FireResistance;
+                ColdResistance      = s.ColdResistance;
+                LightningResistance = s.LightningResistance;
+                FirePen      = s.FirePen;
+                ColdPen      = s.ColdPen;
+                LightningPen = s.LightningPen;
+                SunderingPct = s.SunderingPct;
+                ChaosResistance = s.ChaosResistance;
+                ChaosPen        = s.ChaosPen;
             }
         }
 
@@ -101,92 +97,59 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             if (statChanged) return true;
 
             var cfg = ModContent.GetInstance<Config>();
-            int phase = WorldManager.GetScalingPhase();
-            float multiplier    = 1f + MathF.Pow(level, cfg.ScalingExponent)        * WorldManager.PhaseRates[phase];
-            float defMultiplier = 1f + MathF.Pow(level, cfg.DefScalingExponent) * WorldManager.DefPhaseRates[phase];
+            int phase = ScalingMath.GetScalingPhase();
 
-            // Level scaling (exponential) — defense uses a steeper curve than HP/damage
-            npc.lifeMax = (int)(npc.lifeMax * multiplier);
-            npc.life    = npc.lifeMax;
-            npc.damage  = (int)(npc.damage  * multiplier);
-            // Additive floor ensures low-defense enemies (zombies, slimes) get baseline physRes
-            // while preserving relative differences between enemy types.
-            npc.defense += (int)(level * cfg.DefenseFloor);
-            npc.defense  = (int)(npc.defense * defMultiplier);
+            var s = new EnemyStatBlock
+            {
+                LifeMax = npc.lifeMax,
+                Damage = npc.damage,
+                Defense = npc.defense,
+                Scale = npc.scale,
+                FireDamagePct = FireDamagePct,
+                ColdDamagePct = ColdDamagePct,
+                LightningDamagePct = LightningDamagePct,
+                ChaosDamagePct = ChaosDamagePct,
+                FireResistance = FireResistance,
+                ColdResistance = ColdResistance,
+                LightningResistance = LightningResistance,
+                ChaosResistance = ChaosResistance,
+                FirePen = FirePen,
+                ColdPen = ColdPen,
+                LightningPen = LightningPen,
+                ChaosPen = ChaosPen,
+                SunderingPct = SunderingPct,
+            };
 
-            // Rarity bonus on top of scaled stats
-            npc.lifeMax  += (int)(npc.lifeMax  * rarity.magnitude[0] / 100f);
-            npc.life      = npc.lifeMax;
-            npc.defense  += (int)(npc.defense  * rarity.magnitude[1] / 100f);
-            npc.damage   += (int)(npc.damage   * rarity.magnitude[2] / 100f);
-            npc.value    *= Utils.GetCoinMultiplier(rarity, level, modifierList.Count);
+            int lifeBeforeLevel = npc.lifeMax;
+            EnemyScaling.ApplyLevelScaling(ref s, level, phase, cfg.ScalingExponent, cfg.DefScalingExponent, cfg.DefenseFloor);
+            EnemyScaling.ApplyRarityStats(ref s, rarity.rarity);
+            npc.value *= Utils.GetCoinMultiplier(rarity, level, modifierList.Count);
 
             // Modifier effects
             foreach (var modifier in modifierList)
-            {
-                switch (modifier.modifierType)
-                {
-                    case ModifierType.Colossal:
-                        npc.scale = 1 + modifier.magnitude / 100f;
-                        npc.lifeMax += (int)(npc.lifeMax * modifier.magnitude / 150f);
-                        npc.life = npc.lifeMax;
-                        break;
-                    case ModifierType.Tiny:
-                        npc.scale = 1 - modifier.magnitude / 100f;
-                        npc.lifeMax -= (int)(npc.lifeMax * modifier.magnitude / 200f);
-                        npc.life = npc.lifeMax;
-                        break;
-                    case ModifierType.Strong:
-                        npc.damage += (int)(npc.damage * modifier.magnitude / 100f);
-                        break;
-                    case ModifierType.Durable:
-                        npc.defense += (int)(npc.defense * modifier.magnitude / 100f);
-                        break;
-                    case ModifierType.Flaming:
-                        FireDamagePct += modifier.magnitude;
-                        break;
-                    case ModifierType.Glacial:
-                        ColdDamagePct += modifier.magnitude;
-                        break;
-                    case ModifierType.Charged:
-                        LightningDamagePct += modifier.magnitude;
-                        break;
-                    case ModifierType.FireResistant:
-                        FireResistance += modifier.magnitude;
-                        break;
-                    case ModifierType.ColdResistant:
-                        ColdResistance += modifier.magnitude;
-                        break;
-                    case ModifierType.LightningResistant:
-                        LightningResistance += modifier.magnitude;
-                        break;
-                    case ModifierType.Searing:
-                        FirePen += modifier.magnitude;
-                        break;
-                    case ModifierType.Shattering:
-                        ColdPen += modifier.magnitude;
-                        break;
-                    case ModifierType.Conductive:
-                        LightningPen += modifier.magnitude;
-                        break;
-                    case ModifierType.Sundering:
-                        SunderingPct += modifier.magnitude;
-                        break;
-                    case ModifierType.ChaosInfused:
-                        ChaosDamagePct += modifier.magnitude;
-                        break;
-                    case ModifierType.ChaosResistant:
-                        ChaosResistance += modifier.magnitude;
-                        break;
-                    case ModifierType.ChaosPenetrating:
-                        ChaosPen += modifier.magnitude;
-                        break;
-                }
-            }
+                EnemyScaling.ApplyModifier(ref s, modifier.modifierType, modifier.magnitude);
+
+            npc.lifeMax = s.LifeMax;
+            npc.life    = npc.lifeMax;
+            npc.damage  = s.Damage;
+            npc.defense = s.Defense;
+            npc.scale   = s.Scale;
+            FireDamagePct       = s.FireDamagePct;
+            ColdDamagePct       = s.ColdDamagePct;
+            LightningDamagePct  = s.LightningDamagePct;
+            ChaosDamagePct      = s.ChaosDamagePct;
+            FireResistance      = s.FireResistance;
+            ColdResistance      = s.ColdResistance;
+            LightningResistance = s.LightningResistance;
+            ChaosResistance     = s.ChaosResistance;
+            FirePen      = s.FirePen;
+            ColdPen      = s.ColdPen;
+            LightningPen = s.LightningPen;
+            ChaosPen     = s.ChaosPen;
+            SunderingPct = s.SunderingPct;
 
             statChanged = true;
-            if (BossRoster.ScalesWithPlayers(npc.type))
-                Mod.Logger.Info($"Boss final life: {npc.FullName} ({npc.type}), level {level}, rarity {rarity.rarity}, {modifierList.Count} modifier(s), life {npc.lifeMax}");
+            BossPlayerScaling.Announce(npc, lifeBeforeLevel, level);
             return true;
         }
 
