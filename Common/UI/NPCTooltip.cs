@@ -16,6 +16,7 @@ using Terraria.GameContent.Events;
 using ARPGEnemySystem.Common.GlobalNPCs;
 using ARPGEnemySystem.Common.Elements;
 using ARPGEnemySystem.Common.Configs;
+using ARPGEnemySystem.Common.Scaling;
 using Terraria.Localization;
 
 namespace ARPGEnemySystem.Common.UI
@@ -48,6 +49,8 @@ namespace ARPGEnemySystem.Common.UI
             // This is needed to make sure that the mouse position works correctly for every UI zoom level
             PlayerInput.SetZoom_UI();
 
+            float physResHalfPoint = ModContent.GetInstance<Config>().PhysResHalfPoint;
+
             // Loop through (hopefully) every NPC on screen and check
             for (int i = 0; i < 200; i++)
             {
@@ -59,22 +62,10 @@ namespace ARPGEnemySystem.Common.UI
 
                 if (!mouseRectangle.Intersects(npcPos)) continue;
 
-                var cfg = ModContent.GetInstance<Config>();
-                float physRes = ElementalMath.ConvertDefenseToResistance(
-                    npc.defense, cfg.PhysResHalfPoint, ElementalMath.ElementCap);
+                var profile = EnemyStats.Profile(npc);
+                if (profile == null) continue;
 
-                string tooltipText = null;
-
-                if (npc.TryGetGlobalNPC<NPCManager>(out var modNpc))
-                {
-                    tooltipText = BuildNormalTooltip(npc, modNpc, physRes);
-                }
-                else if (npc.TryGetGlobalNPC<BossManager>(out var bossNpc))
-                {
-                    tooltipText = BuildBossTooltip(npc, bossNpc, physRes);
-                }
-
-                if (tooltipText == null) continue;
+                string tooltipText = BuildTooltip(npc, profile, physResHalfPoint);
 
                 npcTooltip.SetText(tooltipText);
                 Vector2 size = FontAssets.MouseText.Value.MeasureString(tooltipText);
@@ -87,58 +78,43 @@ namespace ARPGEnemySystem.Common.UI
             }
         }
 
-        private static string BuildNormalTooltip(NPC npc, NPCManager modNpc, float physRes)
+        private static string BuildTooltip(NPC npc, EnemyProfile p, float physResHalfPoint)
         {
             var sb = new StringBuilder();
             sb.Append(npc.GivenOrTypeName);
-
-            string modifierList = modNpc.modifierList.Count > 0
-                ? string.Join(", ", modNpc.modifierList.Select(o => o.modifierType))
-                : null;
-
             sb.Append('\n');
-            if (modifierList != null)
-                sb.Append(Language.GetTextValue(LocPrefix + "HeaderNormal", modNpc.level, modNpc.rarity.rarity, modifierList));
+            if (p.Kind == EnemyKind.FightMember)
+                sb.Append(Language.GetTextValue(LocPrefix + "HeaderBoss", p.Level));
+            else if (p.Modifiers.Length > 0)
+            {
+                var modifierNames = new StringBuilder();
+                for (int i = 0; i < p.Modifiers.Length; i++)
+                {
+                    if (i > 0)
+                        modifierNames.Append(", ");
+                    modifierNames.Append(p.Modifiers[i].modifierType);
+                }
+                sb.Append(Language.GetTextValue(LocPrefix + "HeaderNormal", p.Level, p.Rarity, modifierNames.ToString()));
+            }
             else
-                sb.Append(Language.GetTextValue(LocPrefix + "HeaderNormalNoMods", modNpc.level, modNpc.rarity.rarity));
+                sb.Append(Language.GetTextValue(LocPrefix + "HeaderNormalNoMods", p.Level, p.Rarity));
 
-            AppendCommonStats(sb, npc, modNpc.FireResistance, modNpc.ColdResistance, modNpc.LightningResistance, modNpc.ChaosResistance,
-                              modNpc.FireDamagePct, modNpc.ColdDamagePct, modNpc.LightningDamagePct, modNpc.ChaosDamagePct,
-                              modNpc.FirePen, modNpc.ColdPen, modNpc.LightningPen, modNpc.SunderingPct, modNpc.ChaosPen, physRes);
+            // What a hit sees: scaled defense less Ichor / Betsy's Curse.
+            int defense = EnemyStats.Defense(npc) - EnemyStats.DebuffDefenseReduction(npc);
+            float physRes = ElementalMath.ConvertDefenseToResistance(
+                defense, physResHalfPoint, ElementalMath.ElementCap);
 
-            return sb.ToString();
-        }
-
-        private static string BuildBossTooltip(NPC npc, BossManager bossNpc, float physRes)
-        {
-            var sb = new StringBuilder();
-            sb.Append(npc.GivenOrTypeName);
-
+            var pk = p.Package;
             sb.Append('\n');
-            sb.Append(Language.GetTextValue(LocPrefix + "HeaderBoss", bossNpc.level));
-
-            AppendCommonStats(sb, npc, bossNpc.FireResistance, bossNpc.ColdResistance, bossNpc.LightningResistance, bossNpc.ChaosResistance,
-                              bossNpc.FireDamagePct, bossNpc.ColdDamagePct, bossNpc.LightningDamagePct, bossNpc.ChaosDamagePct,
-                              bossNpc.FirePen, bossNpc.ColdPen, bossNpc.LightningPen, bossNpc.SunderingPct, bossNpc.ChaosPen, physRes);
-
-            return sb.ToString();
-        }
-
-        private static void AppendCommonStats(StringBuilder sb, NPC npc,
-            float fireRes, float coldRes, float lightRes, float chaosRes,
-            float fireDmg, float coldDmg, float lightDmg, float chaosDmg,
-            float firePen, float coldPen, float lightPen, float sunderingPct, float chaosPen,
-            float physRes)
-        {
-            sb.Append('\n');
-            sb.Append(Language.GetTextValue(LocPrefix + "StatsLine", npc.damage, npc.defense, physRes.ToString("F1")));
-
+            sb.Append(Language.GetTextValue(LocPrefix + "StatsLine", EnemyStats.ContactDamage(npc), defense, physRes.ToString("F1")));
             sb.Append('\n');
             sb.Append(Language.GetTextValue(LocPrefix + "Resistances",
-                fireRes.ToString("F0"), coldRes.ToString("F0"), lightRes.ToString("F0"), chaosRes.ToString("F0")));
+                pk.FireResistance.ToString("F0"), pk.ColdResistance.ToString("F0"),
+                pk.LightningResistance.ToString("F0"), pk.ChaosResistance.ToString("F0")));
 
-            AppendElemDmg(sb, fireDmg, coldDmg, lightDmg, chaosDmg);
-            AppendPen(sb, firePen, coldPen, lightPen, sunderingPct, chaosPen);
+            AppendElemDmg(sb, pk.FireDamagePct, pk.ColdDamagePct, pk.LightningDamagePct, pk.ChaosDamagePct);
+            AppendPen(sb, pk.FirePen, pk.ColdPen, pk.LightningPen, pk.SunderingPct, pk.ChaosPen);
+            return sb.ToString();
         }
 
         private static void AppendElemDmg(StringBuilder sb, float fire, float cold, float light, float chaos)

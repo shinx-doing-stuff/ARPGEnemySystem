@@ -1,5 +1,6 @@
 using ARPGEnemySystem.Common.GlobalNPCs;
 using ARPGEnemySystem.Common.Network;
+using ARPGEnemySystem.Common.Scaling;
 using ARPGEnemySystem.Common.Systems;
 using System;
 using System.IO;
@@ -26,12 +27,13 @@ namespace ARPGEnemySystem
 		{
 			if (args.Length >= 1 && args[0] is string name && name == "GetEnemyInfo")
 			{
-				if (args.Length >= 2 && args[1] is NPC npc)
+				if (args.Length >= 2 && args[1] is NPC npc && npc.TryGetGlobalNPC(out EnemyProfileNPC data))
 				{
-					if (npc.boss && npc.TryGetGlobalNPC(out BossManager boss))
-						return new int[] { boss.level, 0 };
-					if (npc.TryGetGlobalNPC(out NPCManager manager))
-						return new int[] { manager.level, (int)manager.rarity.rarity };
+					// Level 0 = managed but not yet synced to this client; callers keep polling.
+					if (data.Profile == null)
+						return new int[] { 0, 0 };
+					int rarityTier = data.Profile.Kind == EnemyKind.FightMember ? 0 : (int)data.Profile.Rarity;
+					return new int[] { data.Profile.Level, rarityTier };
 				}
 				return null;
 			}

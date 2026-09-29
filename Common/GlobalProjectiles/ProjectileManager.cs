@@ -1,79 +1,66 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria.DataStructures;
-using Terraria.ID;
-using Terraria;
-using Terraria.ModLoader;
-using ARPGEnemySystem.Common.GlobalNPCs;
-using log4net.Core;
-using Terraria.ModLoader.IO;
 using System.IO;
+using ARPGEnemySystem.Common.GlobalNPCs;
+using ARPGEnemySystem.Common.Scaling;
+using Terraria;
+using Terraria.DataStructures;
+using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace ARPGEnemySystem.Common.GlobalProjectiles
 {
     public class ProjectileManager : GlobalProjectile
     {
-        public NPC sourceNPC;
-        public NPCManager modNPC;
-        public BossManager modBossNPC;
-        public int npcIndex;
         public override bool InstancePerEntity => true;
+
+        // The shooter's (or parent projectile's) profile; outlives the shooter. Null when no enemy fired it.
+        public EnemyProfile Profile;
+
+        // Only for the kaeshi counter-strike, never for scaling.
+        public int ShooterIndex = -1;
 
         public override void OnSpawn(Projectile projectile, IEntitySource source)
         {
-            if (source is EntitySource_Parent parent && parent.Entity is NPC npc)
-            {
-                npcIndex = npc.whoAmI;
+            if (source is not EntitySource_Parent parent)
+                return;
 
-                if (npc.TryGetGlobalNPC<NPCManager>(out modNPC))
-                {
-                    foreach (var modifier in modNPC.modifierList)
-                    {
-                        switch (modifier.modifierType)
-                        {
-                            case ModifierType.Strong:
-                                projectile.damage += (int)(projectile.damage * modifier.magnitude / 100f);
-                                break;
-                        }
-                    }
-                }
-                else
-                {
-                    npc.TryGetGlobalNPC<BossManager>(out modBossNPC);
-                }
+            if (parent.Entity is NPC npc)
+            {
+                Profile = EnemyStats.Profile(npc);
+                ShooterIndex = npc.whoAmI;
+            }
+            else if (parent.Entity is Projectile parentProj && parentProj.TryGetGlobalProjectile(out ProjectileManager parentPm))
+            {
+                Profile = parentPm.Profile;
+                ShooterIndex = parentPm.ShooterIndex;
             }
         }
 
         public override void OnHitPlayer(Projectile projectile, Player target, Player.HurtInfo info)
         {
-            if (modNPC != null)
+            if (Profile == null)
+                return;
+            foreach (var m in Profile.Modifiers)
             {
-                foreach (var modifier in modNPC.modifierList)
-                {
-                    switch (modifier.modifierType)
-                    {
-                        case ModifierType.SoulDrinker:
-                            target.statMana -= modifier.magnitude;
-                            break;
-                    }
-                }
+                if (m.modifierType == ModifierType.SoulDrinker)
+                    target.statMana -= m.magnitude;
             }
         }
 
         public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
         {
-            binaryWriter.Write7BitEncodedInt(npcIndex);
+            bitWriter.WriteBit(Profile != null);
+            if (Profile == null)
+                return;
+            EnemyProfileCodec.Write(binaryWriter, Profile);
+            binaryWriter.Write7BitEncodedInt(ShooterIndex + 1);
         }
 
         public override void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader)
         {
-            npcIndex = binaryReader.Read7BitEncodedInt();
-            sourceNPC = Main.npc[npcIndex];
-            sourceNPC.TryGetGlobalNPC<NPCManager>(out modNPC);
-            sourceNPC.TryGetGlobalNPC<BossManager>(out modBossNPC);
+            if (!bitReader.ReadBit())
+                return;
+            Profile = EnemyProfileCodec.Read(binaryReader, Profile, EnemyProfileNPC.Settings());
+            ShooterIndex = binaryReader.Read7BitEncodedInt() - 1;
         }
     }
 }

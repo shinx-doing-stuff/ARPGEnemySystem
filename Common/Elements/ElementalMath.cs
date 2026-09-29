@@ -20,12 +20,9 @@ namespace ARPGEnemySystem.Common.Elements
         public static float ApplyResistance(float damage, float resistancePct, float cap)
             => damage * (1f - ClampResistance(resistancePct, cap) / 100f);
 
-        // Converts vanilla defense stat to physical resistance %.
-        // Formula: cap × defense / (defense + halfPoint)
-        // halfPoint is the defense value at which physRes = cap / 2.
-        // Example with halfPoint=30, cap=75: 30 defense → 37.5%, 60 defense → 50%, 200 defense → 57.7%
-        // The result is always strictly less than cap for any finite defense value.
+        // cap × d / (|d| + halfPoint), mirrored below zero so negative defense converts to a
+        // vulnerability instead of hitting the pole.
         public static float ConvertDefenseToResistance(float defense, float halfPoint, float cap)
-            => cap * defense / (defense + halfPoint);
+            => MathF.Sign(defense) * cap * MathF.Abs(defense) / (MathF.Abs(defense) + halfPoint);
     }
 }

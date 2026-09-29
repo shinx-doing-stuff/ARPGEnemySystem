@@ -1,7 +1,6 @@
 using ARPGEnemySystem.Common.Elements;
 using ARPGEnemySystem.Common.GlobalNPCs;
 using System;
-using Terraria;
 
 namespace ARPGEnemySystem.Common.Scaling
 {
@@ -20,10 +19,13 @@ namespace ARPGEnemySystem.Common.Scaling
     public static class EnemyScaling
     {
         public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, int phase, float scalingExponent, float defScalingExponent, float defenseFloor)
-        {
-            float multiplier    = ScalingMath.HpDamageMultiplier(level, phase, scalingExponent);
-            float defMultiplier = ScalingMath.DefenseMultiplier(level, phase, defScalingExponent);
+            => ApplyLevelScaling(ref s, level,
+                ScalingMath.HpDamageMultiplier(level, phase, scalingExponent),
+                ScalingMath.DefenseMultiplier(level, phase, defScalingExponent),
+                defenseFloor);
 
+        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, float multiplier, float defMultiplier, float defenseFloor)
+        {
             // Additive floor ensures low-defense enemies (zombies, slimes) get baseline physRes
             // while preserving relative differences between enemy types.
             s.LifeMax = (int)(s.LifeMax * multiplier);
@@ -115,13 +117,13 @@ namespace ARPGEnemySystem.Common.Scaling
                     s.ChaosPen += magnitude;
                     break;
                 case ModifierType.SoulDrinker:
-                    // Mana burn — applied in NPCManager/ProjectileManager.OnHitPlayer, not here.
+                    // Mana burn — applied in EnemyProfileNPC/ProjectileManager.OnHitPlayer, not here.
                     break;
             }
         }
 
-        public static int BossElementalTier()
-            => NPC.downedPlantBoss ? 2 : Main.hardMode ? 1 : 0;
+        // Scaling phase (0-3) to boss package tier (0-2).
+        public static int BossTierForPhase(int phase) => phase >= 3 ? 2 : phase >= 1 ? 1 : 0;
 
         // All three elemental damage types simultaneously (was: single random element).
         // Damage values reduced from {25, 50, 75} -> {15, 30, 45} to compensate for the
