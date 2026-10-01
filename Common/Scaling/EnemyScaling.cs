@@ -126,16 +126,17 @@ namespace ARPGEnemySystem.Common.Scaling
         public static int BossTierForPhase(int phase) => phase >= 3 ? 2 : phase >= 1 ? 1 : 0;
 
         // All three elemental damage types simultaneously (was: single random element).
-        // Damage values reduced from {25, 50, 75} -> {15, 30, 45} to compensate for the
-        // bonus model in PlayerHurtPipeline (no longer eats physical portion).
-        // Chaos values: damage ~33%, res ~25%, pen ~50% of F/C/L.
+        // Damage values reduced from {25, 50, 75} -> {10, 12, 14}: the package leans physical.
+        // Penetration {5, 10, 15} is separate from Sundering {15, 30, 45}.
+        // Chaos values: damage ~40%, res ~25%, pen ~55% of F/C/L.
         public static void ApplyBossElementals(ref EnemyStatBlock s, int tier)
         {
             var cap = ElementalMath.ElementCap;
 
             float[] elemResValues = { 25f, 50f, 75f };
-            float[] damageValues  = { 15f, 30f, 45f };
-            float[] penValues     = { 15f, 30f, 45f };
+            float[] damageValues  = { 10f, 12f, 14f };
+            float[] penValues     = { 5f,  10f, 15f };
+            float[] sunderingValues = { 15f, 30f, 45f };
 
             s.FireResistance      = Math.Min(elemResValues[tier], cap);
             s.ColdResistance      = Math.Min(elemResValues[tier], cap);
@@ -148,11 +149,11 @@ namespace ARPGEnemySystem.Common.Scaling
             s.FirePen      = penValues[tier];
             s.ColdPen      = penValues[tier];
             s.LightningPen = penValues[tier];
-            s.SunderingPct = penValues[tier];
+            s.SunderingPct = sunderingValues[tier];
 
             float[] chaosResValues    = { 6f,  13f, 19f };
-            float[] chaosDamageValues = { 5f,  10f, 15f };
-            float[] chaosPenValues    = { 8f,  15f, 23f };
+            float[] chaosDamageValues = { 4f,  5f,  6f };
+            float[] chaosPenValues    = { 3f,  5f,  8f };
 
             s.ChaosResistance = Math.Min(chaosResValues[tier], cap);
             s.ChaosDamagePct  = chaosDamageValues[tier];
