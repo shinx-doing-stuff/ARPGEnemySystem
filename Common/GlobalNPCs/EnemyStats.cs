@@ -1,6 +1,8 @@
+using ARPGEnemySystem.Common.Configs;
 using ARPGEnemySystem.Common.GlobalProjectiles;
 using ARPGEnemySystem.Common.Scaling;
 using Terraria;
+using Terraria.ModLoader;
 
 namespace ARPGEnemySystem.Common.GlobalNPCs
 {
@@ -27,11 +29,17 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             return p == null ? npc.defense : p.ScaleDefense(npc.defense);
         }
 
+        public static float PhysResHalfPoint(NPC npc)
+            => Profile(npc)?.PhysResHalfPoint ?? ModContent.GetInstance<Config>().EnemyPhysResHalfPoint;
+
         public static int DebuffDefenseReduction(NPC npc)
             => (npc.ichor ? IchorDefenseReduction : 0) + (npc.betsysCurse ? BetsysCurseDefenseReduction : 0);
 
         public static EnemyProfile Profile(Projectile proj)
             => proj.TryGetGlobalProjectile(out ProjectileManager pm) ? pm.Profile : null;
+
+        public static float PhysResHalfPoint(Projectile proj)
+            => Profile(proj)?.PhysResHalfPoint ?? ModContent.GetInstance<Config>().EnemyPhysResHalfPoint;
 
         // Shooter-scaled; the hurt pipeline applies vanilla's hostile ×2 and difficulty on top.
         public static int ProjectileDamage(Projectile proj)

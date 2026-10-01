@@ -15,7 +15,6 @@ using Terraria.GameInput;
 using Terraria.GameContent.Events;
 using ARPGEnemySystem.Common.GlobalNPCs;
 using ARPGEnemySystem.Common.Elements;
-using ARPGEnemySystem.Common.Configs;
 using ARPGEnemySystem.Common.Scaling;
 using Terraria.Localization;
 
@@ -49,8 +48,6 @@ namespace ARPGEnemySystem.Common.UI
             // This is needed to make sure that the mouse position works correctly for every UI zoom level
             PlayerInput.SetZoom_UI();
 
-            float physResHalfPoint = ModContent.GetInstance<Config>().PhysResHalfPoint;
-
             // Loop through (hopefully) every NPC on screen and check
             for (int i = 0; i < 200; i++)
             {
@@ -65,7 +62,7 @@ namespace ARPGEnemySystem.Common.UI
                 var profile = EnemyStats.Profile(npc);
                 if (profile == null) continue;
 
-                string tooltipText = BuildTooltip(npc, profile, physResHalfPoint);
+                string tooltipText = BuildTooltip(npc, profile);
 
                 npcTooltip.SetText(tooltipText);
                 Vector2 size = FontAssets.MouseText.Value.MeasureString(tooltipText);
@@ -78,7 +75,7 @@ namespace ARPGEnemySystem.Common.UI
             }
         }
 
-        private static string BuildTooltip(NPC npc, EnemyProfile p, float physResHalfPoint)
+        private static string BuildTooltip(NPC npc, EnemyProfile p)
         {
             var sb = new StringBuilder();
             sb.Append(npc.GivenOrTypeName);
@@ -101,8 +98,8 @@ namespace ARPGEnemySystem.Common.UI
 
             // What a hit sees: scaled defense less Ichor / Betsy's Curse.
             int defense = EnemyStats.Defense(npc) - EnemyStats.DebuffDefenseReduction(npc);
-            float physRes = ElementalMath.ConvertDefenseToResistance(
-                defense, physResHalfPoint, ElementalMath.ElementCap);
+            float physRes = ElementalMath.ConvertEnemyDefenseToResistance(
+                defense, EnemyStats.PhysResHalfPoint(npc));
 
             var pk = p.Package;
             sb.Append('\n');

@@ -40,7 +40,7 @@ Every combat NPC gets one immutable **EnemyProfile** (`Common/Scaling/EnemyProfi
 - **Damage and defense are never written.** Every reader goes through `EnemyStats` (`Common/GlobalNPCs/EnemyStats.cs`), which scales whatever vanilla holds at that moment. Vanilla AI rewrites them mid-fight (Plantera, Skeletron, Duke, Empress every frame).
 - **Only max life, coin value and size are written.** This happens at spawn and after every `NPC.SetDefaults` re-run on a live NPC on the server: Transform, EoW splits, natural-spawn variants. There the `On_NPC.SetDefaults` detour carries the profile and the health fraction. On clients the detour does nothing; the profile arrives in extra-AI and the same writes are applied from it.
 - **Enemy projectiles** reference their shooter's profile and scale with it.
-- **Vanilla's defense step is zeroed for every enemy.** Defense acts only through the mod's physical resistance, which converts with a mirrored curve and has no floor.
+- **Vanilla's defense step is zeroed for every enemy.** Defense acts only through the mod's physical resistance, which converts with a mirrored curve whose half point scales with the enemy's level multiplier, and has no floor.
 
 The vanilla prefix/reforge system is not touched by this mod; it affects NPCs, not items.
 
@@ -65,50 +65,56 @@ ProjectileManager.OnSpawn         → projectile references its shooter's (or pa
 
 ### Scaling Formulas
 
-HP and damage use a shared multiplier:
+HP, damage and defense each have their own multiplier, per enemy kind (`Regular`, `FightMember`). Every multiplier is one continuous piecewise function of `x = level^exponent`:
 
 ```
-multiplier = 1 + level^ScalingExponent × PhaseRates[phase]
+mult = base + Σ rate_k × (the part of x inside phase k's range)     // k = 0 … current phase
 ```
 
-Defense uses a **separate steeper curve** plus an **additive level floor**:
+Phase k's range runs from `PhaseStartLevels[k]^exponent` to `PhaseStartLevels[k+1]^exponent`; the current phase's range is open-ended. So a phase's slope only applies to the levels above its start level, and the curve has no jump at a phase change. HP and damage use `ScalingExponent`, defense uses `DefScalingExponent`.
+
+Defense is `D = vanilla defense × defense multiplier` (`(int)` truncation, no additive floor; a fight member's D is also multiplied by `BossArmourFactor[phase]`). `D` is vanilla's current `npc.defense`, scaled at every read by `EnemyStats.Defense`; it is never written back. Damage works the same way. The conversion to physical resistance is level-relative:
 
 ```
-defense += (int)(level × DefenseFloor)          // floor: lifts all enemies, preserves relative gaps
-defense  = (int)(defense × defMultiplier)       // defMultiplier = 1 + level^DefScalingExponent × DefPhaseRates[phase]
+res% = min(90, 100 × D' / (D' + EnemyPhysResHalfPoint × m))     // mirrored below zero; D' = D after the player's penetration
 ```
 
-`defense` here is vanilla's current `npc.defense`, scaled at every read by `EnemyStats.Defense`; it is never written back. Damage works the same way.
+`m` is the enemy's defense multiplier (`EnemyProfile.DefenseMultiplier`, without the armour factor), so `EnemyProfile.PhysResHalfPoint = EnemyPhysResHalfPoint × m`. With no penetration D' = vanilla defense × m, so the resistance depends only on vanilla defense against EnemyPhysResHalfPoint, the same at every level; the player's armor penetration lowers D' against a half point that stays put.
 
-The additive floor ensures low-defense enemies (slimes: 2 defense, zombies: 6 defense) have meaningful physical resistance at all progression stages. Without it, the hyperbolic conversion (`cap × |defense| / (|defense| + halfPoint)`, mirrored below zero) would yield near-zero physRes for weak enemies while elemental resistances (level-based) would be 25–75%, making physical damage trivially effective against them. The steeper defense curve means armor penetration affixes become increasingly load-bearing at high levels.
+**Phase start levels, per-kind bases and rates, and level bounds are constants, not config** (game design values, on `ScalingMath`). The exponents and half points below are server config.
 
-**Phase rates and level bounds are constants, not config** (game design values, on `ScalingMath`; `WorldManager` aliases them). The exponents, defense floor and half-point below are server config.
+Constants on `ScalingMath` (per-kind tables indexed by `(int)EnemyKind`; rates indexed by phase):
 
-Constants on `ScalingMath` (phase-indexed arrays):
+| Constant                  | Regular                          | FightMember                                   | Purpose                              |
+| ------------------------- | -------------------------------- | --------------------------------------------- | ------------------------------------ |
+| `HpBase` / `HpRates`      | `1` / `{0.003, 0.006, 0.010, 0.015}` | `1.83` / `{0.00022, 0.0106, 0.0397, 0.0313}`  | HP multiplier                        |
+| `DamageBase` / `DamageRates` | `1` / `{0.003, 0.006, 0.010, 0.015}` | `0.396` / `{0.00725, 0.00039, 0, 0.00446}`    | Damage multiplier                    |
+| `DefenseBase` / `DefenseRates` | `1` / `{0.004, 0.008, 0.013, 0.020}` | `1` / `{0.004, 0.008, 0.013, 0.020}`          | Defense multiplier (steeper)         |
 
-| Constant        | Value                          | Purpose                             |
-| --------------- | ------------------------------ | ----------------------------------- |
-| `PhaseRates`    | `{0.003, 0.006, 0.010, 0.015}` | HP/damage scaling per phase         |
-| `DefPhaseRates` | `{0.004, 0.008, 0.013, 0.020}` | Defense scaling per phase (steeper) |
-| `BaseLevel`     | `10`                           | World level on a fresh world        |
-| `MaxLevel`      | `200`                          | World level with every boss downed  |
+| Constant           | Value              | Purpose                                                        |
+| ------------------ | ------------------ | -------------------------------------------------------------- |
+| `PhaseStartLevels` | `{0, 94, 137, 147}` | Level where each phase's slope starts                          |
+| `BossArmourFactor` | `{1, 1, 1, 1}`     | Multiplies a fight member's D per phase (not the half point)   |
+| `BaseLevel`        | `10`               | World level on a fresh world                                   |
+| `MaxLevel`         | `200`              | World level with every boss downed                             |
 
 Server config knobs (tunable per-server):
 
-| Config field         | Default | Purpose                                            |
-| -------------------- | ------- | -------------------------------------------------- |
-| `ScalingExponent`    | `1.14`  | HP/damage curve shape                              |
-| `DefScalingExponent` | `1.15`  | Defense curve shape (steeper than ScalingExponent) |
-| `DefenseFloor`       | `0.70`  | Additive min defense = level × floor               |
-| `PhysResHalfPoint`   | `60`    | Defense at which physRes reaches half the cap      |
+| Config field            | Default | Purpose                                                                 |
+| ----------------------- | ------- | ----------------------------------------------------------------------- |
+| `ScalingExponent`       | `1.14`  | HP/damage curve shape                                                   |
+| `DefScalingExponent`    | `1.15`  | Defense curve shape (steeper than ScalingExponent)                      |
+| `EnemyPhysResHalfPoint` | `25`    | Vanilla defense that reads 50% physRes at any level (× the enemy's m)   |
+| `PhysResHalfPoint`      | `60`    | The player's half point (Elemental section)                             |
 
-**Reference values** (HP multiplier at key milestones with defaults):
+A saved config that still carries `DefenseFloor` loads fine: the ModConfig loader ignores unknown keys.
 
-- Level 50, phase 0 (pre-HM): 1.26× (+26%)
-- Level 50, phase 1 (post-WoF): 1.52× (+52%)
-- Level 100, phase 2 (post-mechs): 2.91× (+191%)
-- Level 150, phase 3 (post-Plantera): 5.54× (+454%)
-- Level 200, phase 3 (everything downed): 7.30× (+630%)
+**Reference values** (HP multiplier at key milestones with defaults, regular / boss):
+
+- Level 50, phase 0 (pre-HM): 1.26× / 1.85×
+- Level 100, phase 2 (post-mechs; below level 137, so only the phase 0 and 1 slopes apply): 1.61× / 2.01×
+- Level 150, phase 3 (post-Plantera): 2.44× / 4.00×
+- Level 200, phase 3 (everything downed): 4.20× / 7.68×
 
 ### Phase System
 
@@ -119,26 +125,26 @@ Server config knobs (tunable per-server):
 - Phase 2 — post-all-three-mechs (`NPC.downedMechBoss1 && downedMechBoss2 && downedMechBoss3`)
 - Phase 3 — post-Plantera (`NPC.downedPlantBoss`)
 
-Phase changes produce discrete difficulty jumps: the same level enemy becomes significantly harder after each milestone. PhaseRates are the "bump" — same level, different rate, higher multiplier.
+A phase change does not jump the multiplier. A phase adds its own slope on the levels above its start level (`PhaseStartLevels` 94 / 137 / 147), so the same level enemy gets harder only as far as its level lies beyond that start; below it the new phase adds nothing.
 
-`GetScalingPhase()` tops out at 3, so every post-Moon-Lord modded boss fight uses `PhaseRates[3]`. This is a known limitation, deliberately left out of the world-level work.
+`GetScalingPhase()` tops out at 3, so every post-Moon-Lord modded boss fight uses the phase 3 rates. This is a known limitation, deliberately left out of the world-level work.
 
 ### Key Files
 
 - **`Common/Systems/BossRoster.cs`** — Pulls every `isBoss` entry from Boss Checklist in `PostAddRecipes` and keeps its `downed` predicate. `IsDowned(entry)` is the only place a third-party delegate is invoked; an entry whose predicate throws is logged and excluded for the session. `progression` is available on each entry but deliberately unused. It also collects the `npcIDs` of every `isBoss` and `isMiniboss` entry into the set `BossPlayerScaling` reads; Boss Checklist does not export its limb lists (`npcLimbs` is internal), so limbs are not in it. Eater of Worlds and Brain of Cthulhu are two roster entries sharing one `downed` flag, so killing either is counted twice — the Eater of Worlds is worth two bosses' worth of level cap on a corruption world.
 - **`Common/Systems/BossPlayerScaling.cs`** — Detours `NPC.ScaleStats` so every NPC type in a Boss Checklist boss or miniboss entry's `npcIDs` (`BossRoster.ScalesWithPlayers`) gets **solo life × player count** in Expert/Master, replacing vanilla's `balance` curve (1.35× at 2 players, 2.63× at 4). It runs the original with a player count of 1, so vanilla's and the boss mod's own `ApplyDifficultyAndPlayerScaling` produce solo values, then multiplies `lifeMax`. Deliberately unchanged: Normal mode (vanilla has no player scaling there; detected because `statsAreScaledForThisManyPlayers` is only set by vanilla's Expert branch), limbs not listed in `npcIDs` (Skeletron hands, Prime limbs, Golem head/fists, Moon Lord hands, Creepers keep vanilla's partial scaling), mid-fight joins (count frozen at spawn, as vanilla), and damage. `statsAreScaledForThisManyPlayers` is restored to the real count afterwards, because Golem's AI (`GetMyBalance`) and the NPC spawn packet read it, and clients rebuild `lifeMax` from that synced count through the same detour. A mod that adds its own player scaling outside `ApplyDifficultyAndPlayerScaling` would stack with this; that can only be caught in-game. `Announce` (called from `EnemyProfileNPC.OnSpawn` once the spawn writes are applied, server/SP only) broadcasts one chat line per boss type when the server config's `EnableBossScalingLog` is on, at most once per 60 ticks so a worm boss's segments do not flood chat: solo life, life after player scaling, final life and level. The toggle is server-side, unlike the client-side debug logs, because the server decides and broadcasts the line.
-- **`Common/Systems/WorldManager.cs`** — Owns `levelCap` and `GetScalingPhase()`; it only aliases `PhaseRates`/`DefPhaseRates`/`BaseLevel`/`MaxLevel`, which are declared on `ScalingMath` (`Common/Scaling/ScalingMath.cs`). `Recompute()` sets `levelCap = BaseLevel + LevelsPerBoss() × BossRoster.DownedCount()`, called from `PostWorldLoad` and every 60 ticks in `PostUpdateWorld` — both server/single-player only, so the server is authoritative without a `netMode` check. The result is rounded to the nearest int (`MathF.Round`), and a roster of zero bosses pins `LevelsPerBoss()` at 0, so `levelCap` stays at `BaseLevel`. Nothing is persisted: `levelCap` is a pure function of the roster and the downed predicates. `levelCapOverride` (−1 = off) lets `/setlevelcap` hold a value against the recompute.
+- **`Common/Systems/WorldManager.cs`** — Owns `levelCap` and `GetScalingPhase()`; it only aliases `BaseLevel`/`MaxLevel`, which are declared on `ScalingMath` (`Common/Scaling/ScalingMath.cs`). `Recompute()` sets `levelCap = BaseLevel + LevelsPerBoss() × BossRoster.DownedCount()`, called from `PostWorldLoad` and every 60 ticks in `PostUpdateWorld` — both server/single-player only, so the server is authoritative without a `netMode` check. The result is rounded to the nearest int (`MathF.Round`), and a roster of zero bosses pins `LevelsPerBoss()` at 0, so `levelCap` stays at `BaseLevel`. Nothing is persisted: `levelCap` is a pure function of the roster and the downed predicates. `levelCapOverride` (−1 = off) lets `/setlevelcap` hold a value against the recompute.
 - **`Common/GlobalNPCs/EnemyProfileNPC.cs`** — `GlobalNPC` that owns every combat NPC's `EnemyProfile` (`Profile` field). `OnSpawn` (server/SP) creates or joins a profile and writes max life, coin value and size; the `On_NPC.SetDefaults` detour (server/SP only, outermost call only) re-attaches the profile and health fraction after any re-run; `ModifyIncomingHit` zeroes vanilla defense (and cancels vanilla's negative-defense bonus). ARPGItemSystem is a hard mutual requirement, so elemental packages always apply — see Cross-Mod Dependency.
-- **`Common/Scaling/EnemyProfile.cs`** — The immutable profile: `Kind` (`Regular` / `FightMember`), `Level`, `Phase`, `Rarity`, `Modifiers`, and `Package` (elemental damage %, resistances, penetration, sundering). `ScaleDamage` / `ScaleDefense` / `ScaleLifeMax` apply level, then rarity, then modifiers to a raw value. A fight member's package is progression-tiered by `EnemyScaling.BossTierForPhase`: resistances 25/50/75% (chaos 6/13/19%), damage % 10/12/14 (chaos 4/5/6), elemental penetration 5/10/15 (chaos 3/5/8), Sundering 15/30/45 from its own array. `PhysicalResistance` is NOT stored — derived at hit time from `EnemyStats.Defense` via `ConvertDefenseToResistance`.
+- **`Common/Scaling/EnemyProfile.cs`** — The immutable profile: `Kind` (`Regular` / `FightMember`), `Level`, `Phase`, `Rarity`, `Modifiers`, and `Package` (elemental damage %, resistances, penetration, sundering). `ScaleDamage` / `ScaleDefense` / `ScaleLifeMax` apply level, then rarity, then modifiers to a raw value. A fight member's package is progression-tiered by `EnemyScaling.BossTierForPhase`: resistances 25/50/75% (chaos 6/13/19%), damage % 10/12/14 (chaos 4/5/6), elemental penetration 5/10/15 (chaos 3/5/8), Sundering 15/30/45 from its own array. `PhysicalResistance` is NOT stored — derived at hit time from `EnemyStats.Defense` and `EnemyStats.PhysResHalfPoint` via `ConvertDefenseToResistance`. The profile exposes `DefenseMultiplier` (m) and `PhysResHalfPoint` (= `EnemyPhysResHalfPoint` × m).
 - **`Common/GlobalNPCs/EnemyStats.cs`** — The only way mod code reads an enemy's or enemy projectile's damage and defense. Also owns the Ichor (−15) and Betsy's Curse (−40) defense reductions that vanilla's zeroed defense step no longer applies.
 - **`Common/Scaling/EnemyProfileCodec.cs`** — Wire format for the profile inputs (level, kind/phase/rarity header byte, modifier count, type + magnitude per modifier), shared by NPC and projectile sync.
-- **`Common/GlobalNPCs/Rarity.cs`** — `EnemyRarity` struct + `RarityDatabase`. Five rarities (Common / Uncommon / Rare / Elite / Legend). Roll weights (in `rarityWeightDatabase`) shift toward higher rarities across 8 columns, each tied to a boss milestone in `GetWeightIndex()`. Stat bonuses: Common 0/0/0, Uncommon 20/10/10, Rare 50/25/20, Elite 100/50/35, Legend 200/100/60 (HP%/Def%/Dmg%).
+- **`Common/GlobalNPCs/Rarity.cs`** — `EnemyRarity` struct + `RarityDatabase`. Five rarities (Common / Uncommon / Rare / Elite / Legend). Roll weights (in `rarityWeightDatabase`) shift toward higher rarities across 8 columns, each tied to a boss milestone in `GetWeightIndex()`. Stat bonuses: Common 0/0/0, Uncommon 20/10/10, Rare 50/25/20, Elite 70/40/30, Legend 100/70/50 (HP%/Def%/Dmg%).
 - **`Common/GlobalNPCs/EnemyModifier.cs`** — `EnemyModifier` struct + `ModifierType` enum. An excludeList passed to `GenerateModifier` prevents duplicate modifier types on the same enemy.
 - **`Common/Database/TierDatabase.cs`** — Static dictionary: `ModifierType → List<Tier>(10 entries)`. Tier 0 = highest values, tier 9 = lowest. `Utils.GetTier()` returns an index based on boss progression (minimum and maximum tier both shrink as more bosses die).
-- **`Common/UI/UISystem.cs`** + **`Common/UI/NPCTooltip.cs`** — `UISystem` (ModSystem) hooks into `ModifyInterfaceLayers` to draw the overlay. `NPCUI` (UIState) rebuilds a `UITextPanel` on every update tick. Now shows: level, rarity, modifiers, defense, Phys Res (computed via `ConvertDefenseToResistance(EnemyStats.Defense(npc) − Ichor/Betsy reduction, PhysResHalfPoint, ElementalMath.ElementCap)`), Fire/Cold/Lightning Res, and elemental damage type/pct. Controlled by `ConfigClient.EnableEnemyStatPanel`.
+- **`Common/UI/UISystem.cs`** + **`Common/UI/NPCTooltip.cs`** — `UISystem` (ModSystem) hooks into `ModifyInterfaceLayers` to draw the overlay. `NPCUI` (UIState) rebuilds a `UITextPanel` on every update tick. Now shows: level, rarity, modifiers, defense, Phys Res (computed via `ConvertEnemyDefenseToResistance(EnemyStats.Defense(npc) − Ichor/Betsy reduction, EnemyStats.PhysResHalfPoint(npc))`), Fire/Cold/Lightning Res, and elemental damage type/pct. Controlled by `ConfigClient.EnableEnemyStatPanel`.
 - **`Common/Elements/Element.cs`** — `Element` enum (`Physical=0`, `Fire=1`, `Cold=2`, `Lightning=3`), byte-backed for efficient serialization.
-- **`Common/Elements/ElementalMath.cs`** — Static helpers: `ClampResistance(raw, cap)`, `ApplyResistance(damage, res%, cap)`, `ConvertDefenseToResistance(defense, halfPoint, cap)` = `sign(d) · cap · |d| / (|d| + halfPoint)`. A hyperbolic curve mirrored below zero: `halfPoint` is the defense value at which physRes reaches `cap / 2`, and negative defense is a vulnerability. No floor. This is how an enemy's scaled defense becomes a physical resistance percentage.
-- **`Common/Configs/Config.cs`** — Server-side: `ScalingExponent` (default 1.14, HP/damage curve shape), `DefScalingExponent` (1.15), `DefenseFloor` (0.7), `PhysResHalfPoint` (int, default 60, defense value at which physRes reaches cap/2), and the `EnableBossScalingLog` debug toggle (default false). The resistance caps are not config: `ElementalMath.ElementCap` (75) and `ElementalMath.PlayerPhysCap` (80). Client-side (`ConfigClient`): `EnableEnemyStatPanel` (default false), `EnableElementalDamageLog` (default false, debug toggle for chat hit log), `EnableReapLog` (default false, debug toggle for the reap log). Enemy modifiers always roll — the previous `ModifierAllowed` toggle was removed.
+- **`Common/Elements/ElementalMath.cs`** — Static helpers: `ClampResistance(raw, cap)`, `ApplyResistance(damage, res%, cap)`, `ConvertDefenseToResistance(defense, halfPoint, cap)` = `sign(d) · cap · |d| / (|d| + halfPoint)`. A hyperbolic curve mirrored below zero: `halfPoint` is the defense value at which physRes reaches `cap / 2`, and negative defense is a vulnerability. No floor. This is how an enemy's scaled defense becomes a physical resistance percentage; enemies use `ConvertEnemyDefenseToResistance(defense, halfPoint)` = `sign(d) · min(EnemyPhysCap, 100 · |d| / (|d| + halfPoint))` with the profile's level-scaled half point, so the half point reads 50% and 90 is only a ceiling.
+- **`Common/Configs/Config.cs`** — Server-side: `ScalingExponent` (default 1.14, HP/damage curve shape), `DefScalingExponent` (1.15), `EnemyPhysResHalfPoint` (int, 5–100, default 25, vanilla defense that reads 50% at any level), `PhysResHalfPoint` (int, default 60, the player's half point), and the `EnableBossScalingLog` debug toggle (default false). The resistance caps are not config: `ElementalMath.ElementCap` (75), `ElementalMath.PlayerPhysCap` (80) and `ElementalMath.EnemyPhysCap` (90). Client-side (`ConfigClient`): `EnableEnemyStatPanel` (default false), `EnableElementalDamageLog` (default false, debug toggle for chat hit log), `EnableReapLog` (default false, debug toggle for the reap log). Enemy modifiers always roll — the previous `ModifierAllowed` toggle was removed.
 
 ### Multiplayer Sync
 
@@ -157,7 +163,7 @@ Phase changes produce discrete difficulty jumps: the same level enemy becomes si
 
 ### Adding a New Rarity
 
-Add a row to both `RarityDatabase.rarityModifierDatabase` (3-element list: HP%, defense%, damage% magnitudes) and `rarityWeightDatabase` (8-element weight list matching the 8 boss milestone columns in `GetWeightIndex()`). Weights across all rarities must sum to 100 per column.
+Add a row to both `RarityDatabase.rarityModifierDatabase` (3-element list: HP%, defense%, damage% magnitudes) and `rarityWeightDatabase` (8-element weight list matching the 8 boss milestone columns in `GetWeightIndex()`). Weights across all rarities must sum to 100 per column; a column that falls short leaves rolls in the gap with no rarity.
 
 ## NPC Fields — Scaling & Power Level
 

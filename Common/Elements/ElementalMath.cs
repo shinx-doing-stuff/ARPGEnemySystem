@@ -8,6 +8,7 @@ namespace ARPGEnemySystem.Common.Elements
         // Player-side max-resistance class stats add ON TOP of these baselines per-player.
         public const float ElementCap = 75f;
         public const float PlayerPhysCap = 80f;
+        public const float EnemyPhysCap = 90f;
 
         // Clamps resistance to (-inf, cap]. Negative values allowed (vulnerability).
         public static float ClampResistance(float raw, float cap)
@@ -24,5 +25,9 @@ namespace ARPGEnemySystem.Common.Elements
         // vulnerability instead of hitting the pole.
         public static float ConvertDefenseToResistance(float defense, float halfPoint, float cap)
             => MathF.Sign(defense) * cap * MathF.Abs(defense) / (MathF.Abs(defense) + halfPoint);
+
+        // Enemy physical resistance in %: 100 × |d| / (|d| + halfPoint), mirrored below zero, capped at EnemyPhysCap above.
+        public static float ConvertEnemyDefenseToResistance(float defense, float halfPoint)
+            => MathF.Sign(defense) * MathF.Min(EnemyPhysCap, 100f * MathF.Abs(defense) / (MathF.Abs(defense) + halfPoint));
     }
 }

@@ -84,7 +84,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             //                          pre SlimeK  Skele   WoF  QSlime MechAny Golem Plant+
             { Rarity.Common,   new List<int> { 70,  60,  55,  50,  40,  30,  20,  10 } },
             { Rarity.Uncommon, new List<int> { 20,  25,  25,  25,  25,  25,  20,  15 } },
-            { Rarity.Rare,     new List<int> {  8,  10,  13,  15,  20,  22,  25,  25 } },
+            { Rarity.Rare,     new List<int> {  8,  10,  13,  15,  20,  22,  25,  30 } },
             { Rarity.Elite,    new List<int> {  2,   4,   5,   8,  12,  17,  25,  30 } },
             { Rarity.Legend,   new List<int> {  0,   1,   2,   2,   3,   6,  10,  15 } },
         };

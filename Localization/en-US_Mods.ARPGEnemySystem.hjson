@@ -17,22 +17,22 @@ Configs: {
 
 		ScalingExponent: {
 			Label: Scaling Exponent
-			Tooltip: Exponent applied to enemy level in the HP/damage scaling formula: 1 + level^exponent × phaseRate. Higher values = steeper growth curve.
+			Tooltip: Exponent applied to enemy level in the HP/damage curve. Each progression phase adds its own slope on level^exponent from its start level, with no jump at a phase change. Higher values = steeper growth.
 		}
 
 		DefScalingExponent: {
 			Label: Defense Scaling Exponent
-			Tooltip: Exponent for the defense scaling curve. Higher than ScalingExponent keeps physRes meaningful at high levels.
+			Tooltip: Exponent for the defense curve. Same continuous phase-slope shape as the HP/damage curve, with steeper slopes. Higher values = steeper growth.
 		}
 
-		DefenseFloor: {
-			Label: Defense Floor
-			Tooltip: Additive defense added per level (level × floor). Ensures low-defense enemies like slimes have non-trivial physRes.
+		EnemyPhysResHalfPoint: {
+			Label: Enemy Phys Res Half Point
+			Tooltip: Vanilla defense that reads 50% physical resistance at any level; the enemy's level multiplier scales it. Default 25.
 		}
 
 		PhysResHalfPoint: {
 			Label: Phys Res Half Point
-			Tooltip: Defense value at which physRes reaches cap/2. Controls curve steepness. Default 30.
+			Tooltip: The player's half point: defense at which the player's physical resistance reaches half its cap. Default 60.
 		}
 
 		EnableBossScalingLog: {

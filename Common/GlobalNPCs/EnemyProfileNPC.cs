@@ -37,7 +37,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         internal static ScalingSettings Settings()
         {
             var cfg = ModContent.GetInstance<Config>();
-            return new ScalingSettings(cfg.ScalingExponent, cfg.DefScalingExponent, cfg.DefenseFloor);
+            return new ScalingSettings(cfg.ScalingExponent, cfg.DefScalingExponent, cfg.EnemyPhysResHalfPoint);
         }
 
         public override void OnSpawn(NPC npc, IEntitySource source)

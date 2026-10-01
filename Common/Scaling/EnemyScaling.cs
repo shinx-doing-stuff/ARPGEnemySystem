@@ -18,20 +18,18 @@ namespace ARPGEnemySystem.Common.Scaling
 
     public static class EnemyScaling
     {
-        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, int phase, float scalingExponent, float defScalingExponent, float defenseFloor)
+        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, int phase, float scalingExponent, float defScalingExponent, EnemyKind kind)
             => ApplyLevelScaling(ref s, level,
-                ScalingMath.HpDamageMultiplier(level, phase, scalingExponent),
-                ScalingMath.DefenseMultiplier(level, phase, defScalingExponent),
-                defenseFloor);
+                ScalingMath.HpMultiplier(level, phase, scalingExponent, kind),
+                ScalingMath.DamageMultiplier(level, phase, scalingExponent, kind),
+                ScalingMath.DefenseMultiplier(level, phase, defScalingExponent, kind)
+                    * (kind == EnemyKind.FightMember ? ScalingMath.BossArmourFactor[phase] : 1f));
 
-        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, float multiplier, float defMultiplier, float defenseFloor)
+        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, float hpMultiplier, float damageMultiplier, float defMultiplier)
         {
-            // Additive floor ensures low-defense enemies (zombies, slimes) get baseline physRes
-            // while preserving relative differences between enemy types.
-            s.LifeMax = (int)(s.LifeMax * multiplier);
-            s.Damage  = (int)(s.Damage  * multiplier);
-            s.Defense += (int)(level * defenseFloor);
-            s.Defense  = (int)(s.Defense * defMultiplier);
+            s.LifeMax = (int)(s.LifeMax * hpMultiplier);
+            s.Damage  = (int)(s.Damage  * damageMultiplier);
+            s.Defense = (int)(s.Defense * defMultiplier);
         }
 
         public static void ApplyRarityStats(ref EnemyStatBlock s, Rarity rarity)

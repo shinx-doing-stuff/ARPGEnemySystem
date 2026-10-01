@@ -21,11 +21,6 @@ namespace ARPGEnemySystem.Common.Systems
         // -1 = follow boss progression; >= 0 = /setlevelcap is holding it.
         public static int levelCapOverride = -1;
 
-        // Hardcoded — these are game design values, not server-tuning knobs.
-        // Phase 0 = pre-hardmode, 1 = post-WoF, 2 = post-all-mechs, 3 = post-Plantera.
-        public static readonly float[] PhaseRates    = ScalingMath.PhaseRates;
-        public static readonly float[] DefPhaseRates = ScalingMath.DefPhaseRates;
-
         private const int RecomputeInterval = 60;
         private int ticksUntilRecompute;
 

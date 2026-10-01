@@ -29,11 +29,9 @@ namespace ARPGEnemySystem.Common.Configs
         [DefaultValue(ScalingDefaults.DefScalingExponent)]
         public float DefScalingExponent;
 
-        [Range(0.0f, 1.0f)]
-        [Increment(0.01f)]
-        [DrawTicks]
-        [DefaultValue(ScalingDefaults.DefenseFloor)]
-        public float DefenseFloor;
+        [Range(5, 100)]
+        [DefaultValue(ScalingDefaults.EnemyPhysResHalfPoint)]
+        public int EnemyPhysResHalfPoint;
 
         [Header("Elemental")]
 
