@@ -26,8 +26,11 @@ namespace ARPGEnemySystem.Common.Elements
         public static float ConvertDefenseToResistance(float defense, float halfPoint, float cap)
             => MathF.Sign(defense) * cap * MathF.Abs(defense) / (MathF.Abs(defense) + halfPoint);
 
-        // Enemy physical resistance in %: 100 × |d| / (|d| + halfPoint), mirrored below zero, capped at EnemyPhysCap above.
+        // Enemy physical resistance in %: 100 × d / (d + halfPoint), capped at EnemyPhysCap above zero.
+        // Below zero the same curve mirrors with no cap: -100 × |d| / (|d| + halfPoint), limit -100.
         public static float ConvertEnemyDefenseToResistance(float defense, float halfPoint)
-            => MathF.Sign(defense) * MathF.Min(EnemyPhysCap, 100f * MathF.Abs(defense) / (MathF.Abs(defense) + halfPoint));
+            => defense >= 0f
+                ? MathF.Min(EnemyPhysCap, 100f * defense / (defense + halfPoint))
+                : -100f * -defense / (-defense + halfPoint);
     }
 }

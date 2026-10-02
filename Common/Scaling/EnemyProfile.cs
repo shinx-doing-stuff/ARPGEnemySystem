@@ -9,8 +9,8 @@ namespace ARPGEnemySystem.Common.Scaling
         FightMember = 1,
     }
 
-    // Server-synced config inputs, so every machine derives the same numbers.
-    public readonly record struct ScalingSettings(float ScalingExponent, float DefScalingExponent, int EnemyPhysResHalfPoint);
+    // Server-synced config input, so every machine derives the same numbers.
+    public readonly record struct ScalingSettings(float ScalingExponent);
 
     // One enemy's scaling, rolled once on the server. Immutable, so a fight, its projectiles and
     // SetDefaults re-runs share one instance.
@@ -28,10 +28,6 @@ namespace ARPGEnemySystem.Common.Scaling
         // Set by Colossal/Tiny; null keeps the NPC's own scale.
         public readonly float? ScaleOverride;
 
-        // The enemy's defense multiplier m (without the boss armour factor), and the half point scaled by it.
-        public readonly float DefenseMultiplier;
-        public readonly float PhysResHalfPoint;
-
         private readonly float _hpMultiplier;
         private readonly float _damageMultiplier;
 
@@ -46,8 +42,6 @@ namespace ARPGEnemySystem.Common.Scaling
 
             _hpMultiplier = ScalingMath.HpMultiplier(level, phase, settings.ScalingExponent, kind);
             _damageMultiplier = ScalingMath.DamageMultiplier(level, phase, settings.ScalingExponent, kind);
-            DefenseMultiplier = ScalingMath.DefenseMultiplier(level, phase, settings.DefScalingExponent, kind);
-            PhysResHalfPoint = settings.EnemyPhysResHalfPoint * DefenseMultiplier;
 
             var package = new EnemyStatBlock();
             if (kind == EnemyKind.FightMember)
@@ -79,8 +73,7 @@ namespace ARPGEnemySystem.Common.Scaling
         // Level, then rarity, then modifiers, truncating at each stage.
         public void ApplyStats(ref EnemyStatBlock s)
         {
-            float armourFactor = Kind == EnemyKind.FightMember ? ScalingMath.BossArmourFactor[Phase] : 1f;
-            EnemyScaling.ApplyLevelScaling(ref s, Level, _hpMultiplier, _damageMultiplier, DefenseMultiplier * armourFactor);
+            EnemyScaling.ApplyLevelScaling(ref s, Level, _hpMultiplier, _damageMultiplier);
             if (Rarity != Rarity.None)
                 EnemyScaling.ApplyRarityStats(ref s, Rarity);
             foreach (var m in Modifiers)

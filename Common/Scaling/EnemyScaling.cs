@@ -18,18 +18,16 @@ namespace ARPGEnemySystem.Common.Scaling
 
     public static class EnemyScaling
     {
-        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, int phase, float scalingExponent, float defScalingExponent, EnemyKind kind)
+        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, int phase, float scalingExponent, EnemyKind kind)
             => ApplyLevelScaling(ref s, level,
                 ScalingMath.HpMultiplier(level, phase, scalingExponent, kind),
-                ScalingMath.DamageMultiplier(level, phase, scalingExponent, kind),
-                ScalingMath.DefenseMultiplier(level, phase, defScalingExponent, kind)
-                    * (kind == EnemyKind.FightMember ? ScalingMath.BossArmourFactor[phase] : 1f));
+                ScalingMath.DamageMultiplier(level, phase, scalingExponent, kind));
 
-        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, float hpMultiplier, float damageMultiplier, float defMultiplier)
+        // Defense is not level-scaled: vanilla defense, then rarity and modifiers.
+        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, float hpMultiplier, float damageMultiplier)
         {
             s.LifeMax = (int)(s.LifeMax * hpMultiplier);
             s.Damage  = (int)(s.Damage  * damageMultiplier);
-            s.Defense = (int)(s.Defense * defMultiplier);
         }
 
         public static void ApplyRarityStats(ref EnemyStatBlock s, Rarity rarity)

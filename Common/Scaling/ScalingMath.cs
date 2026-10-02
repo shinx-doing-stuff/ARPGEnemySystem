@@ -30,16 +30,6 @@ namespace ARPGEnemySystem.Common.Scaling
             new[] { 0.00725f, 0.00039f, 0f, 0.00446f },
         };
 
-        public static readonly float[] DefenseBase = { 1f, 1f };
-        public static readonly float[][] DefenseRates =
-        {
-            new[] { 0.004f, 0.008f, 0.013f, 0.020f },
-            new[] { 0.004f, 0.008f, 0.013f, 0.020f },
-        };
-
-        // Multiplies a fight member's scaled defense per phase; the resistance half point ignores it.
-        public static readonly float[] BossArmourFactor = { 1f, 1f, 1f, 1f };
-
         // mult = base + sum over phases k up to the current phase of rate_k x (the part of level^exponent inside phase k's range).
         public static float PiecewiseMultiplier(int level, int phase, float exponent, float baseValue, float[] rates)
         {
@@ -59,9 +49,6 @@ namespace ARPGEnemySystem.Common.Scaling
 
         public static float DamageMultiplier(int level, int phase, float exponent, EnemyKind kind)
             => PiecewiseMultiplier(level, phase, exponent, DamageBase[(int)kind], DamageRates[(int)kind]);
-
-        public static float DefenseMultiplier(int level, int phase, float exponent, EnemyKind kind)
-            => PiecewiseMultiplier(level, phase, exponent, DefenseBase[(int)kind], DefenseRates[(int)kind]);
 
         public static float LevelsPerBoss(int rosterCount)
         {

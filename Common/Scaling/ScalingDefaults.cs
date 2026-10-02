@@ -5,7 +5,6 @@ namespace ARPGEnemySystem.Common.Scaling
     public static class ScalingDefaults
     {
         public const float ScalingExponent = 1.14f;
-        public const float DefScalingExponent = 1.15f;
         public const int EnemyPhysResHalfPoint = 25;
         public const int PhysResHalfPoint = 60;
     }

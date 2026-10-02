@@ -30,7 +30,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         }
 
         public static float PhysResHalfPoint(NPC npc)
-            => Profile(npc)?.PhysResHalfPoint ?? ModContent.GetInstance<Config>().EnemyPhysResHalfPoint;
+            => ModContent.GetInstance<Config>().EnemyPhysResHalfPoint;
 
         public static int DebuffDefenseReduction(NPC npc)
             => (npc.ichor ? IchorDefenseReduction : 0) + (npc.betsysCurse ? BetsysCurseDefenseReduction : 0);
@@ -39,7 +39,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             => proj.TryGetGlobalProjectile(out ProjectileManager pm) ? pm.Profile : null;
 
         public static float PhysResHalfPoint(Projectile proj)
-            => Profile(proj)?.PhysResHalfPoint ?? ModContent.GetInstance<Config>().EnemyPhysResHalfPoint;
+            => ModContent.GetInstance<Config>().EnemyPhysResHalfPoint;
 
         // Shooter-scaled; the hurt pipeline applies vanilla's hostile ×2 and difficulty on top.
         public static int ProjectileDamage(Projectile proj)
