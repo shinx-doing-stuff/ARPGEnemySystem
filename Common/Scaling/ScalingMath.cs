@@ -16,18 +16,18 @@ namespace ARPGEnemySystem.Common.Scaling
         public static readonly int[] PhaseStartLevels = { 0, 94, 137, 147 };
 
         // Per-kind tables, indexed by (int)EnemyKind: Regular, FightMember.
-        public static readonly float[] HpBase = { 1f, 1.83f };
+        public static readonly float[] HpBase = { 1f, 1.355f };
         public static readonly float[][] HpRates =
         {
             new[] { 0.003f, 0.006f, 0.010f, 0.015f },
-            new[] { 0.00022f, 0.0106f, 0.0397f, 0.0313f },
+            new[] { 0.008365f, 0f, 0.04957f, 0.03336f },
         };
 
-        public static readonly float[] DamageBase = { 1f, 0.396f };
+        public static readonly float[] DamageBase = { 1f, 0.4934f };
         public static readonly float[][] DamageRates =
         {
             new[] { 0.003f, 0.006f, 0.010f, 0.015f },
-            new[] { 0.00725f, 0.00039f, 0f, 0.00446f },
+            new[] { 0.009262f, 0.001879f, 0f, 0.006118f },
         };
 
         // mult = base + sum over phases k up to the current phase of rate_k x (the part of level^exponent inside phase k's range).
