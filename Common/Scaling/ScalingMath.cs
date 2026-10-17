@@ -12,23 +12,24 @@ namespace ARPGEnemySystem.Common.Scaling
 
         // Hardcoded — these are game design values, not server-tuning knobs.
         // Phase 0 = pre-hardmode, 1 = post-WoF, 2 = post-all-mechs, 3 = post-Plantera.
-        // Each phase's slope applies only to the level range above its start level, so the curve has no jump.
+        // HP: one rate per phase on the whole level, so the kill that opens a phase makes every enemy tankier at once.
+        // Regular enemies and boss-fight members share the HP table.
+        public const float HpBase = 0.8085f;
+        public static readonly float[] HpRates = { 0.004852f, 0.008248f, 0.01398f, 0.02052f };
+
+        // Damage: each phase's slope applies only to the level range above its start level, so the damage curve has no jump.
         public static readonly int[] PhaseStartLevels = { 0, 94, 137, 147 };
 
-        // Per-kind tables, indexed by (int)EnemyKind: Regular, FightMember.
-        public static readonly float[] HpBase = { 1f, 1.355f };
-        public static readonly float[][] HpRates =
-        {
-            new[] { 0.003f, 0.006f, 0.010f, 0.015f },
-            new[] { 0.008365f, 0f, 0.04957f, 0.03336f },
-        };
-
+        // Per-kind damage tables, indexed by (int)EnemyKind: Regular, FightMember.
         public static readonly float[] DamageBase = { 1f, 0.4934f };
         public static readonly float[][] DamageRates =
         {
             new[] { 0.003f, 0.006f, 0.010f, 0.015f },
             new[] { 0.009262f, 0.001879f, 0f, 0.006118f },
         };
+
+        public static float HpMultiplier(int level, int phase, float exponent)
+            => HpBase + HpRates[phase] * MathF.Pow(level, exponent);
 
         // mult = base + sum over phases k up to the current phase of rate_k x (the part of level^exponent inside phase k's range).
         public static float PiecewiseMultiplier(int level, int phase, float exponent, float baseValue, float[] rates)
@@ -43,9 +44,6 @@ namespace ARPGEnemySystem.Common.Scaling
             }
             return result;
         }
-
-        public static float HpMultiplier(int level, int phase, float exponent, EnemyKind kind)
-            => PiecewiseMultiplier(level, phase, exponent, HpBase[(int)kind], HpRates[(int)kind]);
 
         public static float DamageMultiplier(int level, int phase, float exponent, EnemyKind kind)
             => PiecewiseMultiplier(level, phase, exponent, DamageBase[(int)kind], DamageRates[(int)kind]);

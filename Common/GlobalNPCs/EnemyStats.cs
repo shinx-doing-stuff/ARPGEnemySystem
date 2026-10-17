@@ -11,8 +11,8 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
     public static class EnemyStats
     {
         // Ichor and Betsy's Curse; vanilla applies them inside the defense step EnemyProfileNPC replaces.
-        public const int IchorDefenseReduction = 15;
-        public const int BetsysCurseDefenseReduction = 40;
+        public const int IchorDefenseReduction = 5;
+        public const int BetsysCurseDefenseReduction = 13;
 
         public static EnemyProfile Profile(NPC npc)
             => npc.TryGetGlobalNPC(out EnemyProfileNPC data) ? data.Profile : null;

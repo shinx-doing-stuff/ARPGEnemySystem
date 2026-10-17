@@ -20,7 +20,7 @@ namespace ARPGEnemySystem.Common.Scaling
     {
         public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, int phase, float scalingExponent, EnemyKind kind)
             => ApplyLevelScaling(ref s, level,
-                ScalingMath.HpMultiplier(level, phase, scalingExponent, kind),
+                ScalingMath.HpMultiplier(level, phase, scalingExponent),
                 ScalingMath.DamageMultiplier(level, phase, scalingExponent, kind));
 
         // Defense is not level-scaled: vanilla defense, then rarity and modifiers.

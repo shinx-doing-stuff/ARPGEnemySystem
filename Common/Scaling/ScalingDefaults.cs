@@ -6,6 +6,7 @@ namespace ARPGEnemySystem.Common.Scaling
     {
         public const float ScalingExponent = 1.14f;
         public const int EnemyPhysResHalfPoint = 25;
+        public const float VanillaArmorPenScale = 1f / 3f;
         public const int PhysResHalfPoint = 60;
     }
 }

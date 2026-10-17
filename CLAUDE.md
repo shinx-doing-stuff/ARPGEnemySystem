@@ -65,13 +65,19 @@ ProjectileManager.OnSpawn         → projectile references its shooter's (or pa
 
 ### Scaling Formulas
 
-HP and damage each have their own multiplier, per enemy kind (`Regular`, `FightMember`). Every multiplier is one continuous piecewise function of `x = level^exponent`:
+Damage has its own multiplier per enemy kind (`Regular`, `FightMember`), one continuous piecewise function of `x = level^exponent`:
 
 ```
 mult = base + Σ rate_k × (the part of x inside phase k's range)     // k = 0 … current phase
 ```
 
-Phase k's range runs from `PhaseStartLevels[k]^exponent` to `PhaseStartLevels[k+1]^exponent`; the current phase's range is open-ended. So a phase's slope only applies to the levels above its start level, and the curve has no jump at a phase change. HP and damage use `ScalingExponent`.
+Phase k's range runs from `PhaseStartLevels[k]^exponent` to `PhaseStartLevels[k+1]^exponent`; the current phase's range is open-ended. So a damage phase's slope only applies to the levels above its start level, and the damage curve has no jump at a phase change. Damage uses `ScalingExponent`.
+
+HP is different: one table for every enemy kind, and each phase's rate applies to the whole level, so the kill that opens a phase raises every enemy's health at once (the step rule):
+
+```
+mult = HpBase + HpRates[phase] × level^exponent
+```
 
 Defense is not level-scaled: `D = vanilla defense × rarity × modifiers` (`(int)` truncation at each step, no additive floor). `D` is vanilla's current `npc.defense`, scaled at every read by `EnemyStats.Defense`; it is never written back. Damage works the same way. The conversion to physical resistance uses one fixed half point:
 
@@ -82,13 +88,17 @@ res% = −100 × |D'| / (|D'| + EnemyPhysResHalfPoint)            // D' < 0: no 
 
 The half point is the `EnemyPhysResHalfPoint` config value for every enemy at every level (`EnemyStats.PhysResHalfPoint`). The resistance depends only on the enemy's defense against that half point; the player's armor penetration lowers D' against a half point that stays put. The 2× limit on the vulnerability side is the curve's own, not a cap.
 
-**Phase start levels, per-kind bases and rates, and level bounds are constants, not config** (game design values, on `ScalingMath`). The exponents and half points below are server config.
+**Phase start levels (damage), bases and rates, and level bounds are constants, not config** (game design values, on `ScalingMath`). The exponents and half points below are server config.
 
-Constants on `ScalingMath` (per-kind tables indexed by `(int)EnemyKind`; rates indexed by phase):
+Constants on `ScalingMath` (the damage tables are indexed by `(int)EnemyKind`; rates indexed by phase):
 
-| Constant                  | Regular                          | FightMember                                   | Purpose                              |
-| ------------------------- | -------------------------------- | --------------------------------------------- | ------------------------------------ |
-| `HpBase` / `HpRates`      | `1` / `{0.003, 0.006, 0.010, 0.015}` | `1.355` / `{0.008365, 0, 0.04957, 0.03336}` | HP multiplier                        |
+| Constant                  | Value                                          | Purpose                              |
+| ------------------------- | ---------------------------------------------- | ------------------------------------ |
+| `HpBase`                  | `0.8085`                                       | HP multiplier base, every enemy kind |
+| `HpRates`                 | `{0.004852, 0.008248, 0.01398, 0.02052}`       | HP rate per phase, on the whole `level^exponent` |
+
+| Constant                     | Regular                          | FightMember                                     | Purpose            |
+| ---------------------------- | -------------------------------- | ----------------------------------------------- | ------------------ |
 | `DamageBase` / `DamageRates` | `1` / `{0.003, 0.006, 0.010, 0.015}` | `0.4934` / `{0.009262, 0.001879, 0, 0.006118}`  | Damage multiplier                    |
 
 | Constant           | Value              | Purpose                                                        |
@@ -107,12 +117,15 @@ Server config knobs (tunable per-server):
 
 A saved config that still carries `DefenseFloor` or `DefScalingExponent` loads fine: the ModConfig loader ignores unknown keys.
 
-**Reference values** (HP multiplier at key milestones with defaults, regular / boss):
+**Reference values** (HP multiplier at key milestones with defaults; regular and boss are the same):
 
-- Level 50, phase 0 (pre-HM): 1.26× / 1.85×
-- Level 100, phase 2 (post-mechs; below level 137, so only the phase 0 and 1 slopes apply): 1.61× / 2.01×
-- Level 150, phase 3 (post-Plantera): 2.44× / 4.00×
-- Level 200, phase 3 (everything downed): 4.20× / 7.68×
+- Level 50, phase 0 (pre-HM): 1.23×
+- Level 100, phase 2 (post-mechs): 3.47×
+- Level 150, phase 3 (post-Plantera): 7.02×
+- Level 200, phase 3 (everything downed): 9.43×
+- Step at the kill that opens a phase, same level before and after: Wall of Flesh at level 90, 1.35×; last mechanical boss at level 112, 1.48×; Plantera at level 146, 1.39×
+
+The full, human-facing description of the scaling system (world level, profiles, rarity, modifiers, curves, armour, elements, sync, config, panel, API) is `docs/systems/ENEMY_SCALING.md`. Update it after every change to the scaling code.
 
 ### Phase System
 
@@ -123,7 +136,7 @@ A saved config that still carries `DefenseFloor` or `DefScalingExponent` loads f
 - Phase 2 — post-all-three-mechs (`NPC.downedMechBoss1 && downedMechBoss2 && downedMechBoss3`)
 - Phase 3 — post-Plantera (`NPC.downedPlantBoss`)
 
-A phase change does not jump the multiplier. A phase adds its own slope on the levels above its start level (`PhaseStartLevels` 94 / 137 / 147), so the same level enemy gets harder only as far as its level lies beyond that start; below it the new phase adds nothing.
+A phase change does not jump the damage multiplier. A damage phase adds its own slope on the levels above its start level (`PhaseStartLevels` 94 / 137 / 147), so the same level enemy hits harder only as far as its level lies beyond that start; below it the new phase adds nothing. Health does step: the HP rate applies to the whole level, so every enemy's health rises at once when the phase advances (1.35× at level 90 for the Wall of Flesh, 1.48× at level 112 for the last mechanical boss, 1.39× at level 146 for Plantera).
 
 `GetScalingPhase()` tops out at 3, so every post-Moon-Lord modded boss fight uses the phase 3 rates. This is a known limitation, deliberately left out of the world-level work.
 
@@ -134,7 +147,7 @@ A phase change does not jump the multiplier. A phase adds its own slope on the l
 - **`Common/Systems/WorldManager.cs`** — Owns `levelCap` and `GetScalingPhase()`; it only aliases `BaseLevel`/`MaxLevel`, which are declared on `ScalingMath` (`Common/Scaling/ScalingMath.cs`). `Recompute()` sets `levelCap = BaseLevel + LevelsPerBoss() × BossRoster.DownedCount()`, called from `PostWorldLoad` and every 60 ticks in `PostUpdateWorld` — both server/single-player only, so the server is authoritative without a `netMode` check. The result is rounded to the nearest int (`MathF.Round`), and a roster of zero bosses pins `LevelsPerBoss()` at 0, so `levelCap` stays at `BaseLevel`. Nothing is persisted: `levelCap` is a pure function of the roster and the downed predicates. `levelCapOverride` (−1 = off) lets `/setlevelcap` hold a value against the recompute.
 - **`Common/GlobalNPCs/EnemyProfileNPC.cs`** — `GlobalNPC` that owns every combat NPC's `EnemyProfile` (`Profile` field). `OnSpawn` (server/SP) creates or joins a profile and writes max life, coin value and size; the `On_NPC.SetDefaults` detour (server/SP only, outermost call only) re-attaches the profile and health fraction after any re-run; `ModifyIncomingHit` zeroes vanilla defense (and cancels vanilla's negative-defense bonus). ARPGItemSystem is a hard mutual requirement, so elemental packages always apply — see Cross-Mod Dependency.
 - **`Common/Scaling/EnemyProfile.cs`** — The immutable profile: `Kind` (`Regular` / `FightMember`), `Level`, `Phase`, `Rarity`, `Modifiers`, and `Package` (elemental damage %, resistances, penetration, sundering). `ScaleDamage` / `ScaleLifeMax` apply level, then rarity, then modifiers to a raw value; `ScaleDefense` applies rarity and modifiers only. A fight member's package is progression-tiered by `EnemyScaling.BossTierForPhase`: resistances 25/50/75% (chaos 6/13/19%), damage % 10/12/14 (chaos 4/5/6), elemental penetration 5/10/15 (chaos 3/5/8), Sundering 15/30/45 from its own array. `PhysicalResistance` is NOT stored — derived at hit time from `EnemyStats.Defense` and `EnemyStats.PhysResHalfPoint` via `ConvertDefenseToResistance`.
-- **`Common/GlobalNPCs/EnemyStats.cs`** — The only way mod code reads an enemy's or enemy projectile's damage and defense. Also owns the Ichor (−15) and Betsy's Curse (−40) defense reductions that vanilla's zeroed defense step no longer applies.
+- **`Common/GlobalNPCs/EnemyStats.cs`** — The only way mod code reads an enemy's or enemy projectile's damage and defense. Also owns the Ichor (−5) and Betsy's Curse (−13) defense reductions (a third of vanilla's 15 and 40, rounded) that vanilla's zeroed defense step no longer applies.
 - **`Common/Scaling/EnemyProfileCodec.cs`** — Wire format for the profile inputs (level, kind/phase/rarity header byte, modifier count, type + magnitude per modifier), shared by NPC and projectile sync.
 - **`Common/GlobalNPCs/Rarity.cs`** — `EnemyRarity` struct + `RarityDatabase`. Five rarities (Common / Uncommon / Rare / Elite / Legend). Roll weights (in `rarityWeightDatabase`) shift toward higher rarities across 8 columns, each tied to a boss milestone in `GetWeightIndex()`. Stat bonuses: Common 0/0/0, Uncommon 20/10/10, Rare 50/25/20, Elite 70/40/30, Legend 100/70/50 (HP%/Def%/Dmg%).
 - **`Common/GlobalNPCs/EnemyModifier.cs`** — `EnemyModifier` struct + `ModifierType` enum. An excludeList passed to `GenerateModifier` prevents duplicate modifier types on the same enemy.

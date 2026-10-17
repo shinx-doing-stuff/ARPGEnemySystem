@@ -40,7 +40,7 @@ namespace ARPGEnemySystem.Common.Scaling
             Rarity = kind == EnemyKind.FightMember ? Rarity.None : rarity;
             Modifiers = kind == EnemyKind.FightMember ? Array.Empty<EnemyModifier>() : modifiers;
 
-            _hpMultiplier = ScalingMath.HpMultiplier(level, phase, settings.ScalingExponent, kind);
+            _hpMultiplier = ScalingMath.HpMultiplier(level, phase, settings.ScalingExponent);
             _damageMultiplier = ScalingMath.DamageMultiplier(level, phase, settings.ScalingExponent, kind);
 
             var package = new EnemyStatBlock();
