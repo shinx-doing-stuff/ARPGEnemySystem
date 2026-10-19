@@ -17,12 +17,12 @@ Configs: {
 
 		ScalingExponent: {
 			Label: Scaling Exponent
-			Tooltip: Exponent applied to enemy level in the HP and damage curve. Each progression phase adds its own slope on level^exponent from its start level, with no jump at a phase change. Higher values = steeper growth.
+			Tooltip: Exponent applied to enemy level in the HP, defense and damage curve. Each progression phase adds its own slope on level^exponent from its start level, with no jump at a phase change. Higher values = steeper growth.
 		}
 
 		EnemyPhysResHalfPoint: {
 			Label: Enemy Phys Res Half Point
-			Tooltip: Vanilla defense that reads 50% physical resistance. Enemy defense is not scaled by level, so this is the same for every enemy. Default 25.
+			Tooltip: Defense that reads 50% physical resistance, after level scaling. The same for every enemy. Default 25.
 		}
 
 		PhysResHalfPoint: {

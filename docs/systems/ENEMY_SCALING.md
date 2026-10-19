@@ -171,7 +171,7 @@ Every projectile carries a reference to the profile of the NPC (or projectile) t
 
 ### 4.1 Contents
 
-Kind, level, phase, rarity (always None for a fight member), modifiers (always empty for a fight member), the elemental package, an optional scale override (Colossal or Tiny), and the HP and damage multipliers, computed once from the server's `ScalingExponent`. (`Common/Scaling/EnemyProfile.cs`)
+Kind, level, phase, rarity (always None for a fight member), modifiers (always empty for a fight member), the elemental package, an optional scale override (Colossal or Tiny), and the HP, defense and damage multipliers, computed once from the server's `ScalingExponent`. (`Common/Scaling/EnemyProfile.cs`)
 
 ### 4.2 Level roll
 
@@ -553,7 +553,7 @@ Server side (`Common/Configs/Config.cs`):
 
 | Field | Default | Range | What it changes |
 |---|---|---|---|
-| `ScalingExponent` | 1.14 | 1.0 to 2.0 | `e` in `level^e` for HP and damage, both kinds. Baked into each profile when it is built. |
+| `ScalingExponent` | 1.14 | 1.0 to 2.0 | `e` in `level^e` for HP, defense and damage, both kinds. Baked into each profile when it is built. |
 | `EnemyPhysResHalfPoint` | 25 | 5 to 100 | `h` in the enemy defense to resistance curve, for every enemy. |
 | `PhysResHalfPoint` | 60 | 1 to 200 | The **player's** half point; read by the character mod. |
 | `EnableBossScalingLog` | off | | Boss chat line (§9.1). |
