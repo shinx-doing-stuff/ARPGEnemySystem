@@ -12,26 +12,28 @@ Related pages in ARPGCharacterSystem: `DAMAGE_PIPELINE.md` (how a player hit is 
 
 Every combat NPC gets one **profile** when it spawns on the server. A profile is either a **Regular** (level, rarity, 0 to 8 modifiers) or a **Fight Member** (level only, plus the boss elemental package). The profile writes **max life, coin value and sprite scale** to the NPC once. **Damage and defense are never written**; they are scaled every time something reads them, because vanilla AI rewrites those fields mid-fight. Vanilla's own defense step is turned off for every managed NPC; the character mod turns defense into a percentage of physical resistance instead. The level comes from a **world level**, which is a pure function of how many bosses the world has beaten.
 
-What is scaled: max life, contact and projectile damage, coin value, scale (Colossal and Tiny only), elemental resistances, elemental damage shares, elemental penetration, Sundering.
+What is scaled: max life, contact and projectile damage, defense, coin value, scale (Colossal and Tiny only), elemental resistances, elemental damage shares, elemental penetration, Sundering.
 
-What is **not** scaled: defense by level (defense is vanilla defense), knockback given or taken, movement speed, AI, hitboxes, loot tables, spawn slots, immunities. The mod writes nothing per tick.
+What is **not** scaled: knockback given or taken, movement speed, AI, hitboxes, loot tables, spawn slots, immunities. The mod writes nothing per tick.
 
 ### 1.1 The formulas
 
 `trunc` is integer truncation toward zero; every step below truncates. `vanilla` means the value vanilla produced after its own difficulty, Expert tweaks and multiplayer balance.
 
-**Level multiplier** (`e` = `ScalingExponent`, default 1.14). HP uses one table for every enemy, with one rate per phase on the whole `level^e`, so the kill that opens a phase raises every enemy's health at once. Damage uses a piecewise curve with its own per-kind tables:
+**Level multiplier** (`e` = `ScalingExponent`, default 1.14). HP and defense each use one table for every enemy, with one rate per phase on the whole `level^e`, so the kill that opens a phase raises every enemy's health and defense at once. Damage uses a piecewise curve with its own per-kind tables:
 
 ```
 x        = level ^ e
 HP       = HpBase + HpRates[phase] x x
+Defense  = DefenseBase + DefenseRates[phase] x x
 Damage   = base + sum over phases k = 0 .. phase of  rate[k] x max(0, min(x, start[k+1]^e) - start[k]^e)
 start    = { 0, 94, 137, 147 },  start[4] = infinity        (damage only)
 
-                     base     rate ph0    rate ph1    rate ph2    rate ph3
-HP,     every enemy  0.8085   0.004852    0.008248    0.01398     0.02052
-Damage, Regular      1        0.003       0.006       0.010       0.015
-Damage, Fight        0.4934   0.009262    0.001879    0           0.006118
+                        base     rate ph0    rate ph1    rate ph2    rate ph3
+HP,      every enemy    0.8085   0.004852    0.008248    0.01398     0.02052
+Defense, every enemy    1        0           0.002625    0.003882    0.003882
+Damage,  Regular        1        0.003       0.006       0.010       0.015
+Damage,  Fight          0.4934   0.009262    0.001879    0           0.006118
 ```
 
 **Max life** (written once at spawn; `players` applies in Expert and Master to roster bosses and minibosses only):
@@ -53,13 +55,13 @@ dmg = dmg + trunc(dmg x strong / 100)
 
 Difficulty is already inside `npc.damage` (vanilla bakes it in at spawn); it is **not** inside a hostile projectile's damage. Against the player the character mod then applies its own factors: damage variance; for projectiles x2 and the game-mode multiplier (Classic 1, Expert 2, Master 3); and the elemental shares on top (each element adds `dmg x share% / 100`; a phase 3 boss hit is `dmg x 1.48` in raw total).
 
-**Defense** (computed on every read; **no level term**):
+**Defense** (computed on every read):
 
 ```
-def = vanilla current defense
+def = trunc(vanilla current defense x defMult)
 def = def + trunc(def x rarityDef% / 100)
 def = def + trunc(def x durable / 100)
-Fight members: def = vanilla current defense, nothing else.
+Fight members: def = trunc(vanilla current defense x defMult), nothing else.
 ```
 
 **Physical resistance from defense** (the character mod applies this to every player hit; `h` = `EnemyPhysResHalfPoint`, default 25):
@@ -101,7 +103,7 @@ levels per boss = (200 - 10) / N
 world level     = 10 + round(levels per boss x bosses downed)
 ```
 
-`N` is the number of bosses on the Boss Checklist roster: every entry of type Boss with a `downed` delegate. Minibosses and events are not counted. Modded bosses are counted, so `N` depends on the loaded mod set. With vanilla only (Boss Checklist 2.2.4), **`N = 19`** and each boss is worth exactly 10 levels: King Slime, Eye of Cthulhu, Eater of Worlds, Brain of Cthulhu, Queen Bee, Skeletron, Deerclops, Wall of Flesh, Queen Slime, the Twins, Destroyer, Skeletron Prime, Plantera, Golem, **Betsy**, Empress of Light, Duke Fishron, Lunatic Cultist, Moon Lord. Eater of Worlds and Brain of Cthulhu are separate roster entries that share one flag, so beating either counts as two. Betsy counts for the world level although she is a regular enemy in every other respect (§3.1). There is no clamp at 200; the formula reaches 200 exactly when every roster entry is down. (`Common/Scaling/ScalingMath.cs:51-60`, `Common/Systems/BossRoster.cs`)
+`N` is the number of bosses on the Boss Checklist roster: every entry of type Boss with a `downed` delegate. Minibosses and events are not counted. Modded bosses are counted, so `N` depends on the loaded mod set. With vanilla only (Boss Checklist 2.2.4), **`N = 19`** and each boss is worth exactly 10 levels: King Slime, Eye of Cthulhu, Eater of Worlds, Brain of Cthulhu, Queen Bee, Skeletron, Deerclops, Wall of Flesh, Queen Slime, the Twins, Destroyer, Skeletron Prime, Plantera, Golem, **Betsy**, Empress of Light, Duke Fishron, Lunatic Cultist, Moon Lord. Eater of Worlds and Brain of Cthulhu are separate roster entries that share one flag, so beating either counts as two. Betsy counts for the world level although she is a regular enemy in every other respect (§3.1). There is no clamp at 200; the formula reaches 200 exactly when every roster entry is down. (`Common/Scaling/ScalingMath.cs:58-67`, `Common/Systems/BossRoster.cs`)
 
 Boss Checklist is a hard dependency. The mod throws at load if it is missing or the roster call returns null. If a boss's `downed` delegate throws once, that entry is logged and treated as not downed for the rest of the session, but it still counts in `N`, so the world level can then never reach 200.
 
@@ -135,7 +137,7 @@ Phase is read from vanilla flags at the moment a profile is rolled, and stored i
 | 2 | all three mechanical bosses down |
 | 3 | Plantera down |
 
-The phase sets the HP rate for the whole level (so health steps up when the phase advances), changes the slope of the damage curve (§5), and sets the boss elemental tier (§7) and the modifier count (§4.4). It does not change the level roll. (`ScalingMath.cs:62-68`)
+The phase sets the HP rate for the whole level (so health steps up when the phase advances), changes the slope of the damage curve (§5), and sets the boss elemental tier (§7) and the modifier count (§4.4). It does not change the level roll. (`ScalingMath.cs:69-75`)
 
 ---
 
@@ -291,27 +293,31 @@ Colossal and Tiny change the sprite and the life, **not the hitbox**. The scale 
 
 ### 5.1 The formula
 
-Both multipliers are built from `x = level ^ e`, where `e` is the server config `ScalingExponent` (default 1.14).
+The multipliers are built from `x = level ^ e`, where `e` is the server config `ScalingExponent` (default 1.14).
 
 **HP** is one table for every enemy kind: the current phase's rate applies to the whole `x`, so the multiplier steps up at once for every enemy when a phase kill advances the phase. Within a phase it rises smoothly with level.
+
+**Defense** has the same shape as HP with its own table: base 1, phase 0 rate 0, so defense is vanilla until the Wall of Flesh falls. Rate 3 equals rate 2, so the Plantera kill does not step defense; a phase kill never lowers it.
 
 **Damage** is piecewise: each phase has its own slope, and a phase's slope applies only to the part of the level range above that phase's start level, so moving up a level never jumps.
 
 ```
 HP(level, phase)     = HpBase + HpRates[phase] x x
+Defense(level, phase) = DefenseBase + DefenseRates[phase] x x
 Damage(level, phase) = base + sum over k = 0..phase of  rate[k] x max(0, to[k] - start[k]^e)
     start = { 0, 94, 137, 147 }          (phase start levels)
     to[k] = min(x, start[k+1]^e)         for k < phase
     to[k] = x                            for k = phase (open-ended)
 ```
 
-(`ScalingMath.cs:15-49`)
+(`ScalingMath.cs:15-56`)
 
-Constants (damage: Phase 4 refit, 2026-10-04; HP: refit 2026-10-15):
+Constants (damage: Phase 4 refit, 2026-10-04; HP: refit 2026-10-15; defense: 2026-10-19):
 
 | | base | phase 0 | phase 1 | phase 2 | phase 3 |
 |---|---|---|---|---|---|
 | HP, every enemy | 0.8085 | 0.004852 | 0.008248 | 0.01398 | 0.02052 |
+| Defense, every enemy | 1 | 0 | 0.002625 | 0.003882 | 0.003882 |
 | Damage, Regular | 1 | 0.003 | 0.006 | 0.010 | 0.015 |
 | Damage, Fight member | 0.4934 | 0.009262 | 0.001879 | 0 | 0.006118 |
 
@@ -322,6 +328,7 @@ The HP table is solved by BalanceLab so that the reference melee build (`melee-r
 ### 5.2 Shape of the boss curves
 
 - **Health steps at every phase kill.** The kill that opens a phase raises every enemy's HP multiplier at the same level: 1.35x at level 90 (Wall of Flesh), 1.48x at level 112 (last mechanical boss), 1.39x at level 146 (Plantera). Between kills, health rises smoothly with level.
+- **Defense is vanilla through phase 0 and never steps down.** Its multiplier is 1.00 below the Wall of Flesh kill, about 1.44 at level 90 just after it, 1.50 at level 100, 2.00 at level 130 and 2.54 at level 190. The Plantera kill changes nothing, because rate 3 equals rate 2.
 - **Fight damage is flat at 2.32x in phase 2** (the phase 2 rate is 0), for every level from 137 up until Plantera dies.
 - **Fight damage is below 1.0x below level 34** (base 0.4934): Eye of Cthulhu at level 21 hits for 0.79x its vanilla contact damage before elementals. The boss elemental package (+34% at tier 0, §7) brings the raw total back to about vanilla.
 - **The damage curve is continuous in level, not across a phase change at a fixed level.** When the phase advances, the old phase's open-ended slope is cut at the next start level and replaced by the new rate. For fight damage this can go down: a level 104 boss hits 2.34x in phase 0 and 2.18x in phase 1. For Regulars every later rate is higher, so their damage multiplier only rises. HP is not continuous across a phase change; it steps up.
@@ -371,8 +378,8 @@ Level first, then rarity (Regulars), then each modifier in roll order. Every ste
 3. Strong + damage x m/100.
 
 **Defense (computed at read time)**
-- vanilla's *current* `npc.defense` + rarity defense%, then Durable + defense x m/100.
-- Fight members: vanilla defense exactly.
+- vanilla's *current* `npc.defense` x defense multiplier, + rarity defense%, then Durable + defense x m/100.
+- Fight members: vanilla defense x defense multiplier, nothing else.
 - Negative defense stays negative and grows in magnitude with rarity.
 
 **Coin value (written once)**: Regulars x `(1 + 1.75 x rarityHP%/100 + 0.005 x level + 0.15 x modifier count)`. Fight members keep vanilla value.
@@ -390,8 +397,8 @@ Rows are indexed by the rolled level, which is what the formula sees; see §4.2 
 | 10 | 0 | Common | 39 | 14 | 6 |
 | 21 | 0 | Common | 43 | 15 | 6 |
 | 22 | 0 | Legend | 86 | 22 | 10 |
-| 141 | 3 | Common | 296 | 30 | 6 |
-| 189 | 3 | Common | 399 | 53 | 6 |
+| 141 | 3 | Common | 296 | 30 | 12 |
+| 189 | 3 | Common | 399 | 53 | 15 |
 
 Expert doubles the raw life and damage before this mod runs, and Expert hardmode also applies vanilla's pre-hardmode-enemy boost to life, damage, **defense** and coin value. The mod multiplies whatever vanilla produced.
 
@@ -399,12 +406,12 @@ Expert doubles the raw life and damage before this mod runs, and Expert hardmode
 
 | Rolled level | Phase | Life | Damage | Defense |
 |---|---|---|---|---|
-| 78 | 1 | 518 | 57 | 28 |
-| 105 | 1 | 642 | 67 | 28 |
-| 137 | 2 | 1201 | 84 | 28 |
-| 189 | 3 | 2310 | 152 | 28 |
+| 78 | 1 | 518 | 57 | 38 |
+| 105 | 1 | 642 | 67 | 42 |
+| 137 | 2 | 1201 | 84 | 57 |
+| 189 | 3 | 2310 | 152 | 70 |
 
-With rarity: Elite 39 defense, Legend 47, Legend with Durable 60: 75.
+With rarity, at phase 0 (defense multiplier 1): Elite 39 defense, Legend 47, Legend with Durable 60: 75.
 
 **Bosses** (Expert solo raw, at the Phase 4 ladder levels, `N = 18`; the live `N = 19` levels are about 5% lower, §2.2):
 
@@ -416,7 +423,7 @@ With rarity: Elite 39 defense, Legend 47, Legend with Durable 60: 75.
 | Plantera | 137 | 137 to 170 | 42000 to 194140 .. 238822 | 100 to 231 (every roll, first form) |
 | Moon Lord | 189 | 189 to 235 | core 75000 to 666543 .. 837342 | True Eye 120 to 350 .. 431 |
 
-Plantera's AI rewrites its contact damage and defense by form: 100 damage / 36 defense in the first form, 140 damage / 10 defense below half life (Expert), so the scaled second-form damage is 324 and the defense read at that moment is 10. Every part, segment, projectile and minion of a fight uses the same multiplier. Destroyer segments share the head's life pool through vanilla's `realLife`. Fight member defense is vanilla's current value (Moon Lord head 50, hands 40, core 70).
+Plantera's AI rewrites its contact damage and defense by form: 100 damage / 36 defense in the first form, 140 damage / 10 defense below half life (Expert), so the scaled second-form damage is 324 and the defense read at that moment is 10. Every part, segment, projectile and minion of a fight uses the same multiplier. Destroyer segments share the head's life pool through vanilla's `realLife`. Fight member defense is vanilla's current value times the defense multiplier (Moon Lord head 50, hands 40, core 70 raw; at level 190 the multiplier is 2.54, so 126, 101 and 177). Plantera's 36 and 10 at level 130 (phase 2, 2.00) read 71 and 19.
 
 ---
 
@@ -440,14 +447,14 @@ d <  0:  res% = -100 x |d| / (|d| + h)        (no cap; tends to -100%, i.e. doub
 `h` is the server config `EnemyPhysResHalfPoint`, default 25, the same for every enemy: an enemy with 25 defense resists half. The ceiling of 90% is reached at 225 defense. There is no floor on defense. (`Common/Elements/ElementalMath.cs:31-34`, `Common/GlobalNPCs/EnemyStats.cs`)
 
 Effective defense, on the character mod side, in this order:
-1. `d = EnemyStats.Defense(target)` (vanilla current defense with rarity and Durable).
+1. `d = EnemyStats.Defense(target)` (vanilla current defense times the level defense multiplier, then rarity and Durable).
 2. If `d > 0`: `d x= 1 - min(1, percent pen)`. Percent pen is the weapon and player percent armour penetration, plus vanilla's "ignore all positive defense" cases counted as 100%: the Lightning Aura sentry (not against the Dungeon Guardian) and Flymeal against town-type NPCs.
 3. `d -= flat pen`, with no floor. Flat pen is the sum of weapon and player flat armour penetration, vanilla projectile armour penetration, +5 for Strong Bees wasps, and Ichor / Betsy's Curse. A direct strike (no item or projectile) uses the player's total plus the weapon's own penetration. Armour penetration that comes from vanilla (the weapon's and projectile's own, accessories and buffs such as the Sharpening Station, Strong Bees) counts at one third (`ScalingDefaults.VanillaArmorPenScale`), because vanilla sized those numbers for a rule where a point removes half a point of damage, while here a point of defense is worth 1.3% to 4% of damage. Ichor and Betsy's Curse are cut to a third in `EnemyStats` itself (5 and 13).
 4. Convert; apply as `damage x (1 - res/100)`.
 
 Reaps (the character mod's stored-damage hits) count only Ichor and Betsy's Curse as vanilla penetration.
 
-Worked examples (`h = 25`):
+Worked examples (`h = 25`, defense as the formula sees it, after level scaling):
 
 | Target (defense) | 0 pen | 8 flat pen | 13 flat pen |
 |---|---|---|---|

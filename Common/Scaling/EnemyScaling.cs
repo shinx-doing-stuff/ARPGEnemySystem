@@ -21,13 +21,15 @@ namespace ARPGEnemySystem.Common.Scaling
         public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, int phase, float scalingExponent, EnemyKind kind)
             => ApplyLevelScaling(ref s, level,
                 ScalingMath.HpMultiplier(level, phase, scalingExponent),
-                ScalingMath.DamageMultiplier(level, phase, scalingExponent, kind));
+                ScalingMath.DamageMultiplier(level, phase, scalingExponent, kind),
+                ScalingMath.DefenseMultiplier(level, phase, scalingExponent));
 
-        // Defense is not level-scaled: vanilla defense, then rarity and modifiers.
-        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, float hpMultiplier, float damageMultiplier)
+        // Defense scales by level like life; rarity and modifiers follow.
+        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, float hpMultiplier, float damageMultiplier, float defenseMultiplier)
         {
             s.LifeMax = (int)(s.LifeMax * hpMultiplier);
             s.Damage  = (int)(s.Damage  * damageMultiplier);
+            s.Defense = (int)(s.Defense * defenseMultiplier);
         }
 
         public static void ApplyRarityStats(ref EnemyStatBlock s, Rarity rarity)

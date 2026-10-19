@@ -17,6 +17,10 @@ namespace ARPGEnemySystem.Common.Scaling
         public const float HpBase = 0.8085f;
         public static readonly float[] HpRates = { 0.004852f, 0.008248f, 0.01398f, 0.02052f };
 
+        // Defense: the same shape as HP, so it only ever rises; phase 0 stays at vanilla.
+        public const float DefenseBase = 1f;
+        public static readonly float[] DefenseRates = { 0f, 0.002625f, 0.003882f, 0.003882f };
+
         // Damage: each phase's slope applies only to the level range above its start level, so the damage curve has no jump.
         public static readonly int[] PhaseStartLevels = { 0, 94, 137, 147 };
 
@@ -30,6 +34,9 @@ namespace ARPGEnemySystem.Common.Scaling
 
         public static float HpMultiplier(int level, int phase, float exponent)
             => HpBase + HpRates[phase] * MathF.Pow(level, exponent);
+
+        public static float DefenseMultiplier(int level, int phase, float exponent)
+            => DefenseBase + DefenseRates[phase] * MathF.Pow(level, exponent);
 
         // mult = base + sum over phases k up to the current phase of rate_k x (the part of level^exponent inside phase k's range).
         public static float PiecewiseMultiplier(int level, int phase, float exponent, float baseValue, float[] rates)

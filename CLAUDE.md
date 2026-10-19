@@ -40,7 +40,7 @@ Every combat NPC gets one immutable **EnemyProfile** (`Common/Scaling/EnemyProfi
 - **Damage and defense are never written.** Every reader goes through `EnemyStats` (`Common/GlobalNPCs/EnemyStats.cs`), which scales whatever vanilla holds at that moment. Vanilla AI rewrites them mid-fight (Plantera, Skeletron, Duke, Empress every frame).
 - **Only max life, coin value and size are written.** This happens at spawn and after every `NPC.SetDefaults` re-run on a live NPC on the server: Transform, EoW splits, natural-spawn variants. There the `On_NPC.SetDefaults` detour carries the profile and the health fraction. On clients the detour does nothing; the profile arrives in extra-AI and the same writes are applied from it.
 - **Enemy projectiles** reference their shooter's profile and scale with it.
-- **Vanilla's defense step is zeroed for every enemy.** Defense acts only through the mod's physical resistance. Defense is not level-scaled, and the curve's half point is the config value for every enemy; below zero it has no cap.
+- **Vanilla's defense step is zeroed for every enemy.** Defense acts only through the mod's physical resistance. Defense is level-scaled like HP (`DefenseMultiplier`), and the curve's half point is the config value for every enemy; below zero it has no cap.
 
 The vanilla prefix/reforge system is not touched by this mod; it affects NPCs, not items.
 
@@ -79,7 +79,13 @@ HP is different: one table for every enemy kind, and each phase's rate applies t
 mult = HpBase + HpRates[phase] × level^exponent
 ```
 
-Defense is not level-scaled: `D = vanilla defense × rarity × modifiers` (`(int)` truncation at each step, no additive floor). `D` is vanilla's current `npc.defense`, scaled at every read by `EnemyStats.Defense`; it is never written back. Damage works the same way. The conversion to physical resistance uses one fixed half point:
+Defense has the same shape as HP with its own table (`DefenseBase` 1, phase 0 rate 0, so it is vanilla until the Wall of Flesh falls; it never steps down):
+
+```
+mult = DefenseBase + DefenseRates[phase] × level^exponent
+```
+
+`D = vanilla defense × defense mult × rarity × modifiers` (`(int)` truncation at each step, no additive floor). `D` is vanilla's current `npc.defense`, scaled at every read by `EnemyStats.Defense`; it is never written back. Damage works the same way. The conversion to physical resistance uses one fixed half point:
 
 ```
 res% = min(90, 100 × D' / (D' + EnemyPhysResHalfPoint))        // D' ≥ 0; D' = D after the player's penetration
@@ -96,6 +102,8 @@ Constants on `ScalingMath` (the damage tables are indexed by `(int)EnemyKind`; r
 | ------------------------- | ---------------------------------------------- | ------------------------------------ |
 | `HpBase`                  | `0.8085`                                       | HP multiplier base, every enemy kind |
 | `HpRates`                 | `{0.004852, 0.008248, 0.01398, 0.02052}`       | HP rate per phase, on the whole `level^exponent` |
+| `DefenseBase`             | `1`                                            | Defense multiplier base, every enemy kind |
+| `DefenseRates`            | `{0, 0.002625, 0.003882, 0.003882}`            | Defense rate per phase, on the whole `level^exponent` |
 
 | Constant                     | Regular                          | FightMember                                     | Purpose            |
 | ---------------------------- | -------------------------------- | ----------------------------------------------- | ------------------ |

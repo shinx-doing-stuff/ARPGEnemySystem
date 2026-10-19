@@ -30,6 +30,7 @@ namespace ARPGEnemySystem.Common.Scaling
 
         private readonly float _hpMultiplier;
         private readonly float _damageMultiplier;
+        private readonly float _defenseMultiplier;
 
         public EnemyProfile(EnemyKind kind, int level, int phase, Rarity rarity, EnemyModifier[] modifiers, ScalingSettings settings)
         {
@@ -42,6 +43,7 @@ namespace ARPGEnemySystem.Common.Scaling
 
             _hpMultiplier = ScalingMath.HpMultiplier(level, phase, settings.ScalingExponent);
             _damageMultiplier = ScalingMath.DamageMultiplier(level, phase, settings.ScalingExponent, kind);
+            _defenseMultiplier = ScalingMath.DefenseMultiplier(level, phase, settings.ScalingExponent);
 
             var package = new EnemyStatBlock();
             if (kind == EnemyKind.FightMember)
@@ -73,7 +75,7 @@ namespace ARPGEnemySystem.Common.Scaling
         // Level, then rarity, then modifiers, truncating at each stage.
         public void ApplyStats(ref EnemyStatBlock s)
         {
-            EnemyScaling.ApplyLevelScaling(ref s, Level, _hpMultiplier, _damageMultiplier);
+            EnemyScaling.ApplyLevelScaling(ref s, Level, _hpMultiplier, _damageMultiplier, _defenseMultiplier);
             if (Rarity != Rarity.None)
                 EnemyScaling.ApplyRarityStats(ref s, Rarity);
             foreach (var m in Modifiers)
