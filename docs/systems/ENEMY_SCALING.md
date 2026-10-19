@@ -30,7 +30,7 @@ Damage   = base + sum over phases k = 0 .. phase of  rate[k] x max(0, min(x, sta
 start    = { 0, 94, 137, 147 },  start[4] = infinity        (damage only)
 
                         base     rate ph0    rate ph1    rate ph2    rate ph3
-HP,      every enemy    0.8085   0.004852    0.008248    0.01398     0.02052
+HP,      every enemy    0.7405   0.007147    0.01121     0.01616     0.01616
 Defense, every enemy    1        0           0.002625    0.003882    0.003882
 Damage,  Regular        1        0.003       0.006       0.010       0.015
 Damage,  Fight          0.4934   0.009262    0.001879    0           0.006118
@@ -312,54 +312,54 @@ Damage(level, phase) = base + sum over k = 0..phase of  rate[k] x max(0, to[k] -
 
 (`ScalingMath.cs:15-56`)
 
-Constants (damage: Phase 4 refit, 2026-10-04; HP: refit 2026-10-15; defense: 2026-10-19):
+Constants (damage: Phase 4 refit, 2026-10-04; HP: refit 2026-10-19; defense: 2026-10-19):
 
 | | base | phase 0 | phase 1 | phase 2 | phase 3 |
 |---|---|---|---|---|---|
-| HP, every enemy | 0.8085 | 0.004852 | 0.008248 | 0.01398 | 0.02052 |
+| HP, every enemy | 0.7405 | 0.007147 | 0.01121 | 0.01616 | 0.01616 |
 | Defense, every enemy | 1 | 0 | 0.002625 | 0.003882 | 0.003882 |
 | Damage, Regular | 1 | 0.003 | 0.006 | 0.010 | 0.015 |
 | Damage, Fight member | 0.4934 | 0.009262 | 0.001879 | 0 | 0.006118 |
 
 The HP table is solved by BalanceLab so that the reference melee build (`melee-ref-medium`, finished gear at every tier) kills each boss at about 1.10x the vanilla player's speed. Hits taken come from the damage tables, which are the Phase 4 fit and are not refit here. Regular damage rates are design values; regular enemies share the boss HP table.
 
-**Open item (2026-10-04).** BalanceLab's checkpoint ladder was authored with a roster of 18 (it had no Betsy), so the Phase 4 damage fit was solved at world levels 21 / 84 / 105 / 137 / 189. The live roster is 19, which puts the same fights at 20 / 80 / 100 / 130 / 180 (190 with Betsy down). Bosses in game therefore roll a few levels lower than the fit assumed; the gap is largest at Plantera (roll 130 to 161 instead of 137 to 170) and Moon Lord. The phase start levels 94 / 137 / 147 were also chosen against the 18-roster ladder. A damage refit at `N = 19` is pending a decision. The HP table (2026-10-15) was fitted at the live `N = 19` levels, at the middle of each boss's level roll (22 / 90 / 112 / 146 / 213), so for HP this is closed.
+**Open item (2026-10-04).** BalanceLab's checkpoint ladder was authored with a roster of 18 (it had no Betsy), so the Phase 4 damage fit was solved at world levels 21 / 84 / 105 / 137 / 189. The live roster is 19, which puts the same fights at 20 / 80 / 100 / 130 / 180 (190 with Betsy down). Bosses in game therefore roll a few levels lower than the fit assumed; the gap is largest at Plantera (roll 130 to 161 instead of 137 to 170) and Moon Lord. The phase start levels 94 / 137 / 147 were also chosen against the 18-roster ladder. A damage refit at `N = 19` is pending a decision. The HP table (2026-10-19) was fitted at the live `N = 19` levels, at the middle of each boss's level roll (22 / 90 / 112 / 146 / 213), so for HP this is closed.
 
 ### 5.2 Shape of the boss curves
 
-- **Health steps at every phase kill.** The kill that opens a phase raises every enemy's HP multiplier at the same level: 1.35x at level 90 (Wall of Flesh), 1.48x at level 112 (last mechanical boss), 1.39x at level 146 (Plantera). Between kills, health rises smoothly with level.
+- **Health steps at every phase kill.** The kill that opens a phase raises every enemy's HP multiplier at the same level: 1.35x at level 90 (Wall of Flesh) and 1.34x at level 112 (last mechanical boss); the Plantera kill does not step HP, because rate 3 equals rate 2, and a phase kill never lowers it. Between kills, health rises smoothly with level.
 - **Defense is vanilla through phase 0 and never steps down.** Its multiplier is 1.00 below the Wall of Flesh kill, about 1.44 at level 90 just after it, 1.50 at level 100, 2.00 at level 130 and 2.54 at level 190. The Plantera kill changes nothing, because rate 3 equals rate 2.
 - **Fight damage is flat at 2.32x in phase 2** (the phase 2 rate is 0), for every level from 137 up until Plantera dies.
 - **Fight damage is below 1.0x below level 34** (base 0.4934): Eye of Cthulhu at level 21 hits for 0.79x its vanilla contact damage before elementals. The boss elemental package (+34% at tier 0, §7) brings the raw total back to about vanilla.
 - **The damage curve is continuous in level, not across a phase change at a fixed level.** When the phase advances, the old phase's open-ended slope is cut at the next start level and replaced by the new rate. For fight damage this can go down: a level 104 boss hits 2.34x in phase 0 and 2.18x in phase 1. For Regulars every later rate is higher, so their damage multiplier only rises. HP is not continuous across a phase change; it steps up.
-- **Plantera's HP depends on the roll.** The Plantera-fight roll spans 130 to 161 (world level 130): 4.40x at the bottom, 5.39x at the top. Plantera's damage is 2.32x on every roll.
+- **Plantera's HP depends on the roll.** The Plantera-fight roll spans 130 to 161 (world level 130): 4.89x at the bottom, 6.04x at the top. Plantera's damage is 2.32x on every roll.
 
 Multiplier table (default exponent):
 
 | Level | Phase | HP, every enemy | Regular Dmg | Fight Dmg |
 |---|---|---|---|---|
-| 10 | 0 | 0.88 | 1.04 | 0.62 |
+| 10 | 0 | 0.84 | 1.04 | 0.62 |
 | 20 | 0 | 0.96 | 1.09 | 0.78 |
-| 21 | 0 | 0.96 | 1.10 | 0.79 |
-| 50 | 0 | 1.23 | 1.26 | 1.29 |
-| 80 | 0 | 1.53 | 1.44 | 1.86 |
-| 84 | 0 | 1.57 | 1.47 | 1.94 |
-| 104 | 0 | 1.78 | - | 2.34 |
-| 100 | 1 | 2.38 | 1.61 | 2.16 |
-| 105 | 1 | 2.47 | 1.68 | 2.18 |
-| 130 | 1 | 2.93 | - | 2.29 |
-| 130 | 2 | 4.40 | 2.01 | 2.29 |
-| 137 | 2 | 4.62 | 2.10 | 2.32 |
-| 161 | 2 | 5.39 | - | 2.32 |
-| 170 | 2 | 5.69 | - | 2.32 |
-| 150 | 3 | 7.02 | 2.44 | 2.36 |
-| 180 | 3 | 8.45 | 3.48 | 2.79 |
-| 189 | 3 | 8.89 | 3.80 | 2.92 |
-| 190 | 3 | 8.94 | 3.84 | 2.93 |
-| 200 | 3 | 9.43 | 4.20 | 3.08 |
-| 235 | 3 | 11.16 | - | 3.60 |
+| 21 | 0 | 0.97 | 1.10 | 0.79 |
+| 50 | 0 | 1.36 | 1.26 | 1.29 |
+| 80 | 0 | 1.80 | 1.44 | 1.86 |
+| 84 | 0 | 1.86 | 1.47 | 1.94 |
+| 104 | 0 | 2.16 | - | 2.34 |
+| 100 | 1 | 2.88 | 1.61 | 2.16 |
+| 105 | 1 | 3.00 | 1.68 | 2.18 |
+| 130 | 1 | 3.62 | - | 2.29 |
+| 130 | 2 | 4.89 | 2.01 | 2.29 |
+| 137 | 2 | 5.15 | 2.10 | 2.32 |
+| 161 | 2 | 6.04 | - | 2.32 |
+| 170 | 2 | 6.38 | - | 2.32 |
+| 150 | 3 | 5.63 | 2.44 | 2.36 |
+| 180 | 3 | 6.76 | 3.48 | 2.79 |
+| 189 | 3 | 7.10 | 3.80 | 2.92 |
+| 190 | 3 | 7.14 | 3.84 | 2.93 |
+| 200 | 3 | 7.53 | 4.20 | 3.08 |
+| 235 | 3 | 8.90 | - | 3.60 |
 
-HP spread from the fight level roll alone, at the live world levels (`N = 19`): EoC 20 to 24 0.96 to 0.99x, WoF 80 to 99 1.53 to 1.72x, Destroyer 100 to 124 2.38 to 2.82x, Plantera 130 to 161 4.40 to 5.39x, Moon Lord 180 to 224 8.45 to 10.61x (Betsy not down) or 190 to 236 8.94 to 11.21x (Betsy down).
+HP spread from the fight level roll alone, at the live world levels (`N = 19`): EoC 20 to 24 0.96 to 1.01x, WoF 80 to 99 1.80 to 2.09x, Destroyer 100 to 124 2.88 to 3.47x, Plantera 130 to 161 4.89 to 6.04x, Moon Lord 180 to 224 6.76 to 8.46x (Betsy not down) or 190 to 236 7.14 to 8.94x (Betsy down).
 
 ### 5.3 Order of operations
 
@@ -394,11 +394,11 @@ Rows are indexed by the rolled level, which is what the formula sees; see §4.2 
 
 | Rolled level | Phase | Rarity | Life | Damage | Defense |
 |---|---|---|---|---|---|
-| 10 | 0 | Common | 39 | 14 | 6 |
+| 10 | 0 | Common | 37 | 14 | 6 |
 | 21 | 0 | Common | 43 | 15 | 6 |
-| 22 | 0 | Legend | 86 | 22 | 10 |
-| 141 | 3 | Common | 296 | 30 | 12 |
-| 189 | 3 | Common | 399 | 53 | 15 |
+| 22 | 0 | Legend | 88 | 22 | 10 |
+| 141 | 3 | Common | 238 | 30 | 12 |
+| 189 | 3 | Common | 319 | 53 | 15 |
 
 Expert doubles the raw life and damage before this mod runs, and Expert hardmode also applies vanilla's pre-hardmode-enemy boost to life, damage, **defense** and coin value. The mod multiplies whatever vanilla produced.
 
@@ -406,10 +406,10 @@ Expert doubles the raw life and damage before this mod runs, and Expert hardmode
 
 | Rolled level | Phase | Life | Damage | Defense |
 |---|---|---|---|---|
-| 78 | 1 | 518 | 57 | 38 |
-| 105 | 1 | 642 | 67 | 42 |
-| 137 | 2 | 1201 | 84 | 57 |
-| 189 | 3 | 2310 | 152 | 70 |
+| 78 | 1 | 610 | 57 | 38 |
+| 105 | 1 | 779 | 67 | 42 |
+| 137 | 2 | 1338 | 84 | 57 |
+| 189 | 3 | 1846 | 152 | 70 |
 
 With rarity, at level 105 (defense 42 after scaling): Elite 58 defense, Legend 71, Legend with Durable 60: 113.
 
@@ -417,11 +417,11 @@ With rarity, at level 105 (defense 42 after scaling): Elite 58 defense, Legend 7
 
 | Boss | Ladder world level | Level roll | Life raw to scaled | Contact damage raw to scaled |
 |---|---|---|---|---|
-| Eye of Cthulhu | 21 | 21 to 25 | 3640 to 3510 .. 3635 | 30 to 23 .. 25 |
-| Wall of Flesh | 84 | 84 to 104 | 11200 to 17543 .. 19883 | 150 to 291 .. 350 |
-| Destroyer | 105 | 105 to 130 | 120000 to 296401 .. 351366 | body 93 to 203 .. 212 |
-| Plantera | 137 | 137 to 170 | 42000 to 194140 .. 238822 | 100 to 231 (every roll, first form) |
-| Moon Lord | 189 | 189 to 235 | core 75000 to 666543 .. 837342 | True Eye 120 to 350 .. 431 |
+| Eye of Cthulhu | 21 | 21 to 25 | 3640 to 3532 .. 3716 | 30 to 23 .. 25 |
+| Wall of Flesh | 84 | 84 to 104 | 11200 to 20796 .. 24243 | 150 to 291 .. 350 |
+| Destroyer | 105 | 105 to 130 | 120000 to 359843 .. 434546 | body 93 to 203 .. 212 |
+| Plantera | 137 | 137 to 170 | 42000 to 216263 .. 267912 | 100 to 231 (every roll, first form) |
+| Moon Lord | 189 | 189 to 235 | core 75000 to 532703 .. 667211 | True Eye 120 to 350 .. 431 |
 
 Plantera's AI rewrites its contact damage and defense by form: 100 damage / 36 defense in the first form, 140 damage / 10 defense below half life (Expert), so the scaled second-form damage is 324 and the defense read at that moment is 10 raw (19 at level 130). Every part, segment, projectile and minion of a fight uses the same multiplier. Destroyer segments share the head's life pool through vanilla's `realLife`. Fight member defense is vanilla's current value times the defense multiplier (Moon Lord head 50, hands 40, core 70 raw; at level 190 the multiplier is 2.54, so 126, 101 and 177). Plantera's 36 and 10 at level 130 (phase 2, 2.00) read 71 and 19.
 
@@ -478,17 +478,17 @@ The rarity baseline (§4.3) plus modifiers (§4.4). Nothing depends on level or 
 
 ### 7.2 Fight members
 
-One package per tier, chosen by phase. Every boss deals all three elements plus Chaos at once, on purpose. (`EnemyScaling.cs:122-157`)
+One package per tier, chosen by phase. Every boss deals all three elements plus Chaos at once, on purpose. (`EnemyScaling.cs:122-155`)
 
 | Tier (phases) | F/C/L res | Chaos res | F/C/L damage % (each) | Chaos damage % | F/C/L pen | Chaos pen | Sundering % |
 |---|---|---|---|---|---|---|---|
-| 0 (phase 0) | 25 | 6 | 10 | 4 | 5 | 3 | 15 |
-| 1 (phases 1 and 2) | 50 | 13 | 12 | 5 | 10 | 5 | 30 |
-| 2 (phase 3) | 75 | 19 | 14 | 6 | 15 | 8 | 45 |
+| 0 (phase 0) | 40 | 10 | 10 | 4 | 5 | 3 | 15 |
+| 1 (phases 1 and 2) | 70 | 18 | 12 | 5 | 10 | 5 | 30 |
+| 2 (phase 3) | 88 | 22 | 14 | 6 | 15 | 8 | 45 |
 
 ### 7.3 Caps and penetration
 
-- Resistance cap 75% (`ElementalMath.ElementCap`). It applies at hit time, not when the package is built: a Legend with FireResistant can store 80 and the panel shows 80, but 75 applies.
+- Resistance cap 75% (`ElementalMath.ElementCap`). It applies at hit time, not when the package is built: a Legend with FireResistant can store 80 and the panel shows 80, but 75 applies. A phase 3 boss stores 88 fire, cold and lightning resistance the same way, so it takes 75 until the player's penetration takes the stored value below 75.
 - Player elemental penetration subtracts from the **stored** resistance first, and the cap applies after: `effective = min(75, stored - pen)`. So resistance stored above the cap absorbs penetration before it does anything; against 80 stored fire resistance, 0 and 5 penetration deal the same damage. There is no floor, so penetration beyond the resistance makes the enemy vulnerable. Fire, Cold and Lightning penetration include the "all elemental penetration" affix; Chaos does not. The same order applies to enemy penetration against the player's resistances.
 - Against the player, enemy penetration subtracts from the player's resistance the same way. Sundering cuts the player's defense by its percentage before the player's own physical resistance is computed.
 
