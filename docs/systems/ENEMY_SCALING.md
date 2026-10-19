@@ -411,7 +411,7 @@ Expert doubles the raw life and damage before this mod runs, and Expert hardmode
 | 137 | 2 | 1201 | 84 | 57 |
 | 189 | 3 | 2310 | 152 | 70 |
 
-With rarity, at phase 0 (defense multiplier 1): Elite 39 defense, Legend 47, Legend with Durable 60: 75.
+With rarity, at level 105 (defense 42 after scaling): Elite 58 defense, Legend 71, Legend with Durable 60: 113.
 
 **Bosses** (Expert solo raw, at the Phase 4 ladder levels, `N = 18`; the live `N = 19` levels are about 5% lower, §2.2):
 
@@ -423,7 +423,7 @@ With rarity, at phase 0 (defense multiplier 1): Elite 39 defense, Legend 47, Leg
 | Plantera | 137 | 137 to 170 | 42000 to 194140 .. 238822 | 100 to 231 (every roll, first form) |
 | Moon Lord | 189 | 189 to 235 | core 75000 to 666543 .. 837342 | True Eye 120 to 350 .. 431 |
 
-Plantera's AI rewrites its contact damage and defense by form: 100 damage / 36 defense in the first form, 140 damage / 10 defense below half life (Expert), so the scaled second-form damage is 324 and the defense read at that moment is 10. Every part, segment, projectile and minion of a fight uses the same multiplier. Destroyer segments share the head's life pool through vanilla's `realLife`. Fight member defense is vanilla's current value times the defense multiplier (Moon Lord head 50, hands 40, core 70 raw; at level 190 the multiplier is 2.54, so 126, 101 and 177). Plantera's 36 and 10 at level 130 (phase 2, 2.00) read 71 and 19.
+Plantera's AI rewrites its contact damage and defense by form: 100 damage / 36 defense in the first form, 140 damage / 10 defense below half life (Expert), so the scaled second-form damage is 324 and the defense read at that moment is 10 raw (19 at level 130). Every part, segment, projectile and minion of a fight uses the same multiplier. Destroyer segments share the head's life pool through vanilla's `realLife`. Fight member defense is vanilla's current value times the defense multiplier (Moon Lord head 50, hands 40, core 70 raw; at level 190 the multiplier is 2.54, so 126, 101 and 177). Plantera's 36 and 10 at level 130 (phase 2, 2.00) read 71 and 19.
 
 ---
 
@@ -456,15 +456,15 @@ Reaps (the character mod's stored-damage hits) count only Ichor and Betsy's Curs
 
 Worked examples (`h = 25`, defense as the formula sees it, after level scaling):
 
-| Target (defense) | 0 pen | 8 flat pen | 13 flat pen |
+| Defense | 0 pen | 8 flat pen | 13 flat pen |
 |---|---|---|---|
-| Zombie (6) | 19.4% | -7.4% | -21.9% |
-| Armored Skeleton (28) | 52.8% | 44.4% | 37.5% |
-| Moon Lord head (50) | 66.7% | 62.7% | 59.7% |
-| Moon Lord core (70) | 73.7% | 71.3% | 69.5% |
-| Moon Lord hands (40) | 61.5% | 56.1% | 51.9% |
+| 6 | 19.4% | -7.4% | -21.9% |
+| 28 | 52.8% | 44.4% | 37.5% |
+| 50 | 66.7% | 62.7% | 59.7% |
+| 70 | 73.7% | 71.3% | 69.5% |
+| 40 | 61.5% | 56.1% | 51.9% |
 
-Zombie with Ichor: defense 6 - 5 = 1, so 100 x 1 / (1 + 25) = 3.8% resistance and 0.96x damage (with vanilla's 15 it was -26.5%, 1.26x). A Legend Armored Skeleton (47) resists 65.3%; with Durable 60 (75 defense), 75%. The gain from flat penetration peaks where the target's defense is about equal to the penetration and fades on both sides.
+Zombie with Ichor: defense 6 - 5 = 1, so 100 x 1 / (1 + 25) = 3.8% resistance and 0.96x damage (with vanilla's 15 it was -26.5%, 1.26x). A Legend Armored Skeleton at level 105 (71 defense) resists 74.0%; with Durable 60 (113 defense), 81.9%. The gain from flat penetration peaks where the target's defense is about equal to the penetration and fades on both sides.
 
 ---
 
