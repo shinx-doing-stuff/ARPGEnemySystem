@@ -138,7 +138,7 @@ namespace ARPGEnemySystem.Common.Scaling
         // Damage values reduced from {25, 50, 75} -> {10, 12, 14}: the package leans physical.
         // Penetration {5, 10, 15} is separate from Sundering {15, 30, 45}.
         // Chaos values: damage ~40%, pen ~55% of F/C/L. Armour is not set here: a boss's elemental
-        // ratings follow its defense; the package only carries the Shock threshold fraction.
+        // ratings follow its defense, and of the armour terms the package carries only the Shock threshold fraction.
         public static void ApplyBossElementals(ref EnemyStatBlock s, int tier)
         {
             float[] shockThresholdFractions = { 1f, 0.5f, 0.25f };

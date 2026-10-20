@@ -1,5 +1,4 @@
 using ARPGEnemySystem.Common.Configs;
-using ARPGEnemySystem.Common.Elements;
 using ARPGEnemySystem.Common.GlobalProjectiles;
 using ARPGEnemySystem.Common.Scaling;
 using Terraria;
@@ -32,13 +31,6 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
 
         public static float ArmourHalving(NPC npc)
             => ModContent.GetInstance<Config>().ArmourHalving;
-
-        public static float ElementalArmour(NPC npc, Element element)
-        {
-            var p = Profile(npc);
-            float bonus = p == null ? 0f : p.Package.ArmourBonus(element);
-            return EnemyScaling.ElementalArmour(Defense(npc), element, bonus);
-        }
 
         // The life a Shock is measured against: a fight member's tier fraction of max life, everyone else all of it.
         public static int ShockThreshold(NPC npc)

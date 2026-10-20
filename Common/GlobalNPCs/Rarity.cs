@@ -32,7 +32,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
 
         // Penetration baseline per rarity — same value for all four pen fields.
         // Modifier-rolled pen (Searing/Shattering/Conductive/Sundering) stacks +=
-        // on top in PreAI. Worst case Legend + max-roll Sundering = 20 + 40 = 60 pen points.
+        // on top in PreAI. Worst case Legend + max-roll Sundering = 20 + 40 = 60% pen.
         public static Dictionary<Rarity, int> rarityElementalPenDatabase = new Dictionary<Rarity, int>()
         {
             { Rarity.None,      0  },
@@ -43,7 +43,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             { Rarity.Legend,    20 },
         };
 
-        // Chaos pen baseline per rarity — same scale as F/C/L pen (~50%), in points.
+        // Chaos pen baseline per rarity — same scale as F/C/L pen (~50%).
         // Modifier bonus (ChaosPenetrating) stacks += on top in PreAI.
         public static Dictionary<Rarity, int> rarityChaosPenDatabase = new Dictionary<Rarity, int>()
         {

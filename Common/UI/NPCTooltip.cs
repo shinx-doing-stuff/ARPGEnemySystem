@@ -97,7 +97,8 @@ namespace ARPGEnemySystem.Common.UI
                 sb.Append(Language.GetTextValue(LocPrefix + "HeaderNormalNoMods", p.Level, p.Rarity));
 
             // What a hit sees: scaled defense less Ichor / Betsy's Curse.
-            int defense = EnemyStats.Defense(npc) - EnemyStats.DebuffDefenseReduction(npc);
+            int scaledDefense = EnemyStats.Defense(npc);
+            int defense = scaledDefense - EnemyStats.DebuffDefenseReduction(npc);
             float h = EnemyStats.ArmourHalving(npc);
             float v = ScalingDefaults.VulnerabilityCeiling;
             float physRes = ElementalMath.ArmourResistancePct(defense, h, v);
@@ -106,10 +107,10 @@ namespace ARPGEnemySystem.Common.UI
             sb.Append('\n');
             sb.Append(Language.GetTextValue(LocPrefix + "StatsLine", EnemyStats.ContactDamage(npc), defense, physRes.ToString("F1")));
             sb.Append('\n');
-            float fire = EnemyStats.ElementalArmour(npc, Element.Fire);
-            float cold = EnemyStats.ElementalArmour(npc, Element.Cold);
-            float lightning = EnemyStats.ElementalArmour(npc, Element.Lightning);
-            float chaos = EnemyStats.ElementalArmour(npc, Element.Chaos);
+            float fire = EnemyScaling.ElementalArmour(scaledDefense, Element.Fire, pk.ArmourBonus(Element.Fire));
+            float cold = EnemyScaling.ElementalArmour(scaledDefense, Element.Cold, pk.ArmourBonus(Element.Cold));
+            float lightning = EnemyScaling.ElementalArmour(scaledDefense, Element.Lightning, pk.ArmourBonus(Element.Lightning));
+            float chaos = EnemyScaling.ElementalArmour(scaledDefense, Element.Chaos, pk.ArmourBonus(Element.Chaos));
             sb.Append(Language.GetTextValue(LocPrefix + "Resistances",
                 ElementalMath.ArmourResistancePct(fire, h, v).ToString("F0"), fire.ToString("F0"),
                 ElementalMath.ArmourResistancePct(cold, h, v).ToString("F0"), cold.ToString("F0"),

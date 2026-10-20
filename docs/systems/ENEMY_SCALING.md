@@ -1,6 +1,6 @@
 # Enemy Scaling
 
-How ARPGEnemySystem decides how strong an enemy is. Everything on this page is read from the code as of 2026-10-04 (commit 7c42f59). Constant tables are copied from the source. World levels, checkpoint rows and worked examples are computed, and they depend on the boss roster of the loaded mod set (§2.1); read the live roster size with `/checklevelcap` or the `World level roster: N bosses.` log line. File references point at the place the rule lives.
+How ARPGEnemySystem decides how strong an enemy is. Everything on this page is read from the code as of 2026-10-20 (after commit ec63042). Constant tables are copied from the source. World levels, checkpoint rows and worked examples are computed, and they depend on the boss roster of the loaded mod set (§2.1); read the live roster size with `/checklevelcap` or the `World level roster: N bosses.` log line. File references point at the place the rule lives.
 
 ARPGEnemySystem requires ARPGItemSystem (checked at load) and Boss Checklist (declared dependency).
 
@@ -465,7 +465,7 @@ With `h = 60`:
 Effective defense, on the character mod side, in this order:
 1. `d = EnemyStats.Defense(target)` (vanilla current defense times the level defense multiplier, then rarity and Durable).
 2. If `d > 0`: `d x= 1 - min(1, percent pen)`. Percent pen is the weapon and player percent armour penetration, plus vanilla's "ignore all positive defense" cases counted as 100%: the Lightning Aura sentry (not against the Dungeon Guardian) and Flymeal against town-type NPCs.
-3. `d -= flat pen`, with no floor. Flat pen is the sum of weapon and player flat armour penetration, vanilla projectile armour penetration, +5 for Strong Bees wasps, and Ichor / Betsy's Curse. A direct strike (no item or projectile) uses the player's total plus the weapon's own penetration. Armour penetration that comes from vanilla (the weapon's and projectile's own, accessories and buffs such as the Sharpening Station, Strong Bees) counts at one third (`ScalingDefaults.VanillaArmorPenScale`), because vanilla sized those numbers for a rule where a point removes half a point of damage, while here a point of defense is worth 1.3% to 4% of damage. Ichor and Betsy's Curse are cut to a third in `EnemyStats` itself (5 and 13).
+3. `d -= flat pen`, with no floor. Flat pen is the sum of weapon and player flat armour penetration, vanilla projectile armour penetration, +5 for Strong Bees wasps, and Ichor / Betsy's Curse. A direct strike (no item or projectile) uses the player's total plus the weapon's own penetration. Armour penetration that comes from vanilla (the weapon's and projectile's own, accessories and buffs such as the Sharpening Station, Strong Bees) counts at one third (`ScalingDefaults.VanillaArmorPenScale`), because vanilla sized those numbers for a rule where a point removes half a point of damage, while here a point of defense is worth about 1.16% of the damage that lands. Ichor and Betsy's Curse are cut to a third in `EnemyStats` itself (5 and 13).
 4. Apply the law: `damage x lands`.
 
 Reaps (the character mod's stored-damage hits) count only Ichor and Betsy's Curse as vanilla penetration.
@@ -501,7 +501,7 @@ rating = def - edge + bonus        edge = 10 (Fire, Cold, Lightning), 15 (Chaos)
 lands  = armour law at (rating - the element's penetration points)
 ```
 
-`def` is `EnemyStats.Defense`, `bonus` is the package's armour bonus for that element (rarity plus Resistant modifiers; 0 for fight members and for NPCs without a profile). The edge makes every element slightly easier to hurt than physical at equal defense; Chaos has a further 5 points. The rating is read once per hit from the defense that hit already reads. (`EnemyScaling.ElementalArmour`, `EnemyStats.ElementalArmour`; edges are `ScalingDefaults.ElementalEdgePoints` and `ChaosEdgePoints`.)
+`def` is `EnemyStats.Defense`, `bonus` is the package's armour bonus for that element (rarity plus Resistant modifiers; 0 for fight members and for NPCs without a profile). The edge makes every element slightly easier to hurt than physical at equal defense; Chaos has a further 5 points. The rating is read once per hit from the defense that hit already reads. (`EnemyScaling.ElementalArmour`; edges are `ScalingDefaults.ElementalEdgePoints` and `ChaosEdgePoints`.)
 
 ### 7.2 Fight members
 
@@ -619,7 +619,7 @@ Max life is not shown. Rarity and modifier names are the raw enum names.
 
 `Call("GetEnemyInfo", NPC npc)` returns `int[] { level, rarityTier }` for a managed NPC (rarity 0 for fight members), `{0, 0}` when managed but not yet synced to this client, and `null` for an unmanaged NPC. Fancy Healthbar reads it for its level badge and rarity frame. Keep the shape stable or version the name. (`ARPGEnemySystem.cs:26-42`)
 
-The character mod references this mod at compile time and reads `EnemyStats` (profile, defense, contact and projectile damage, armour halving, elemental armour, Shock threshold, debuff defense reduction), `ProjectileManager` (the projectile's profile and the shooter index, used by its hurt log and the kaeshi counter-strike), `ElementalMath`, the `Element` enum and the config armour halving and player half point directly. Its XP award is `life/5 + contact damage x 2 + defense x 2`, x5 for NPCs with the vanilla `boss` flag (so not Eater of Worlds segments, pillars or Betsy), x the coin-style multiplier for Regulars, x a level-difference factor; no XP for dummies, critters or statue spawns, and a 70% share when teammates split it. Since max life includes the player-count scaling, boss XP grows with the player count.
+The character mod references this mod at compile time and reads `EnemyStats` (profile, defense, contact and projectile damage, armour halving, Shock threshold, debuff defense reduction) and `EnemyScaling.ElementalArmour`, `ProjectileManager` (the projectile's profile and the shooter index, used by its hurt log and the kaeshi counter-strike), `ElementalMath`, the `Element` enum and the config armour halving and player half point directly. Its XP award is `life/5 + contact damage x 2 + defense x 2`, x5 for NPCs with the vanilla `boss` flag (so not Eater of Worlds segments, pillars or Betsy), x the coin-style multiplier for Regulars, x a level-difference factor; no XP for dummies, critters or statue spawns, and a 70% share when teammates split it. Since max life includes the player-count scaling, boss XP grows with the player count.
 
 BalanceLab links the scaling source files directly and mirrors the rest. It models a Regular as rarity None with no modifiers, a state that never occurs in game, so its regular-enemy numbers are a floor.
 
