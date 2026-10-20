@@ -5,7 +5,10 @@ namespace ARPGEnemySystem.Common.Scaling
     public static class ScalingDefaults
     {
         public const float ScalingExponent = 1.14f;
-        public const int EnemyPhysResHalfPoint = 25;
+        public const int ArmourHalving = 60;
+        public const float VulnerabilityCeiling = 2f;
+        public const float ElementalEdgePoints = 10f;
+        public const float ChaosEdgePoints = 5f;
         public const float VanillaArmorPenScale = 1f / 3f;
         public const int PhysResHalfPoint = 60;
     }

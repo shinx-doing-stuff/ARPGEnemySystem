@@ -23,9 +23,9 @@ namespace ARPGEnemySystem.Common.Configs
         [DefaultValue(ScalingDefaults.ScalingExponent)]
         public float ScalingExponent;
 
-        [Range(5, 100)]
-        [DefaultValue(ScalingDefaults.EnemyPhysResHalfPoint)]
-        public int EnemyPhysResHalfPoint;
+        [Range(10, 300)]
+        [DefaultValue(ScalingDefaults.ArmourHalving)]
+        public int ArmourHalving;
 
         [Header("Elemental")]
 

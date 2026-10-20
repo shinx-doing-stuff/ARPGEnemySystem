@@ -1,4 +1,5 @@
 using ARPGEnemySystem.Common.Configs;
+using ARPGEnemySystem.Common.Elements;
 using ARPGEnemySystem.Common.GlobalProjectiles;
 using ARPGEnemySystem.Common.Scaling;
 using Terraria;
@@ -29,8 +30,23 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             return p == null ? npc.defense : p.ScaleDefense(npc.defense);
         }
 
-        public static float PhysResHalfPoint(NPC npc)
-            => ModContent.GetInstance<Config>().EnemyPhysResHalfPoint;
+        public static float ArmourHalving(NPC npc)
+            => ModContent.GetInstance<Config>().ArmourHalving;
+
+        public static float ElementalArmour(NPC npc, Element element)
+        {
+            var p = Profile(npc);
+            float bonus = p == null ? 0f : p.Package.ArmourBonus(element);
+            return EnemyScaling.ElementalArmour(Defense(npc), element, bonus);
+        }
+
+        // The life a Shock is measured against: a fight member's tier fraction of max life, everyone else all of it.
+        public static int ShockThreshold(NPC npc)
+        {
+            var p = Profile(npc);
+            float fraction = p == null ? 0f : p.Package.ShockThresholdFraction;
+            return (int)(npc.lifeMax * (fraction > 0f ? fraction : 1f));
+        }
 
         public static int DebuffDefenseReduction(NPC npc)
             => (npc.ichor ? IchorDefenseReduction : 0) + (npc.betsysCurse ? BetsysCurseDefenseReduction : 0);
@@ -38,8 +54,8 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public static EnemyProfile Profile(Projectile proj)
             => proj.TryGetGlobalProjectile(out ProjectileManager pm) ? pm.Profile : null;
 
-        public static float PhysResHalfPoint(Projectile proj)
-            => ModContent.GetInstance<Config>().EnemyPhysResHalfPoint;
+        public static float ArmourHalving(Projectile proj)
+            => ModContent.GetInstance<Config>().ArmourHalving;
 
         // Shooter-scaled; the hurt pipeline applies vanilla's hostile ×2 and difficulty on top.
         public static int ProjectileDamage(Projectile proj)

@@ -18,21 +18,21 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
 
     public static class RarityDatabase
     {
-        // Elemental resistance baseline per rarity — same value for all three elements.
-        // Stored as raw %; clamped to cap at hit time. Modifier bonuses stack on top.
-        public static Dictionary<Rarity, int> rarityElementalResDatabase = new Dictionary<Rarity, int>()
+        // Armour points added to each of the four elemental ratings per rarity.
+        // Modifier bonuses (the Resistant modifiers) stack on top.
+        public static Dictionary<Rarity, int> rarityElementalArmourBonus = new Dictionary<Rarity, int>()
         {
             { Rarity.None,      0  },
             { Rarity.Common,    0  },
-            { Rarity.Uncommon,  10 },
-            { Rarity.Rare,      20 },
-            { Rarity.Elite,     30 },
-            { Rarity.Legend,    40 },
+            { Rarity.Uncommon,  2  },
+            { Rarity.Rare,      5  },
+            { Rarity.Elite,     10 },
+            { Rarity.Legend,    20 },
         };
 
         // Penetration baseline per rarity — same value for all four pen fields.
         // Modifier-rolled pen (Searing/Shattering/Conductive/Sundering) stacks +=
-        // on top in PreAI. Worst case Legend + max-roll Sundering = 20 + 40 = 60% pen.
+        // on top in PreAI. Worst case Legend + max-roll Sundering = 20 + 40 = 60 pen points.
         public static Dictionary<Rarity, int> rarityElementalPenDatabase = new Dictionary<Rarity, int>()
         {
             { Rarity.None,      0  },
@@ -43,19 +43,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
             { Rarity.Legend,    20 },
         };
 
-        // Chaos resistance baseline per rarity — intentionally lower than F/C/L (~25%).
-        // Modifier bonus (ChaosResistant) stacks += on top in PreAI.
-        public static Dictionary<Rarity, int> rarityChaosResDatabase = new Dictionary<Rarity, int>()
-        {
-            { Rarity.None,      0  },
-            { Rarity.Common,    0  },
-            { Rarity.Uncommon,  3  },
-            { Rarity.Rare,      5  },
-            { Rarity.Elite,     8  },
-            { Rarity.Legend,    10 },
-        };
-
-        // Chaos pen baseline per rarity — same scale as F/C/L pen (~50%).
+        // Chaos pen baseline per rarity — same scale as F/C/L pen (~50%), in points.
         // Modifier bonus (ChaosPenetrating) stacks += on top in PreAI.
         public static Dictionary<Rarity, int> rarityChaosPenDatabase = new Dictionary<Rarity, int>()
         {

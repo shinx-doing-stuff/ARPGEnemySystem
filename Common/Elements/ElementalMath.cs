@@ -8,7 +8,6 @@ namespace ARPGEnemySystem.Common.Elements
         // Player-side max-resistance class stats add ON TOP of these baselines per-player.
         public const float ElementCap = 75f;
         public const float PlayerPhysCap = 80f;
-        public const float EnemyPhysCap = 90f;
 
         // Clamps resistance to (-inf, cap]. Negative values allowed (vulnerability).
         public static float ClampResistance(float raw, float cap)
@@ -26,11 +25,15 @@ namespace ARPGEnemySystem.Common.Elements
         public static float ConvertDefenseToResistance(float defense, float halfPoint, float cap)
             => MathF.Sign(defense) * cap * MathF.Abs(defense) / (MathF.Abs(defense) + halfPoint);
 
-        // Enemy physical resistance in %: 100 × d / (d + halfPoint), capped at EnemyPhysCap above zero.
-        // Below zero the same curve mirrors with no cap: -100 × |d| / (|d| + halfPoint), limit -100.
-        public static float ConvertEnemyDefenseToResistance(float defense, float halfPoint)
-            => defense >= 0f
-                ? MathF.Min(EnemyPhysCap, 100f * defense / (defense + halfPoint))
-                : -100f * -defense / (-defense + halfPoint);
+        // The fraction of a hit that lands on an enemy with this net armour (defense or an element's rating, less the
+        // attacker's penetration): halves every `halving` points above zero. Below zero it rises toward the ceiling,
+        // halving the gap to it every `halving` points, with the same slope at zero.
+        public static float ArmourLands(float netArmour, float halving, float vulnerabilityCeiling)
+            => netArmour >= 0f
+                ? MathF.Pow(2f, -netArmour / halving)
+                : vulnerabilityCeiling - (vulnerabilityCeiling - 1f) * MathF.Pow(2f, netArmour / halving);
+
+        public static float ArmourResistancePct(float netArmour, float halving, float vulnerabilityCeiling)
+            => 100f * (1f - ArmourLands(netArmour, halving, vulnerabilityCeiling));
     }
 }

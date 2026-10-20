@@ -20,9 +20,9 @@ Configs: {
 			Tooltip: Exponent applied to enemy level in the HP, defense and damage curve. Each progression phase adds its own slope on level^exponent from its start level, with no jump at a phase change. Higher values = steeper growth.
 		}
 
-		EnemyPhysResHalfPoint: {
-			Label: Enemy Phys Res Half Point
-			Tooltip: Defense that reads 50% physical resistance, after level scaling. The same for every enemy. Default 25.
+		ArmourHalving: {
+			Label: Armour Halving
+			Tooltip: Armour points that halve the damage landing: an enemy whose rating is this many points above the attacker's penetration takes half. One number for defense and the four elemental armours. Default 60.
 		}
 
 		PhysResHalfPoint: {
@@ -61,7 +61,7 @@ NPCTooltip: {
 	HeaderNormalNoMods: Level {0}  {1}
 	HeaderBoss: Level {0}
 	StatsLine: Damage: {0}   Defense: {1} (Phys Res {2}%)
-	Resistances: Resistances: Fire {0}%  Cold {1}%  Lightning {2}%  Chaos {3}%
+	Resistances: Resistances: Fire {0}% [{1}]  Cold {2}% [{3}]  Lightning {4}% [{5}]  Chaos {6}% [{7}]
 	ElemDmgLabel: Elem Dmg:
 	PenLabel: Penetration:
 	ElemDmgNone: Elem Dmg: none

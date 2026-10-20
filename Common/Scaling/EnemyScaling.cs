@@ -11,9 +11,19 @@ namespace ARPGEnemySystem.Common.Scaling
         public int LifeMax, Damage, Defense;
         public float Scale;
         public float FireDamagePct, ColdDamagePct, LightningDamagePct, ChaosDamagePct;
-        public float FireResistance, ColdResistance, LightningResistance, ChaosResistance;
+        public float FireArmourBonus, ColdArmourBonus, LightningArmourBonus, ChaosArmourBonus;
         public float FirePen, ColdPen, LightningPen, ChaosPen;
         public float SunderingPct;
+        public float ShockThresholdFraction;
+
+        public float ArmourBonus(Element e) => e switch
+        {
+            Element.Fire      => FireArmourBonus,
+            Element.Cold      => ColdArmourBonus,
+            Element.Lightning => LightningArmourBonus,
+            Element.Chaos     => ChaosArmourBonus,
+            _                 => 0f,
+        };
     }
 
     public static class EnemyScaling
@@ -42,10 +52,12 @@ namespace ARPGEnemySystem.Common.Scaling
 
         public static void ApplyRarityElementals(ref EnemyStatBlock s, Rarity rarity)
         {
-            int rarityRes = RarityDatabase.rarityElementalResDatabase[rarity];
-            s.FireResistance      = rarityRes;
-            s.ColdResistance      = rarityRes;
-            s.LightningResistance = rarityRes;
+            int bonus = RarityDatabase.rarityElementalArmourBonus[rarity];
+            s.FireArmourBonus      = bonus;
+            s.ColdArmourBonus      = bonus;
+            s.LightningArmourBonus = bonus;
+            s.ChaosArmourBonus     = bonus;
+            s.ShockThresholdFraction = 1f;
 
             int rarityPen = RarityDatabase.rarityElementalPenDatabase[rarity];
             s.FirePen      = rarityPen;
@@ -53,8 +65,7 @@ namespace ARPGEnemySystem.Common.Scaling
             s.LightningPen = rarityPen;
             s.SunderingPct = rarityPen;
 
-            s.ChaosResistance = RarityDatabase.rarityChaosResDatabase[rarity];
-            s.ChaosPen        = RarityDatabase.rarityChaosPenDatabase[rarity];
+            s.ChaosPen = RarityDatabase.rarityChaosPenDatabase[rarity];
         }
 
         public static void ApplyModifier(ref EnemyStatBlock s, ModifierType type, int magnitude)
@@ -85,13 +96,13 @@ namespace ARPGEnemySystem.Common.Scaling
                     s.LightningDamagePct += magnitude;
                     break;
                 case ModifierType.FireResistant:
-                    s.FireResistance += magnitude;
+                    s.FireArmourBonus += magnitude;
                     break;
                 case ModifierType.ColdResistant:
-                    s.ColdResistance += magnitude;
+                    s.ColdArmourBonus += magnitude;
                     break;
                 case ModifierType.LightningResistant:
-                    s.LightningResistance += magnitude;
+                    s.LightningArmourBonus += magnitude;
                     break;
                 case ModifierType.Searing:
                     s.FirePen += magnitude;
@@ -109,7 +120,7 @@ namespace ARPGEnemySystem.Common.Scaling
                     s.ChaosDamagePct += magnitude;
                     break;
                 case ModifierType.ChaosResistant:
-                    s.ChaosResistance += magnitude;
+                    s.ChaosArmourBonus += magnitude;
                     break;
                 case ModifierType.ChaosPenetrating:
                     s.ChaosPen += magnitude;
@@ -126,17 +137,16 @@ namespace ARPGEnemySystem.Common.Scaling
         // All three elemental damage types simultaneously (was: single random element).
         // Damage values reduced from {25, 50, 75} -> {10, 12, 14}: the package leans physical.
         // Penetration {5, 10, 15} is separate from Sundering {15, 30, 45}.
-        // Chaos values: damage ~40%, res ~25%, pen ~55% of F/C/L.
+        // Chaos values: damage ~40%, pen ~55% of F/C/L. Armour is not set here: a boss's elemental
+        // ratings follow its defense; the package only carries the Shock threshold fraction.
         public static void ApplyBossElementals(ref EnemyStatBlock s, int tier)
         {
-            float[] elemResValues = { 40f, 70f, 88f };
+            float[] shockThresholdFractions = { 1f, 0.5f, 0.25f };
             float[] damageValues  = { 10f, 12f, 14f };
             float[] penValues     = { 5f,  10f, 15f };
             float[] sunderingValues = { 15f, 30f, 45f };
 
-            s.FireResistance      = elemResValues[tier];
-            s.ColdResistance      = elemResValues[tier];
-            s.LightningResistance = elemResValues[tier];
+            s.ShockThresholdFraction = shockThresholdFractions[tier];
 
             s.FireDamagePct      = damageValues[tier];
             s.ColdDamagePct      = damageValues[tier];
@@ -147,13 +157,18 @@ namespace ARPGEnemySystem.Common.Scaling
             s.LightningPen = penValues[tier];
             s.SunderingPct = sunderingValues[tier];
 
-            float[] chaosResValues    = { 10f, 18f, 22f };
             float[] chaosDamageValues = { 4f,  5f,  6f };
             float[] chaosPenValues    = { 3f,  5f,  8f };
 
-            s.ChaosResistance = chaosResValues[tier];
             s.ChaosDamagePct  = chaosDamageValues[tier];
             s.ChaosPen        = chaosPenValues[tier];
+        }
+
+        // An element's net armour before the attacker's penetration: defense less the element's edge, plus its bonus points.
+        public static float ElementalArmour(int defense, Element element, float bonusPoints)
+        {
+            float edge = ScalingDefaults.ElementalEdgePoints + (element == Element.Chaos ? ScalingDefaults.ChaosEdgePoints : 0f);
+            return defense - edge + bonusPoints;
         }
     }
 }
