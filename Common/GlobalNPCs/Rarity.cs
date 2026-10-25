@@ -18,16 +18,26 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
 
     public static class RarityDatabase
     {
-        // Armour points added to each of the four elemental ratings per rarity.
-        // Modifier bonuses (the Resistant modifiers) stack on top.
-        public static Dictionary<Rarity, int> rarityElementalArmourBonus = new Dictionary<Rarity, int>()
+        // Percentage points added to the raw fire, cold and lightning resistance per rarity, after the
+        // armour law has turned the enemy's rating into a resistance. The Resistant modifiers stack on top.
+        public static Dictionary<Rarity, int> rarityElementalResistancePct = new Dictionary<Rarity, int>()
         {
             { Rarity.None,      0  },
             { Rarity.Common,    0  },
-            { Rarity.Uncommon,  2  },
+            { Rarity.Uncommon,  10 },
+            { Rarity.Rare,      20 },
+            { Rarity.Elite,     30 },
+            { Rarity.Legend,    40 },
+        };
+
+        public static Dictionary<Rarity, int> rarityChaosResistancePct = new Dictionary<Rarity, int>()
+        {
+            { Rarity.None,      0  },
+            { Rarity.Common,    0  },
+            { Rarity.Uncommon,  3  },
             { Rarity.Rare,      5  },
-            { Rarity.Elite,     10 },
-            { Rarity.Legend,    20 },
+            { Rarity.Elite,     8  },
+            { Rarity.Legend,    10 },
         };
 
         // Penetration baseline per rarity — same value for all four pen fields.

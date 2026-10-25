@@ -9,6 +9,9 @@ namespace ARPGEnemySystem.Common.Scaling
         public const float VulnerabilityCeiling = 3f;
         public const float ElementalArmourRatio = 0.8f;
         public const float ChaosArmourRatio = 0.7f;
+        public const float EnemyPhysCapPct = 90f;
+        public const float EnemyElementCapPct = 75f;
+        public const float EnemyChaosCapPct = 75f;
         public const float VanillaArmorPenScale = 1f / 3f;
         public const int PhysResHalfPoint = 60;
     }

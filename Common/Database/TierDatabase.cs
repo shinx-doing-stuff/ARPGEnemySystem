@@ -125,7 +125,7 @@ namespace ARPGEnemySystem.Common.Database
                 new Tier(20,23),
                 new Tier(17,18)
             } },
-            // Elemental armour modifiers — magnitude = armour points added to that element's rating
+            // Elemental resistance modifiers — magnitude = percentage points added to that element's raw resistance
             {ModifierType.FireResistant, new List<Tier>
             {
                 new Tier(36,40),

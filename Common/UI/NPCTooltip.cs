@@ -101,26 +101,26 @@ namespace ARPGEnemySystem.Common.UI
             int defense = scaledDefense - EnemyStats.DebuffDefenseReduction(npc);
             float h = EnemyStats.ArmourHalving(npc);
             float v = ScalingDefaults.VulnerabilityCeiling;
-            float physRes = ElementalMath.ArmourResistancePct(defense, h, v);
-
             var pk = p.Package;
+            float physRes = ElementalMath.EffectiveResistancePct(ElementalMath.ArmourResistancePct(defense, h, v), 0f, pk.CapPct(Element.Physical), v);
+
             sb.Append('\n');
             sb.Append(Language.GetTextValue(LocPrefix + "StatsLine", EnemyStats.ContactDamage(npc), defense, physRes.ToString("F1")));
             sb.Append('\n');
-            float fire = EnemyScaling.ElementalArmour(scaledDefense, Element.Fire, pk.ArmourBonus(Element.Fire));
-            float cold = EnemyScaling.ElementalArmour(scaledDefense, Element.Cold, pk.ArmourBonus(Element.Cold));
-            float lightning = EnemyScaling.ElementalArmour(scaledDefense, Element.Lightning, pk.ArmourBonus(Element.Lightning));
-            float chaos = EnemyScaling.ElementalArmour(scaledDefense, Element.Chaos, pk.ArmourBonus(Element.Chaos));
             sb.Append(Language.GetTextValue(LocPrefix + "Resistances",
-                ElementalMath.ArmourResistancePct(fire, h, v).ToString("F0"), fire.ToString("F0"),
-                ElementalMath.ArmourResistancePct(cold, h, v).ToString("F0"), cold.ToString("F0"),
-                ElementalMath.ArmourResistancePct(lightning, h, v).ToString("F0"), lightning.ToString("F0"),
-                ElementalMath.ArmourResistancePct(chaos, h, v).ToString("F0"), chaos.ToString("F0")));
+                ElementResistance(pk, scaledDefense, Element.Fire, h, v).ToString("F0"),
+                ElementResistance(pk, scaledDefense, Element.Cold, h, v).ToString("F0"),
+                ElementResistance(pk, scaledDefense, Element.Lightning, h, v).ToString("F0"),
+                ElementResistance(pk, scaledDefense, Element.Chaos, h, v).ToString("F0")));
 
             AppendElemDmg(sb, pk.FireDamagePct, pk.ColdDamagePct, pk.LightningDamagePct, pk.ChaosDamagePct);
             AppendPen(sb, pk.FirePen, pk.ColdPen, pk.LightningPen, pk.SunderingPct, pk.ChaosPen);
             return sb.ToString();
         }
+
+        private static float ElementResistance(in EnemyStatBlock pk, int defense, Element element, float h, float v)
+            => ElementalMath.EffectiveResistancePct(
+                EnemyScaling.RawResistancePct(defense, element, pk.ResistBonusPct(element), h, v), 0f, pk.CapPct(element), v);
 
         private static void AppendElemDmg(StringBuilder sb, float fire, float cold, float light, float chaos)
         {

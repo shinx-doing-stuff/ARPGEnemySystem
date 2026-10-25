@@ -36,5 +36,8 @@ namespace ARPGEnemySystem.Common.Elements
 
         public static float ArmourResistancePct(float netArmour, float halving, float vulnerabilityCeiling)
             => 100f * (1f - ArmourLands(netArmour, halving, vulnerabilityCeiling));
+
+        public static float EffectiveResistancePct(float rawPct, float penetrationPct, float capPct, float vulnerabilityCeiling)
+            => MathF.Max(100f * (1f - vulnerabilityCeiling), MathF.Min(capPct, rawPct - penetrationPct));
     }
 }

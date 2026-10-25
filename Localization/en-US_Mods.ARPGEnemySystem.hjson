@@ -22,7 +22,7 @@ Configs: {
 
 		ArmourHalving: {
 			Label: Armour Halving
-			Tooltip: Armour points that halve the damage landing: an enemy whose rating is this many points above the attacker's penetration takes half. One number for defense and the four elemental armours. Default 80.
+			Tooltip: Defense points that halve the damage landing: an enemy with this much defense, after the attacker's armour penetration, takes half. The four elemental resistances derive from a share of defense through the same curve. Default 80.
 		}
 
 		PhysResHalfPoint: {
@@ -61,7 +61,7 @@ NPCTooltip: {
 	HeaderNormalNoMods: Level {0}  {1}
 	HeaderBoss: Level {0}
 	StatsLine: Damage: {0}   Defense: {1} (Phys Res {2}%)
-	Resistances: Resistances: Fire {0}% [{1}]  Cold {2}% [{3}]  Lightning {4}% [{5}]  Chaos {6}% [{7}]
+	Resistances: Resistances: Fire {0}%  Cold {1}%  Lightning {2}%  Chaos {3}%
 	ElemDmgLabel: Elem Dmg:
 	PenLabel: Penetration:
 	ElemDmgNone: Elem Dmg: none

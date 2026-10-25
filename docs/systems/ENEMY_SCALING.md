@@ -12,7 +12,7 @@ Related pages in ARPGCharacterSystem: `DAMAGE_PIPELINE.md` (how a player hit is 
 
 Every combat NPC gets one **profile** when it spawns on the server. A profile is either a **Regular** (level, rarity, 0 to 8 modifiers) or a **Fight Member** (level only, plus the boss elemental package). The profile writes **max life, coin value and sprite scale** to the NPC once. **Damage and defense are never written**; they are scaled every time something reads them, because vanilla AI rewrites those fields mid-fight. Vanilla's own defense step is turned off for every managed NPC; the character mod turns defense into a share of each hit that lands instead (the armour law, §6.2). The level comes from a **world level**, which is a pure function of how many bosses the world has beaten.
 
-What is scaled: max life, contact and projectile damage, defense, coin value, scale (Colossal and Tiny only), elemental armour bonuses, elemental damage shares, elemental penetration, Sundering.
+What is scaled: max life, contact and projectile damage, defense, coin value, scale (Colossal and Tiny only), elemental resistance bonuses and resistance caps, elemental damage shares, elemental penetration, Sundering.
 
 What is **not** scaled: knockback given or taken, movement speed, AI, hitboxes, loot tables, spawn slots, immunities. The mod writes nothing per tick.
 
@@ -71,12 +71,13 @@ d     = def x (1 - min(1, percentPen / 100))    only if def > 0
 d     = d - flatPen                             flatPen includes Ichor (5) and Betsy's Curse (13); no floor
 lands = 2^(-d / h)                              d >= 0
 lands = 3 - 2 x 2^(d / (2h))                    d <  0   (vulnerability, limit V = 3)
+lands = max(1 - cap / 100, lands)               physical cap 90: at least 10% lands
 hit   = hit x lands                             resistance % = 100 x (1 - lands)
 ```
 
-Below zero the gap to V halves every 2h points, so the curve is continuous at zero (its slope too, with V = 3) and over-penetration has diminishing returns.
+Below zero the gap to V halves every 2h points, so the curve is continuous at zero (its slope too, with V = 3) and over-penetration has diminishing returns. The physical resistance is capped at 90% after the law (the enemy's `PhysCapPct`).
 
-An element's armour is `def x 0.8 + bonus` (Chaos `def x 0.7 + bonus`), less that element's penetration points, through the same law (§7).
+An element's raw resistance is the law's resistance of `def x 0.8` (Chaos `def x 0.7`) plus the rarity and Resistant-modifier percentage points; the element's penetration, in percentage points, comes off that raw value and the enemy's cap (75) applies after it (§7).
 
 Ichor and Betsy's Curse take off 5 and 13 defense here, a third of vanilla's 15 and 40, because a point of defense is worth far more damage under this rule than under vanilla's.
 
@@ -227,15 +228,15 @@ Stat bonuses, applied after the level multiplier:
 
 Elemental baseline by rarity (the Regular's package before modifiers):
 
-| Rarity | Elemental armour bonus (all four elements, points) | Fire/Cold/Lightning pen, and Sundering % | Chaos pen |
-|---|---|---|---|
-| Common | 0 | 0 | 0 |
-| Uncommon | 2 | 5 | 3 |
-| Rare | 5 | 10 | 5 |
-| Elite | 10 | 15 | 8 |
-| Legend | 20 | 20 | 10 |
+| Rarity | Fire/Cold/Lightning resistance bonus (percentage points) | Chaos resistance bonus (percentage points) | Fire/Cold/Lightning pen, and Sundering % | Chaos pen |
+|---|---|---|---|---|
+| Common | 0 | 0 | 0 | 0 |
+| Uncommon | 10 | 3 | 5 | 3 |
+| Rare | 20 | 5 | 10 | 5 |
+| Elite | 30 | 8 | 15 | 8 |
+| Legend | 40 | 10 | 20 | 10 |
 
-Rarity gives no elemental **damage**; only modifiers do. The armour bonus is added to each element's rating (§7.1); a Regular's Shock threshold fraction is 1 (all of its max life).
+Rarity gives no elemental **damage**; only modifiers do. The resistance bonus is added to the element's raw resistance after the armour law has turned its rating into a resistance (§7.1.1); a Regular's Shock threshold fraction is 1 (all of its max life).
 
 ### 4.4 Modifiers (Regulars only)
 
@@ -284,7 +285,7 @@ Magnitude ranges by row (uniform inside the range):
 | Strong | damage += damage x m/100 |
 | Durable | defense += defense x m/100 |
 | Flaming, Glacial, Charged, ChaosInfused | +m% of the hit as that element's damage |
-| Fire/Cold/Lightning/Chaos Resistant | +m armour points on that element's rating (the armour bonus, §7.1) |
+| Fire/Cold/Lightning/Chaos Resistant | +m percentage points on that element's raw resistance (§7.1.1) |
 | Searing, Shattering, Conductive, ChaosPenetrating | +m to that element's penetration |
 | Sundering | +m% Sundering (cuts the player's defense by that share) |
 | SoulDrinker | no stat change; each contact or projectile hit drains m mana from the player |
@@ -441,7 +442,7 @@ Only the character mod's player hit path puts defense back, as physical resistan
 
 ### 6.2 The armour law
 
-The enemy mod provides the numbers and the law; the character mod applies them. One exponential curve covers physical defense and the four elemental ratings (§7): the share of a hit that lands is
+The enemy mod provides the numbers and the law; the character mod applies them. One exponential curve covers physical defense and the four elemental ratings, which the same curve turns into raw resistances (§7): the share of a hit that lands is
 
 ```
 n >= 0:  lands = 2^(-n / h)
@@ -449,7 +450,7 @@ n <  0:  lands = V - (V - 1) x 2^(n / (2h))    V = 3   (limit 3, i.e. triple dam
 resistance % = 100 x (1 - lands)
 ```
 
-`n` is the net armour: defense after the player's armour penetration for physical, an element's rating less that element's penetration points for the four elements. `h` is the server config `ArmourHalving`, default 80, the same for every enemy: every `h` points of net armour halve what lands. `V` is `ScalingDefaults.VulnerabilityCeiling`. There is no ceiling on the armour side (resistance only approaches 100%) and no floor on defense or on net armour. (`Common/Elements/ElementalMath.cs` `ArmourLands` / `ArmourResistancePct`, `Common/GlobalNPCs/EnemyStats.cs`)
+`n` is the net armour: defense after the player's armour penetration for physical. For an element the law turns its rating into a raw resistance (§7.1.1) and penetration then comes off that resistance in percentage points (§7.3). `h` is the server config `ArmourHalving`, default 80, the same for every enemy: every `h` points of net armour halve what lands. `V` is `ScalingDefaults.VulnerabilityCeiling`. Physical resistance is capped after the law at the enemy's `PhysCapPct` (90, so at least 10% lands, §7.3); there is no floor on defense or on net armour. (`Common/Elements/ElementalMath.cs` `ArmourLands` / `ArmourResistancePct` / `EffectiveResistancePct`, `Common/GlobalNPCs/EnemyStats.cs`)
 
 With `h = 80`:
 
@@ -468,7 +469,7 @@ Effective defense, on the character mod side, in this order:
 1. `d = EnemyStats.Defense(target)` (vanilla current defense times the level defense multiplier, then rarity and Durable).
 2. If `d > 0`: `d x= 1 - min(1, percent pen)`. Percent pen is the weapon and player percent armour penetration, plus vanilla's "ignore all positive defense" cases counted as 100%: the Lightning Aura sentry (not against the Dungeon Guardian) and Flymeal against town-type NPCs.
 3. `d -= flat pen`, with no floor. Flat pen is the sum of weapon and player flat armour penetration, vanilla projectile armour penetration, +5 for Strong Bees wasps, and Ichor / Betsy's Curse. A direct strike (no item or projectile) uses the player's total plus the weapon's own penetration. Armour penetration that comes from vanilla (the weapon's and projectile's own, accessories and buffs such as the Sharpening Station, Strong Bees) counts at one third (`ScalingDefaults.VanillaArmorPenScale`), because vanilla sized those numbers for a rule where a point removes half a point of damage, while here a point of defense is worth about 0.87% of the damage that lands. Ichor and Betsy's Curse are cut to a third in `EnemyStats` itself (5 and 13).
-4. Apply the law: `damage x lands`.
+4. Apply the law, then the physical cap: `resistance = min(PhysCapPct, 100 x (1 - lands))`, `damage x (1 - resistance / 100)`.
 
 Reaps (the character mod's stored-damage hits) count only Ichor and Betsy's Curse as vanilla penetration.
 
@@ -492,22 +493,23 @@ Elements are Fire, Cold, Lightning and Chaos. Physical is the base hit.
 
 ### 7.1 Regulars
 
-The rarity baseline (§4.3) plus modifiers (§4.4). Nothing depends on level or phase. The baseline gives all four elements one shared armour bonus; single-element modifiers (FireResistant, Searing, Flaming, and so on) then move one element on its own. An element's rating is derived from the enemy's defense and its bonus (§7.1.1), not stored.
+The rarity baseline (§4.3) plus modifiers (§4.4). Nothing depends on level or phase. The baseline gives Fire, Cold and Lightning one shared resistance bonus and Chaos a smaller one; single-element modifiers (FireResistant, Searing, Flaming, and so on) then move one element on its own. An element's raw resistance is derived from the enemy's defense and its bonus (§7.1.1), not stored.
 
-#### 7.1.1 Elemental ratings
+#### 7.1.1 Elemental resistances
 
-Each element has an armour rating that follows the enemy's defense, through the same law as physical (§6.2):
+Each element has a rating that follows the enemy's defense, and the same law as physical (§6.2) turns the rating into a raw resistance in percent; the rarity and Resistant-modifier bonuses are percentage points added on top:
 
 ```
-rating = def x ratio + bonus       ratio = 0.8 (Fire, Cold, Lightning), 0.7 (Chaos)
-lands  = armour law at (rating - the element's penetration points)
+rating         = def x ratio                  ratio = 0.8 (Fire, Cold, Lightning), 0.7 (Chaos)
+raw resistance = 100 x (1 - lands(rating)) + bonus %
+effective      = max(100 x (1 - V), min(cap, raw - penetration %))
 ```
 
-`def` is `EnemyStats.Defense`, `bonus` is the package's armour bonus for that element (rarity plus Resistant modifiers; 0 for fight members and for NPCs without a profile). The ratio makes every element easier to hurt than physical at equal positive defense, by 20% of the defense (20 points at 100 defense, 40 at 200); Chaos is lower still, at 0.7. The rating is read once per hit from the defense that hit already reads. (`EnemyScaling.ElementalArmour`; the ratios are `ScalingDefaults.ElementalArmourRatio` and `ChaosArmourRatio`.)
+`def` is `EnemyStats.Defense`, `bonus` is the package's resistance bonus for that element (rarity plus Resistant modifiers, `ResistBonusPct`; 0 for fight members and for NPCs without a profile). The ratio makes every element easier to hurt than physical at equal positive defense; Chaos is lower still, at 0.7. The rating is read once per hit from the defense that hit already reads. (`EnemyScaling.ElementalArmour` and `RawResistancePct`; the ratios are `ScalingDefaults.ElementalArmourRatio` and `ChaosArmourRatio`.) With `h = 80`, a rating of 20 reads 15.9%, 40 reads 29.3%, 80 reads 50% and 160 reads 75%, before the bonus.
 
 ### 7.2 Fight members
 
-One package per tier, chosen by phase. Every boss deals all three elements plus Chaos at once, on purpose. A fight member has no armour bonus: its ratings follow its defense (§7.1.1). The package carries a Shock threshold fraction, the share of max life a Shock is measured against (`EnemyStats.ShockThreshold`: a fight member's fraction of max life, everyone else all of it). (`EnemyScaling.cs`, `ApplyBossElementals`)
+One package per tier, chosen by phase. Every boss deals all three elements plus Chaos at once, on purpose. A fight member has no resistance bonus: its resistances follow its defense (§7.1.1). The package carries the resistance caps (§7.3) and a Shock threshold fraction, the share of max life a Shock is measured against (`EnemyStats.ShockThreshold`: a fight member's fraction of max life, everyone else all of it). (`EnemyScaling.cs`, `ApplyBossElementals`)
 
 | Tier (phases) | F/C/L damage % (each) | Chaos damage % | F/C/L pen | Chaos pen | Sundering % | Shock threshold |
 |---|---|---|---|---|---|---|
@@ -515,10 +517,11 @@ One package per tier, chosen by phase. Every boss deals all three elements plus 
 | 1 (phases 1 and 2) | 12 | 5 | 10 | 5 | 30 | 0.025 |
 | 2 (phase 3) | 14 | 6 | 15 | 8 | 45 | 0.0125 |
 
-### 7.3 No caps on the enemy side; penetration is points
+### 7.3 Enemy resistance caps; elemental penetration is percentage points
 
-- There is no resistance cap on an enemy: a rating only approaches 100% resisted, and below zero the enemy takes at most 3x. (`ElementalMath.ElementCap` 75 and `PlayerPhysCap` 80 remain, for the player's resistances.)
-- Player elemental penetration is **points** subtracted from the element's rating before the law: `lands = law(rating - pen)`. There is no floor, so penetration beyond the rating makes the enemy vulnerable. Fire, Cold and Lightning penetration include the "all elemental penetration" affix; Chaos does not.
+- Every enemy has a resistance cap per type, fields on its stat block (`PhysCapPct`, `FireCapPct`, `ColdCapPct`, `LightningCapPct`, `ChaosCapPct`) set from `ScalingDefaults`: physical 90, Fire, Cold and Lightning 75, Chaos 75 (`EnemyPhysCapPct`, `EnemyElementCapPct`, `EnemyChaosCapPct`). Nothing raises them yet; the fields exist so a later modifier can. Below zero an enemy takes at most 3x (resistance floor -200). (`ElementalMath.ElementCap` 75 and `PlayerPhysCap` 80 are the player's own caps and are unchanged.)
+- Player elemental and chaos penetration is **percentage points** subtracted from the element's raw resistance: `effective = max(-200, min(cap, raw - pen))`. Penetration comes off the raw, uncapped value and the cap applies after it, so resistance above the cap soaks penetration first: raw 100, cap 75, pen 30 gives 70; raw 120 gives 75; raw 60 gives 30; raw 10 with pen 250 gives -200. Fire, Cold and Lightning penetration include the "all elemental penetration" affix; Chaos does not.
+- Physical armour penetration stays in points against defense (§6.2); the physical cap applies after the law.
 - Against the player, enemy penetration subtracts from the player's resistance as before. Sundering cuts the player's defense by its percentage before the player's own physical resistance is computed.
 
 ---
@@ -571,7 +574,7 @@ There is no custom profile packet. The profile rides on vanilla's NPC sync (spaw
 
 ### 9.4 Known gaps
 
-- Between spawn and the first sync packet, a client's NPC has no profile: stats read as vanilla, the character mod sees no elemental package (armour bonus 0, Shock threshold all of max life) and falls back to vanilla hurt math, and `GetEnemyInfo` returns `{0, 0}`.
+- Between spawn and the first sync packet, a client's NPC has no profile: stats read as vanilla, the character mod sees no elemental package (resistance bonus 0, the default caps, Shock threshold all of max life) and falls back to vanilla hurt math, and `GetEnemyInfo` returns `{0, 0}`.
 - Changing `ScalingExponent` mid-session: existing profiles on the server and on already-connected clients keep their multiplier (the sync data has not changed, so the client keeps its instance), but a client that joins later rebuilds every NPC with the new value, so max life can differ between machines until the NPC despawns.
 
 ---
@@ -583,7 +586,7 @@ Server side (`Common/Configs/Config.cs`):
 | Field | Default | Range | What it changes |
 |---|---|---|---|
 | `ScalingExponent` | 1.14 | 1.0 to 2.0 | `e` in `level^e` for HP, defense and damage, both kinds. Baked into each profile when it is built. |
-| `ArmourHalving` | 80 | 10 to 300 | `h` in the armour law (§6.2), for every enemy: the net armour points that halve the damage landing. One number for defense and the four elemental ratings. |
+| `ArmourHalving` | 80 | 10 to 300 | `h` in the armour law (§6.2), for every enemy: the net armour points that halve the damage landing. One number for defense and the four elemental ratings, which become raw resistances through the same curve. |
 | `PhysResHalfPoint` | 60 | 1 to 200 | The **player's** half point; read by the character mod. |
 | `EnableBossScalingLog` | off | | Boss chat line (§9.1). |
 
@@ -608,8 +611,8 @@ Drawn at the top centre of the screen for the NPC under the mouse (hit test on t
 
 1. Name.
 2. `Level {L}` for a fight member; `Level {L}  {Rarity}  [{modifiers}]` for a Regular with modifiers; `Level {L}  {Rarity}` for one without.
-3. `Damage: {scaled contact damage}   Defense: {defense minus Ichor/Betsy} (Phys Res {x}%)`. The resistance uses the config armour halving and ignores the viewer's penetration. Damage includes difficulty but not variance, the projectile x2, or elementals.
-4. `Resistances: Fire {x}% [{rating}]  Cold ...  Lightning ...  Chaos ...`: each element's resistance against zero penetration, with its armour rating in brackets (§7.1.1).
+3. `Damage: {scaled contact damage}   Defense: {defense minus Ichor/Betsy} (Phys Res {x}%)`. The resistance uses the config armour halving, is capped at the enemy's physical cap and ignores the viewer's penetration. Damage includes difficulty but not variance, the projectile x2, or elementals.
+4. `Resistances: Fire {x}%  Cold ...  Lightning ...  Chaos ...`: each element's raw resistance against zero penetration, capped at the enemy's cap for that element (§7.1.1, §7.3); no ratings are shown.
 5. `Elem Dmg:` shares above 0, or `none`.
 6. `Penetration:` only if any value is above 0.
 
@@ -621,7 +624,7 @@ Max life is not shown. Rarity and modifier names are the raw enum names.
 
 `Call("GetEnemyInfo", NPC npc)` returns `int[] { level, rarityTier }` for a managed NPC (rarity 0 for fight members), `{0, 0}` when managed but not yet synced to this client, and `null` for an unmanaged NPC. Fancy Healthbar reads it for its level badge and rarity frame. Keep the shape stable or version the name. (`ARPGEnemySystem.cs:26-42`)
 
-The character mod references this mod at compile time and reads `EnemyStats` (profile, defense, contact and projectile damage, armour halving, Shock threshold, debuff defense reduction) and `EnemyScaling.ElementalArmour`, `ProjectileManager` (the projectile's profile and the shooter index, used by its hurt log and the kaeshi counter-strike), `ElementalMath`, the `Element` enum and the config armour halving and player half point directly. Its XP award is `life/5 + contact damage x 2 + defense x 2`, x5 for NPCs with the vanilla `boss` flag (so not Eater of Worlds segments, pillars or Betsy), x the coin-style multiplier for Regulars, x a level-difference factor; no XP for dummies, critters or statue spawns, and a 70% share when teammates split it. Since max life includes the player-count scaling, boss XP grows with the player count.
+The character mod references this mod at compile time and reads `EnemyStats` (profile, defense, contact and projectile damage, armour halving, Shock threshold, debuff defense reduction, the package with its resistance bonuses and caps) and `EnemyScaling.RawResistancePct`, `ProjectileManager` (the projectile's profile and the shooter index, used by its hurt log and the kaeshi counter-strike), `ElementalMath`, the `Element` enum and the config armour halving and player half point directly. Its XP award is `life/5 + contact damage x 2 + defense x 2`, x5 for NPCs with the vanilla `boss` flag (so not Eater of Worlds segments, pillars or Betsy), x the coin-style multiplier for Regulars, x a level-difference factor; no XP for dummies, critters or statue spawns, and a 70% share when teammates split it. Since max life includes the player-count scaling, boss XP grows with the player count.
 
 BalanceLab links the scaling source files directly and mirrors the rest. It models a Regular as rarity None with no modifiers, a state that never occurs in game, so its regular-enemy numbers are a floor.
 

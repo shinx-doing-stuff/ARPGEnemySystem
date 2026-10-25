@@ -17,6 +17,9 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public static EnemyProfile Profile(NPC npc)
             => npc.TryGetGlobalNPC(out EnemyProfileNPC data) ? data.Profile : null;
 
+        public static EnemyStatBlock Package(NPC npc)
+            => Profile(npc)?.Package ?? new EnemyStatBlock();
+
         public static int ContactDamage(NPC npc)
         {
             var p = Profile(npc);
