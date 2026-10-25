@@ -25,8 +25,9 @@ namespace ARPGEnemySystem.Common.Elements
         public static float ConvertDefenseToResistance(float defense, float halfPoint, float cap)
             => MathF.Sign(defense) * cap * MathF.Abs(defense) / (MathF.Abs(defense) + halfPoint);
 
-        // The fraction of a hit that lands on an enemy with this net armour (defense or an element's rating, less the
-        // attacker's penetration): halves every `halving` points above zero. Below zero it rises toward the ceiling,
+        // The fraction of a hit that lands on an enemy with this net armour (defense or an element's rating; only physical
+        // armour penetration lowers it, elemental and chaos penetration comes off the raw resistance in percentage points before
+        // the cap, see EffectiveResistancePct): halves every `halving` points above zero. Below zero it rises toward the ceiling,
         // halving the gap to it every 2 x `halving` points, so the slope is continuous at zero when the ceiling is 3
         // and over-penetration has diminishing returns.
         public static float ArmourLands(float netArmour, float halving, float vulnerabilityCeiling)
