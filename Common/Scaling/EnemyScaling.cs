@@ -141,7 +141,7 @@ namespace ARPGEnemySystem.Common.Scaling
         // ratings follow its defense, and of the armour terms the package carries only the Shock threshold fraction.
         public static void ApplyBossElementals(ref EnemyStatBlock s, int tier)
         {
-            float[] shockThresholdFractions = { 1f, 0.5f, 0.25f };
+            float[] shockThresholdFractions = { 1f, 0.025f, 0.0125f };
             float[] damageValues  = { 10f, 12f, 14f };
             float[] penValues     = { 5f,  10f, 15f };
             float[] sunderingValues = { 15f, 30f, 45f };
@@ -164,11 +164,11 @@ namespace ARPGEnemySystem.Common.Scaling
             s.ChaosPen        = chaosPenValues[tier];
         }
 
-        // An element's net armour before the attacker's penetration: defense less the element's edge, plus its bonus points.
+        // An element's net armour before the attacker's penetration: the element's share of the enemy's defense, plus its bonus points.
         public static float ElementalArmour(int defense, Element element, float bonusPoints)
         {
-            float edge = ScalingDefaults.ElementalEdgePoints + (element == Element.Chaos ? ScalingDefaults.ChaosEdgePoints : 0f);
-            return defense - edge + bonusPoints;
+            float ratio = element == Element.Chaos ? ScalingDefaults.ChaosArmourRatio : ScalingDefaults.ElementalArmourRatio;
+            return defense * ratio + bonusPoints;
         }
     }
 }

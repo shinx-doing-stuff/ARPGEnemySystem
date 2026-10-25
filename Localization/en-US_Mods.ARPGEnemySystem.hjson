@@ -22,7 +22,7 @@ Configs: {
 
 		ArmourHalving: {
 			Label: Armour Halving
-			Tooltip: Armour points that halve the damage landing: an enemy whose rating is this many points above the attacker's penetration takes half. One number for defense and the four elemental armours. Default 60.
+			Tooltip: Armour points that halve the damage landing: an enemy whose rating is this many points above the attacker's penetration takes half. One number for defense and the four elemental armours. Default 80.
 		}
 
 		PhysResHalfPoint: {

@@ -20,7 +20,7 @@ What is **not** scaled: knockback given or taken, movement speed, AI, hitboxes, 
 
 `trunc` is integer truncation toward zero; every step below truncates. `vanilla` means the value vanilla produced after its own difficulty, Expert tweaks and multiplayer balance.
 
-**Level multiplier** (`e` = `ScalingExponent`, default 1.14). HP and defense each use one table for every enemy, with one rate per phase on the whole `level^e`, so the kill that opens a phase raises every enemy's health and defense at once. Damage uses a piecewise curve with its own per-kind tables:
+**Level multiplier** (`e` = `ScalingExponent`, default 1.14). HP and defense each use one table for every enemy, with one rate per phase on the whole `level^e`, so the kill that opens a phase raises every enemy's health at once, and defense at the Wall of Flesh and last mechanical boss kills. Damage uses a piecewise curve with its own per-kind tables:
 
 ```
 x        = level ^ e
@@ -30,8 +30,8 @@ Damage   = base + sum over phases k = 0 .. phase of  rate[k] x max(0, min(x, sta
 start    = { 0, 94, 137, 147 },  start[4] = infinity        (damage only)
 
                         base     rate ph0    rate ph1    rate ph2    rate ph3
-HP,      every enemy    0.7405   0.007147    0.01121     0.01616     0.01616
-Defense, every enemy    1        0           0.002625    0.003882    0.003882
+HP,      every enemy    0.8474   0.008017    0.0192      0.0271      0.05129
+Defense, every enemy    1        0           0.0002625   0.0003882   0.0003882
 Damage,  Regular        1        0.003       0.006       0.010       0.015
 Damage,  Fight          0.4934   0.009262    0.001879    0           0.006118
 ```
@@ -64,17 +64,19 @@ def = def + trunc(def x durable / 100)
 Fight members: def = trunc(vanilla current defense x defMult), nothing else.
 ```
 
-**Share of a physical hit that lands** (the character mod applies this to every player hit; `h` = `ArmourHalving`, default 60):
+**Share of a physical hit that lands** (the character mod applies this to every player hit; `h` = `ArmourHalving`, default 80):
 
 ```
 d     = def x (1 - min(1, percentPen / 100))    only if def > 0
 d     = d - flatPen                             flatPen includes Ichor (5) and Betsy's Curse (13); no floor
 lands = 2^(-d / h)                              d >= 0
-lands = 2 - 2^(d / h)                           d <  0   (vulnerability, limit 2)
+lands = 3 - 2 x 2^(d / (2h))                    d <  0   (vulnerability, limit V = 3)
 hit   = hit x lands                             resistance % = 100 x (1 - lands)
 ```
 
-An element's armour is `def - 10 + bonus` (Chaos `def - 15 + bonus`), less that element's penetration points, through the same law (§7).
+Below zero the gap to V halves every 2h points, so the curve is continuous at zero (its slope too, with V = 3) and over-penetration has diminishing returns.
+
+An element's armour is `def x 0.8 + bonus` (Chaos `def x 0.7 + bonus`), less that element's penetration points, through the same law (§7).
 
 Ichor and Betsy's Curse take off 5 and 13 defense here, a third of vanilla's 15 and 40, because a point of defense is worth far more damage under this rule than under vanilla's.
 
@@ -314,12 +316,12 @@ Damage(level, phase) = base + sum over k = 0..phase of  rate[k] x max(0, to[k] -
 
 (`ScalingMath.cs:15-56`)
 
-Constants (damage: Phase 4 refit, 2026-10-04; HP: refit 2026-10-19; defense: 2026-10-19):
+Constants (damage: Phase 4 refit, 2026-10-04; HP: refit 2026-10-21; defense: 2026-10-21):
 
 | | base | phase 0 | phase 1 | phase 2 | phase 3 |
 |---|---|---|---|---|---|
-| HP, every enemy | 0.7405 | 0.007147 | 0.01121 | 0.01616 | 0.01616 |
-| Defense, every enemy | 1 | 0 | 0.002625 | 0.003882 | 0.003882 |
+| HP, every enemy | 0.8474 | 0.008017 | 0.0192 | 0.0271 | 0.05129 |
+| Defense, every enemy | 1 | 0 | 0.0002625 | 0.0003882 | 0.0003882 |
 | Damage, Regular | 1 | 0.003 | 0.006 | 0.010 | 0.015 |
 | Damage, Fight member | 0.4934 | 0.009262 | 0.001879 | 0 | 0.006118 |
 
@@ -329,39 +331,39 @@ The HP table is solved by BalanceLab so that the reference melee build (`melee-r
 
 ### 5.2 Shape of the boss curves
 
-- **Health steps at every phase kill.** The kill that opens a phase raises every enemy's HP multiplier at the same level: 1.35x at level 90 (Wall of Flesh) and 1.34x at level 112 (last mechanical boss); the Plantera kill does not step HP, because rate 3 equals rate 2, and a phase kill never lowers it. Between kills, health rises smoothly with level.
-- **Defense is vanilla through phase 0 and never steps down.** Its multiplier is 1.00 below the Wall of Flesh kill, about 1.44 at level 90 just after it, 1.50 at level 100, 2.00 at level 130 and 2.54 at level 190. The Plantera kill changes nothing, because rate 3 equals rate 2.
+- **Health steps at every phase kill.** The kill that opens a phase raises every enemy's HP multiplier at the same level: 1.86x at level 90 (Wall of Flesh), 1.34x at level 112 (last mechanical boss) and 1.81x at level 146 (Plantera); a phase kill never lowers it. Between kills, health rises smoothly with level.
+- **Defense is vanilla through phase 0 and never steps down.** Its multiplier is 1.00 below the Wall of Flesh kill, about 1.04 at level 90 just after it, 1.05 at level 100, 1.10 at level 130 and 1.15 at level 190. The Plantera kill changes nothing, because rate 3 equals rate 2.
 - **Fight damage is flat at 2.32x in phase 2** (the phase 2 rate is 0), for every level from 137 up until Plantera dies.
 - **Fight damage is below 1.0x below level 34** (base 0.4934): Eye of Cthulhu at level 21 hits for 0.79x its vanilla contact damage before elementals. The boss elemental package (+34% at tier 0, §7) brings the raw total back to about vanilla.
 - **The damage curve is continuous in level, not across a phase change at a fixed level.** When the phase advances, the old phase's open-ended slope is cut at the next start level and replaced by the new rate. For fight damage this can go down: a level 104 boss hits 2.34x in phase 0 and 2.18x in phase 1. For Regulars every later rate is higher, so their damage multiplier only rises. HP is not continuous across a phase change; it steps up.
-- **Plantera's HP depends on the roll.** The Plantera-fight roll spans 130 to 161 (world level 130): 4.89x at the bottom, 6.04x at the top. Plantera's damage is 2.32x on every roll.
+- **Plantera's HP depends on the roll.** The Plantera-fight roll spans 130 to 161 (world level 130): 7.81x at the bottom, 9.73x at the top. Plantera's damage is 2.32x on every roll.
 
 Multiplier table (default exponent):
 
 | Level | Phase | HP, every enemy | Regular Dmg | Fight Dmg |
 |---|---|---|---|---|
-| 10 | 0 | 0.84 | 1.04 | 0.62 |
-| 20 | 0 | 0.96 | 1.09 | 0.78 |
-| 21 | 0 | 0.97 | 1.10 | 0.79 |
-| 50 | 0 | 1.36 | 1.26 | 1.29 |
-| 80 | 0 | 1.80 | 1.44 | 1.86 |
-| 84 | 0 | 1.86 | 1.47 | 1.94 |
-| 104 | 0 | 2.16 | - | 2.34 |
-| 100 | 1 | 2.88 | 1.61 | 2.16 |
-| 105 | 1 | 3.00 | 1.68 | 2.18 |
-| 130 | 1 | 3.62 | - | 2.29 |
-| 130 | 2 | 4.89 | 2.01 | 2.29 |
-| 137 | 2 | 5.15 | 2.10 | 2.32 |
-| 161 | 2 | 6.04 | - | 2.32 |
-| 170 | 2 | 6.38 | - | 2.32 |
-| 150 | 3 | 5.63 | 2.44 | 2.36 |
-| 180 | 3 | 6.76 | 3.48 | 2.79 |
-| 189 | 3 | 7.10 | 3.80 | 2.92 |
-| 190 | 3 | 7.14 | 3.84 | 2.93 |
-| 200 | 3 | 7.53 | 4.20 | 3.08 |
-| 235 | 3 | 8.90 | - | 3.60 |
+| 10 | 0 | 0.96 | 1.04 | 0.62 |
+| 20 | 0 | 1.09 | 1.09 | 0.78 |
+| 21 | 0 | 1.11 | 1.10 | 0.79 |
+| 50 | 0 | 1.54 | 1.26 | 1.29 |
+| 80 | 0 | 2.03 | 1.44 | 1.86 |
+| 84 | 0 | 2.10 | 1.47 | 1.94 |
+| 104 | 0 | 2.44 | - | 2.34 |
+| 100 | 1 | 4.51 | 1.61 | 2.16 |
+| 105 | 1 | 4.72 | 1.68 | 2.18 |
+| 130 | 1 | 5.78 | - | 2.29 |
+| 130 | 2 | 7.81 | 2.01 | 2.29 |
+| 137 | 2 | 8.24 | 2.10 | 2.32 |
+| 161 | 2 | 9.73 | - | 2.32 |
+| 170 | 2 | 10.30 | - | 2.32 |
+| 150 | 3 | 16.36 | 2.44 | 2.36 |
+| 180 | 3 | 19.95 | 3.48 | 2.79 |
+| 189 | 3 | 21.04 | 3.80 | 2.92 |
+| 190 | 3 | 21.16 | 3.84 | 2.93 |
+| 200 | 3 | 22.39 | 4.20 | 3.08 |
+| 235 | 3 | 26.73 | - | 3.60 |
 
-HP spread from the fight level roll alone, at the live world levels (`N = 19`): EoC 20 to 24 0.96 to 1.01x, WoF 80 to 99 1.80 to 2.09x, Destroyer 100 to 124 2.88 to 3.47x, Plantera 130 to 161 4.89 to 6.04x, Moon Lord 180 to 224 6.76 to 8.46x (Betsy not down) or 190 to 236 7.14 to 8.94x (Betsy down).
+HP spread from the fight level roll alone, at the live world levels (`N = 19`): EoC 20 to 24 1.09 to 1.15x, WoF 80 to 99 2.03 to 2.36x, Destroyer 100 to 124 4.51 to 5.52x, Plantera 130 to 161 7.81 to 9.73x, Moon Lord 180 to 224 19.95 to 25.36x (Betsy not down) or 190 to 236 21.16 to 26.86x (Betsy down).
 
 ### 5.3 Order of operations
 
@@ -396,11 +398,11 @@ Rows are indexed by the rolled level, which is what the formula sees; see §4.2 
 
 | Rolled level | Phase | Rarity | Life | Damage | Defense |
 |---|---|---|---|---|---|
-| 10 | 0 | Common | 37 | 14 | 6 |
-| 21 | 0 | Common | 43 | 15 | 6 |
-| 22 | 0 | Legend | 88 | 22 | 10 |
-| 141 | 3 | Common | 238 | 30 | 12 |
-| 189 | 3 | Common | 319 | 53 | 15 |
+| 10 | 0 | Common | 43 | 14 | 6 |
+| 21 | 0 | Common | 49 | 15 | 6 |
+| 22 | 0 | Legend | 100 | 22 | 10 |
+| 141 | 3 | Common | 688 | 30 | 6 |
+| 189 | 3 | Common | 946 | 53 | 6 |
 
 Expert doubles the raw life and damage before this mod runs, and Expert hardmode also applies vanilla's pre-hardmode-enemy boost to life, damage, **defense** and coin value. The mod multiplies whatever vanilla produced.
 
@@ -408,24 +410,24 @@ Expert doubles the raw life and damage before this mod runs, and Expert hardmode
 
 | Rolled level | Phase | Life | Damage | Defense |
 |---|---|---|---|---|
-| 78 | 1 | 610 | 57 | 38 |
-| 105 | 1 | 779 | 67 | 42 |
-| 137 | 2 | 1338 | 84 | 57 |
-| 189 | 3 | 1846 | 152 | 70 |
+| 78 | 1 | 936 | 57 | 29 |
+| 105 | 1 | 1225 | 67 | 29 |
+| 137 | 2 | 2142 | 84 | 30 |
+| 189 | 3 | 5470 | 152 | 32 |
 
-With rarity, at level 105 (defense 42 after scaling): Elite 58 defense, Legend 71, Legend with Durable 60: 113.
+With rarity, at level 105 (defense 29 after scaling): Elite 40 defense, Legend 49, Legend with Durable 60: 78.
 
 **Bosses** (Expert solo raw, at the Phase 4 ladder levels, `N = 18`; the live `N = 19` levels are about 5% lower, §2.2):
 
 | Boss | Ladder world level | Level roll | Life raw to scaled | Contact damage raw to scaled |
 |---|---|---|---|---|
-| Eye of Cthulhu | 21 | 21 to 25 | 3640 to 3532 .. 3716 | 30 to 23 .. 25 |
-| Wall of Flesh | 84 | 84 to 104 | 11200 to 20796 .. 24243 | 150 to 291 .. 350 |
-| Destroyer | 105 | 105 to 130 | 120000 to 359843 .. 434546 | body 93 to 203 .. 212 |
-| Plantera | 137 | 137 to 170 | 42000 to 216263 .. 267912 | 100 to 231 (every roll, first form) |
-| Moon Lord | 189 | 189 to 235 | core 75000 to 532703 .. 667211 | True Eye 120 to 350 .. 431 |
+| Eye of Cthulhu | 21 | 21 to 25 | 3640 to 4023 .. 4229 | 30 to 23 .. 25 |
+| Wall of Flesh | 84 | 84 to 104 | 11200 to 23516 .. 27382 | 150 to 291 .. 350 |
+| Destroyer | 105 | 105 to 130 | 120000 to 565816 .. 693764 | body 93 to 203 .. 212 |
+| Plantera | 137 | 137 to 170 | 42000 to 346103 .. 432718 | 100 to 231 (every roll, first form) |
+| Moon Lord | 189 | 189 to 235 | core 75000 to 1578024 .. 2004938 | True Eye 120 to 350 .. 431 |
 
-Plantera's AI rewrites its contact damage and defense by form: 100 damage / 36 defense in the first form, 140 damage / 10 defense below half life (Expert), so the scaled second-form damage is 324 and the defense read at that moment is 10 raw (19 at level 130). Every part, segment, projectile and minion of a fight uses the same multiplier. Destroyer segments share the head's life pool through vanilla's `realLife`. Fight member defense is vanilla's current value times the defense multiplier (Moon Lord head 50, hands 40, core 70 raw; at level 190 the multiplier is 2.54, so 126, 101 and 177). Plantera's 36 and 10 at level 130 (phase 2, 2.00) read 71 and 19.
+Plantera's AI rewrites its contact damage and defense by form: 100 damage / 36 defense in the first form, 140 damage / 10 defense below half life (Expert), so the scaled second-form damage is 324 and the defense read at that moment is 10 raw (10 at level 130). Every part, segment, projectile and minion of a fight uses the same multiplier. Destroyer segments share the head's life pool through vanilla's `realLife`. Fight member defense is vanilla's current value times the defense multiplier (Moon Lord head 50, hands 40, core 70 raw; at level 190 the multiplier is 1.15, so 57, 46 and 80). Plantera's 36 and 10 at level 130 (phase 2, 1.10) read 39 and 10.
 
 ---
 
@@ -443,44 +445,44 @@ The enemy mod provides the numbers and the law; the character mod applies them. 
 
 ```
 n >= 0:  lands = 2^(-n / h)
-n <  0:  lands = V - (V - 1) x 2^(n / h)       V = 2   (limit 2, i.e. double damage; slope equal to the n >= 0 side at zero)
+n <  0:  lands = V - (V - 1) x 2^(n / (2h))    V = 3   (limit 3, i.e. triple damage; the gap to V halves every 2h points, so the curve and, with V = 3, its slope are continuous at zero)
 resistance % = 100 x (1 - lands)
 ```
 
-`n` is the net armour: defense after the player's armour penetration for physical, an element's rating less that element's penetration points for the four elements. `h` is the server config `ArmourHalving`, default 60, the same for every enemy: every `h` points of net armour halve what lands. `V` is `ScalingDefaults.VulnerabilityCeiling`. There is no ceiling on the armour side (resistance only approaches 100%) and no floor on defense or on net armour. (`Common/Elements/ElementalMath.cs` `ArmourLands` / `ArmourResistancePct`, `Common/GlobalNPCs/EnemyStats.cs`)
+`n` is the net armour: defense after the player's armour penetration for physical, an element's rating less that element's penetration points for the four elements. `h` is the server config `ArmourHalving`, default 80, the same for every enemy: every `h` points of net armour halve what lands. `V` is `ScalingDefaults.VulnerabilityCeiling`. There is no ceiling on the armour side (resistance only approaches 100%) and no floor on defense or on net armour. (`Common/Elements/ElementalMath.cs` `ArmourLands` / `ArmourResistancePct`, `Common/GlobalNPCs/EnemyStats.cs`)
 
-With `h = 60`:
+With `h = 80`:
 
 | Net armour n | Lands | Resistance |
 |---|---|---|
-| 180 | 12.5% | 87.5% |
-| 120 | 25% | 75% |
-| 60 | 50% | 50% |
-| 30 | 70.7% | 29.3% |
+| 240 | 12.5% | 87.5% |
+| 160 | 25% | 75% |
+| 80 | 50% | 50% |
+| 40 | 70.7% | 29.3% |
 | 0 | 100% | 0% |
-| -30 | 129.3% | -29.3% |
-| -60 | 150% | -50% |
-| -120 | 175% | -75% |
+| -40 | 131.8% | -31.8% |
+| -80 | 158.6% | -58.6% |
+| -160 | 200% | -100% |
 
 Effective defense, on the character mod side, in this order:
 1. `d = EnemyStats.Defense(target)` (vanilla current defense times the level defense multiplier, then rarity and Durable).
 2. If `d > 0`: `d x= 1 - min(1, percent pen)`. Percent pen is the weapon and player percent armour penetration, plus vanilla's "ignore all positive defense" cases counted as 100%: the Lightning Aura sentry (not against the Dungeon Guardian) and Flymeal against town-type NPCs.
-3. `d -= flat pen`, with no floor. Flat pen is the sum of weapon and player flat armour penetration, vanilla projectile armour penetration, +5 for Strong Bees wasps, and Ichor / Betsy's Curse. A direct strike (no item or projectile) uses the player's total plus the weapon's own penetration. Armour penetration that comes from vanilla (the weapon's and projectile's own, accessories and buffs such as the Sharpening Station, Strong Bees) counts at one third (`ScalingDefaults.VanillaArmorPenScale`), because vanilla sized those numbers for a rule where a point removes half a point of damage, while here a point of defense is worth about 1.16% of the damage that lands. Ichor and Betsy's Curse are cut to a third in `EnemyStats` itself (5 and 13).
+3. `d -= flat pen`, with no floor. Flat pen is the sum of weapon and player flat armour penetration, vanilla projectile armour penetration, +5 for Strong Bees wasps, and Ichor / Betsy's Curse. A direct strike (no item or projectile) uses the player's total plus the weapon's own penetration. Armour penetration that comes from vanilla (the weapon's and projectile's own, accessories and buffs such as the Sharpening Station, Strong Bees) counts at one third (`ScalingDefaults.VanillaArmorPenScale`), because vanilla sized those numbers for a rule where a point removes half a point of damage, while here a point of defense is worth about 0.87% of the damage that lands. Ichor and Betsy's Curse are cut to a third in `EnemyStats` itself (5 and 13).
 4. Apply the law: `damage x lands`.
 
 Reaps (the character mod's stored-damage hits) count only Ichor and Betsy's Curse as vanilla penetration.
 
-Worked examples (`h = 60`, resistance %, defense as the formula sees it, after level scaling):
+Worked examples (`h = 80`, resistance %, defense as the formula sees it, after level scaling):
 
 | Defense | 0 pen | 8 flat pen | 13 flat pen |
 |---|---|---|---|
-| 6 | 6.7% | -2.3% | -7.8% |
-| 28 | 27.6% | 20.6% | 15.9% |
-| 40 | 37.0% | 30.9% | 26.8% |
-| 50 | 43.9% | 38.4% | 34.8% |
-| 70 | 55.5% | 51.1% | 48.2% |
+| 6 | 5.1% | -1.7% | -6.0% |
+| 28 | 21.5% | 15.9% | 12.2% |
+| 40 | 29.3% | 24.2% | 20.9% |
+| 50 | 35.2% | 30.5% | 27.4% |
+| 70 | 45.5% | 41.6% | 39.0% |
 
-Zombie with Ichor: defense 6 - 5 = 1, so lands 2^(-1/60) = 0.9885, 1.1% resistance. A Legend Armored Skeleton at level 105 (71 defense) resists 56.0%; with Durable 60 (113 defense), 72.9%. Above zero, every point of net armour multiplies what lands by the same ratio (2^(-1/60), 1.15% less at `h = 60`), so a point of penetration raises the damage by the same percentage (1.16%) whatever armour is left.
+Zombie with Ichor: defense 6 - 5 = 1, so lands 2^(-1/80) = 0.9914, 0.9% resistance. A Legend Armored Skeleton at level 105 (49 defense) resists 34.6%; with Durable 60 (78 defense), 49.1%. Above zero, every point of net armour multiplies what lands by the same ratio (2^(-1/80), 0.86% less at `h = 80`), so a point of penetration raises the damage by the same percentage (0.87%) whatever armour is left.
 
 ---
 
@@ -497,11 +499,11 @@ The rarity baseline (§4.3) plus modifiers (§4.4). Nothing depends on level or 
 Each element has an armour rating that follows the enemy's defense, through the same law as physical (§6.2):
 
 ```
-rating = def - edge + bonus        edge = 10 (Fire, Cold, Lightning), 15 (Chaos)
+rating = def x ratio + bonus       ratio = 0.8 (Fire, Cold, Lightning), 0.7 (Chaos)
 lands  = armour law at (rating - the element's penetration points)
 ```
 
-`def` is `EnemyStats.Defense`, `bonus` is the package's armour bonus for that element (rarity plus Resistant modifiers; 0 for fight members and for NPCs without a profile). The edge makes every element slightly easier to hurt than physical at equal defense; Chaos has a further 5 points. The rating is read once per hit from the defense that hit already reads. (`EnemyScaling.ElementalArmour`; edges are `ScalingDefaults.ElementalEdgePoints` and `ChaosEdgePoints`.)
+`def` is `EnemyStats.Defense`, `bonus` is the package's armour bonus for that element (rarity plus Resistant modifiers; 0 for fight members and for NPCs without a profile). The ratio makes every element easier to hurt than physical at equal positive defense, by 20% of the defense (20 points at 100 defense, 40 at 200); Chaos is lower still, at 0.7. The rating is read once per hit from the defense that hit already reads. (`EnemyScaling.ElementalArmour`; the ratios are `ScalingDefaults.ElementalArmourRatio` and `ChaosArmourRatio`.)
 
 ### 7.2 Fight members
 
@@ -510,12 +512,12 @@ One package per tier, chosen by phase. Every boss deals all three elements plus 
 | Tier (phases) | F/C/L damage % (each) | Chaos damage % | F/C/L pen | Chaos pen | Sundering % | Shock threshold |
 |---|---|---|---|---|---|---|
 | 0 (phase 0) | 10 | 4 | 5 | 3 | 15 | 1 (all of max life) |
-| 1 (phases 1 and 2) | 12 | 5 | 10 | 5 | 30 | 0.5 |
-| 2 (phase 3) | 14 | 6 | 15 | 8 | 45 | 0.25 |
+| 1 (phases 1 and 2) | 12 | 5 | 10 | 5 | 30 | 0.025 |
+| 2 (phase 3) | 14 | 6 | 15 | 8 | 45 | 0.0125 |
 
 ### 7.3 No caps on the enemy side; penetration is points
 
-- There is no resistance cap on an enemy: a rating only approaches 100% resisted, and below zero the enemy takes at most 2x. (`ElementalMath.ElementCap` 75 and `PlayerPhysCap` 80 remain, for the player's resistances.)
+- There is no resistance cap on an enemy: a rating only approaches 100% resisted, and below zero the enemy takes at most 3x. (`ElementalMath.ElementCap` 75 and `PlayerPhysCap` 80 remain, for the player's resistances.)
 - Player elemental penetration is **points** subtracted from the element's rating before the law: `lands = law(rating - pen)`. There is no floor, so penetration beyond the rating makes the enemy vulnerable. Fire, Cold and Lightning penetration include the "all elemental penetration" affix; Chaos does not.
 - Against the player, enemy penetration subtracts from the player's resistance as before. Sundering cuts the player's defense by its percentage before the player's own physical resistance is computed.
 
@@ -531,7 +533,7 @@ The character mod's hurt pipeline owns this; the enemy mod supplies the scaled d
 - Then the player's physical resistance (half point `PhysResHalfPoint`, default 60, cap 80 plus bonuses), elemental resistances minus enemy penetration, "less damage taken", Composure, deflect and mana absorb, and vanilla's endurance-type reductions (Endurance, solar shield, beetle, paladin).
 - The character mod sets the final damage itself, so vanilla's other incoming-damage multipliers are **not** applied to these hits: banner damage reduction, Warmth against cold **contact** hits, and any other mod's hit-by-NPC or hit-by-projectile multipliers.
 
-Note that the player's "half point" works differently from the enemy's armour halving (§6.2): the player curve is `cap x d / (d + h)`, so at 60 defense the player has 40% physical resistance (half of the 80 cap), while an enemy at 60 net armour takes half.
+Note that the player's "half point" works differently from the enemy's armour halving (§6.2): the player curve is `cap x d / (d + h)`, so at 60 defense the player has 40% physical resistance (half of the 80 cap), while an enemy at 80 net armour takes half.
 
 So enemy damage against the player = level multiplier x rarity x Strong on vanilla's current raw value, for contact and projectiles alike, plus the elemental shares. Bosses gain about +34% / +41% / +48% raw from the package by tier.
 
@@ -541,7 +543,7 @@ So enemy damage against the player = level multiplier x rarity x Strong on vanil
 
 ### 9.1 Player-count life scaling
 
-The mod detours vanilla's `ScaleStats`, calls it as if for one player, and then multiplies max life by the real player count whenever vanilla itself would have scaled for players: Expert and Master, Journey with the difficulty slider at 2x or more, and Classic "For the Worthy" worlds. It applies only to NPC types on Boss Checklist's boss **and miniboss** entry lists. **Only max life** changes. The count is frozen at spawn. This runs before the enemy mod records base life, so the level multiplier multiplies the player-scaled life. Example: four players, Plantera at level 161: 42000 x 4 x 5.57 = about 936 000. (`Common/Systems/BossPlayerScaling.cs`)
+The mod detours vanilla's `ScaleStats`, calls it as if for one player, and then multiplies max life by the real player count whenever vanilla itself would have scaled for players: Expert and Master, Journey with the difficulty slider at 2x or more, and Classic "For the Worthy" worlds. It applies only to NPC types on Boss Checklist's boss **and miniboss** entry lists. **Only max life** changes. The count is frozen at spawn. This runs before the enemy mod records base life, so the level multiplier multiplies the player-scaled life. Example: four players, Plantera at level 161: 42000 x 4 x 10.93 = about 1 836 000. (`Common/Systems/BossPlayerScaling.cs`)
 
 Which NPCs are on those lists:
 - Every roster boss's main body. Moon Lord's entry lists the head as well as the core, so the head gets full scaling and only the hands keep vanilla's partial scaling. Eater of Worlds lists head, body and tail, so every segment (each with its own life pool) gets full scaling.
@@ -581,7 +583,7 @@ Server side (`Common/Configs/Config.cs`):
 | Field | Default | Range | What it changes |
 |---|---|---|---|
 | `ScalingExponent` | 1.14 | 1.0 to 2.0 | `e` in `level^e` for HP, defense and damage, both kinds. Baked into each profile when it is built. |
-| `ArmourHalving` | 60 | 10 to 300 | `h` in the armour law (§6.2), for every enemy: the net armour points that halve the damage landing. One number for defense and the four elemental ratings. |
+| `ArmourHalving` | 80 | 10 to 300 | `h` in the armour law (§6.2), for every enemy: the net armour points that halve the damage landing. One number for defense and the four elemental ratings. |
 | `PhysResHalfPoint` | 60 | 1 to 200 | The **player's** half point; read by the character mod. |
 | `EnableBossScalingLog` | off | | Boss chat line (§9.1). |
 

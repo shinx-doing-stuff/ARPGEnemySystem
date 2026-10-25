@@ -14,12 +14,12 @@ namespace ARPGEnemySystem.Common.Scaling
         // Phase 0 = pre-hardmode, 1 = post-WoF, 2 = post-all-mechs, 3 = post-Plantera.
         // HP: one rate per phase on the whole level, so the kill that opens a phase makes every enemy tankier at once.
         // Regular enemies and boss-fight members share the HP table.
-        public const float HpBase = 0.7405f;
-        public static readonly float[] HpRates = { 0.007147f, 0.01121f, 0.01616f, 0.01616f };
+        public const float HpBase = 0.8474f;
+        public static readonly float[] HpRates = { 0.008017f, 0.0192f, 0.0271f, 0.05129f };
 
-        // Defense: the same shape as HP, so it only ever rises; phase 0 stays at vanilla.
+        // Defense: the same shape as HP at a tenth of its former rates (2026-10-21 fit), so it rises slowly and never falls; phase 0 stays at vanilla.
         public const float DefenseBase = 1f;
-        public static readonly float[] DefenseRates = { 0f, 0.002625f, 0.003882f, 0.003882f };
+        public static readonly float[] DefenseRates = { 0f, 0.0002625f, 0.0003882f, 0.0003882f };
 
         // Damage: each phase's slope applies only to the level range above its start level, so the damage curve has no jump.
         public static readonly int[] PhaseStartLevels = { 0, 94, 137, 147 };
