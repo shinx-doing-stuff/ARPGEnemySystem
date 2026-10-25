@@ -543,7 +543,7 @@ So enemy damage against the player = level multiplier x rarity x Strong on vanil
 
 ### 9.1 Player-count life scaling
 
-The mod detours vanilla's `ScaleStats`, calls it as if for one player, and then multiplies max life by the real player count whenever vanilla itself would have scaled for players: Expert and Master, Journey with the difficulty slider at 2x or more, and Classic "For the Worthy" worlds. It applies only to NPC types on Boss Checklist's boss **and miniboss** entry lists. **Only max life** changes. The count is frozen at spawn. This runs before the enemy mod records base life, so the level multiplier multiplies the player-scaled life. Example: four players, Plantera at level 161: 42000 x 4 x 10.93 = about 1 836 000. (`Common/Systems/BossPlayerScaling.cs`)
+The mod detours vanilla's `ScaleStats`, calls it as if for one player, and then multiplies max life by the real player count whenever vanilla itself would have scaled for players: Expert and Master, Journey with the difficulty slider at 2x or more, and Classic "For the Worthy" worlds. It applies only to NPC types on Boss Checklist's boss **and miniboss** entry lists. **Only max life** changes. The count is frozen at spawn. This runs before the enemy mod records base life, so the level multiplier multiplies the player-scaled life. Example: four players, Plantera at level 161: 42000 x 4 x 9.73 = about 1 635 000. (`Common/Systems/BossPlayerScaling.cs`)
 
 Which NPCs are on those lists:
 - Every roster boss's main body. Moon Lord's entry lists the head as well as the core, so the head gets full scaling and only the hands keep vanilla's partial scaling. Eater of Worlds lists head, body and tail, so every segment (each with its own life pool) gets full scaling.

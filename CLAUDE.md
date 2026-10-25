@@ -144,7 +144,7 @@ The full, human-facing description of the scaling system (world level, profiles,
 - Phase 2 — post-all-three-mechs (`NPC.downedMechBoss1 && downedMechBoss2 && downedMechBoss3`)
 - Phase 3 — post-Plantera (`NPC.downedPlantBoss`)
 
-A phase change does not jump the damage multiplier. A damage phase adds its own slope on the levels above its start level (`PhaseStartLevels` 94 / 137 / 147), so the same level enemy hits harder only as far as its level lies beyond that start; below it the new phase adds nothing. Health does step: the HP rate applies to the whole level, so every enemy's health rises at once when the phase advances (1.93× at level 90 for the Wall of Flesh, 1.31× at level 112 for the last mechanical boss, 1.86× at level 146 for Plantera).
+A phase change does not jump the damage multiplier. A damage phase adds its own slope on the levels above its start level (`PhaseStartLevels` 94 / 137 / 147), so the same level enemy hits harder only as far as its level lies beyond that start; below it the new phase adds nothing. Health does step: the HP rate applies to the whole level, so every enemy's health rises at once when the phase advances (1.86× at level 90 for the Wall of Flesh, 1.34× at level 112 for the last mechanical boss, 1.81× at level 146 for Plantera).
 
 `GetScalingPhase()` tops out at 3, so every post-Moon-Lord modded boss fight uses the phase 3 rates. This is a known limitation, deliberately left out of the world-level work.
 
