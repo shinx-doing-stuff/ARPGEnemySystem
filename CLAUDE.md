@@ -62,7 +62,8 @@ EnemyProfileNPC.OnSpawn (server)  → fight profile (join or start) or regular p
 On_NPC.SetDefaults detour         → server only: re-attaches the same profile after any SetDefaults re-run, keeps the health fraction
 SendExtraAI / ReceiveExtraAI      → 3–20 B (+2 bits) of profile inputs; clients rebuild, never roll
        ↓ (read at hit / tooltip / XP time)
-EnemyStats.ContactDamage / Defense / ProjectileDamage → profile applied to vanilla's current raw value
+EnemyStats.ContactDamage / Defense → profile applied to vanilla's current raw value
+CharacterSystem hurt pipeline    → EnemyProfile.DamageFactor as vanilla's source scale
 EnemyProfileNPC.ModifyIncomingHit → zeroes vanilla defense (resistance replaces it)
 ProjectileManager.OnSpawn         → projectile references its shooter's (or parent projectile's) profile
 ```
@@ -182,7 +183,7 @@ A phase change does not jump the damage multiplier. A damage phase adds its own 
 3. Add the stat effect as a `case` in `EnemyScaling.ApplyModifier`. It only edits the `EnemyStatBlock` (scale and package); a life, defense or damage bonus goes in `EnemyScaling.AddStatBonus`, which the profile sums and applies at read time (damage, defense) or at the spawn writes (max life). There is no per-tick hook — per-tick velocity manipulation was removed because it compounds uncontrollably for accumulation-based NPC AI.
 4. Add an `OnHitPlayer` case in both `EnemyProfileNPC` and `ProjectileManager` for debuffs applied on hit
 
-**Removing a modifier:** Delete its enum value from `ModifierType`, remove its entry from `TierDatabase.modifierTierDatabase`, and remove any switch cases in `EnemyScaling.ApplyModifier` and `OnHitPlayer`. NPCs don't persist to disk and both sides of a multiplayer session always share the same mod version, so there is no save-migration or network-sync concern from renumbering the enum.
+**Removing a modifier:** Delete its enum value from `ModifierType`, remove its entry from `TierDatabase.modifierTierDatabase`, and remove any switch cases in `EnemyScaling.ApplyModifier`, `EnemyScaling.AddStatBonus` and `OnHitPlayer`. NPCs don't persist to disk and both sides of a multiplayer session always share the same mod version, so there is no save-migration or network-sync concern from renumbering the enum.
 
 ### Adding a New Rarity
 

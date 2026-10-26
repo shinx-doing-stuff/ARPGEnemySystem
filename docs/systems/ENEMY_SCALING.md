@@ -525,11 +525,10 @@ One package per tier, chosen by phase. Every boss deals all three elements plus 
 
 The character mod's hurt pipeline owns this; the enemy mod supplies the scaled damage and the package.
 
-- **Contact**: base = vanilla damage variance of `EnemyStats.ContactDamage(npc)`. Difficulty is already inside vanilla's `npc.damage`.
-- **Enemy projectile** (the projectile carries a profile): base = variance of `EnemyStats.ProjectileDamage(proj)` x 2, x 0.7 for Warmth against cold projectiles, x the game mode's enemy damage multiplier (Classic 1, Expert 2, Master 3, or the Journey slider). Reflected projectiles and types in vanilla's `PlayerHurtDamageIgnoresDifficultyScaling` set skip the difficulty step. Projectiles without a profile (traps, boulders) use vanilla math.
+- Vanilla builds the hit from the raw `npc.damage` or `proj.damage`: `DamageVar` variance, the contact multipliers, the projectile x 2, the difficulty step, banner damage reduction and Warmth. Nothing of vanilla's math is replaced.
+- The character mod multiplies `EnemyProfile.DamageFactor` into the source damage (contact and projectiles with a profile; projectiles without one, such as traps and boulders, keep vanilla's scale) and the per-element factor K into the final damage, then applies Composure and deflect.
 - The physical portion is the whole base. **Each element adds on top**: a phase 3 boss hit of 100 base is 100 physical + 14 Fire + 14 Cold + 14 Lightning + 6 Chaos = 148 before the player's resistances.
-- Then the player's physical resistance (half point `PhysResHalfPoint`, default 60, cap 80 plus bonuses), elemental resistances minus enemy penetration, "less damage taken", Composure, deflect and mana absorb, and vanilla's endurance-type reductions (Endurance, solar shield, beetle, paladin).
-- The character mod sets the final damage itself, so vanilla's other incoming-damage multipliers are **not** applied to these hits: banner damage reduction, Warmth against cold **contact** hits, and any other mod's hit-by-NPC or hit-by-projectile multipliers.
+- K carries the player's physical resistance (half point `PhysResHalfPoint`, default 60, cap 80 plus bonuses), elemental resistances minus enemy penetration and "less damage taken". Mana absorb follows. Vanilla's endurance, solar shield, beetle and paladin reductions apply, then one truncation. See the character mod's `docs/systems/DAMAGE_PIPELINE.md` for the order.
 
 Note that the player's "half point" works differently from the enemy's armour halving (§6.2): the player curve is `cap x d / (d + h)`, so at 60 defense the player has 40% physical resistance (half of the 80 cap), while an enemy at 80 net armour takes half.
 

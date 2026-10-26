@@ -29,7 +29,6 @@ namespace ARPGEnemySystem.Common.Scaling
         public readonly float? ScaleOverride;
 
         private readonly float _hpMultiplier;
-        private readonly float _damageMultiplier;
         private readonly float _defenseMultiplier;
 
         // Rarity and modifier bonuses, summed; a fight member has none.
@@ -50,10 +49,10 @@ namespace ARPGEnemySystem.Common.Scaling
             Modifiers = kind == EnemyKind.FightMember ? Array.Empty<EnemyModifier>() : modifiers;
 
             _hpMultiplier = ScalingMath.HpMultiplier(level, phase, settings.ScalingExponent);
-            _damageMultiplier = ScalingMath.DamageMultiplier(level, phase, settings.ScalingExponent, kind);
+            float damageMultiplier = ScalingMath.DamageMultiplier(level, phase, settings.ScalingExponent, kind);
             _defenseMultiplier = ScalingMath.DefenseMultiplier(level, phase, settings.ScalingExponent);
             EnemyScaling.AddStatBonus(Rarity, Modifiers, out _lifeBonus, out _defenseBonus, out _damageBonus);
-            DamageFactor = _damageMultiplier * (1f + _damageBonus);
+            DamageFactor = damageMultiplier * (1f + _damageBonus);
 
             var package = new EnemyStatBlock();
             if (kind == EnemyKind.FightMember)
