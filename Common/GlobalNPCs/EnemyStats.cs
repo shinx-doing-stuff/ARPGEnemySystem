@@ -6,8 +6,8 @@ using Terraria.ModLoader;
 
 namespace ARPGEnemySystem.Common.GlobalNPCs
 {
-    // The only way mod code reads enemy damage and defense: vanilla AI rewrites the raw fields
-    // mid-fight, so scaling is applied on read.
+    // The read path for enemy damage and defense: vanilla AI rewrites the raw fields mid-fight, so scaling is applied on read.
+    // The hurt pipeline is the exception: it takes EnemyProfile.DamageFactor as vanilla's source scale.
     public static class EnemyStats
     {
         // Ichor and Betsy's Curse; vanilla applies them inside the defense step EnemyProfileNPC replaces.
