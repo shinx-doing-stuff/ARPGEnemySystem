@@ -51,12 +51,5 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
 
         public static float ArmourHalving(Projectile proj)
             => ModContent.GetInstance<Config>().ArmourHalving;
-
-        // Shooter-scaled; the hurt pipeline applies vanilla's hostile ×2 and difficulty on top.
-        public static int ProjectileDamage(Projectile proj)
-        {
-            var p = Profile(proj);
-            return p == null ? proj.damage : p.ScaleDamage(proj.damage);
-        }
     }
 }

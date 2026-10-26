@@ -18,7 +18,7 @@ What is **not** scaled: knockback given or taken, movement speed, AI, hitboxes, 
 
 ### 1.1 The formulas
 
-`trunc` is integer truncation toward zero; every step below truncates. `vanilla` means the value vanilla produced after its own difficulty, Expert tweaks and multiplayer balance.
+`trunc` is integer truncation toward zero; each stat truncates once, at the end. `bonus` is the sum of the stat's rarity bonus and every modifier bonus (they add, they never compound). `vanilla` means the value vanilla produced after its own difficulty, Expert tweaks and multiplayer balance.
 
 **Level multiplier** (`e` = `ScalingExponent`, default 1.14). HP and defense each use one table for every enemy, with one rate per phase on the whole `level^e`, so the kill that opens a phase raises every enemy's health at once, and defense at the Wall of Flesh and last mechanical boss kills. Damage uses a piecewise curve with its own per-kind tables:
 
@@ -39,28 +39,26 @@ Damage,  Fight          0.4934   0.009262    0.001879    0           0.006118
 **Max life** (written once at spawn; `players` applies in Expert and Master to roster bosses and minibosses only):
 
 ```
-life = trunc(vanilla lifeMax x players x hpMult)
-life = life + trunc(life x rarityHP% / 100)                 (Regulars; Common is 0)
-life = life + trunc(life x colossal / 150) - trunc(life x tiny / 200)
-life = max(1, life)
+lifeBonus = rarityHP% / 100 + colossal / 150 - tiny / 200   (Regulars; Common is 0; Colossal and Tiny add together)
+life      = trunc(vanilla lifeMax x players x hpMult x (1 + lifeBonus))
+life      = max(1, life)
 ```
 
 **Damage** (computed on every read of `npc.damage` or `projectile.damage`, so AI rewrites are scaled too):
 
 ```
-dmg = trunc(vanilla current damage x dmgMult)
-dmg = dmg + trunc(dmg x rarityDmg% / 100)
-dmg = dmg + trunc(dmg x strong / 100)
+damageFactor = dmgMult x (1 + rarityDmg% / 100 + strong / 100)
+dmg          = trunc(vanilla current damage x damageFactor)
 ```
+
+`damageFactor` is `EnemyProfile.DamageFactor`. The character mod's hurt pipeline hands it to vanilla as the source scale, so an enemy projectile's own `damage` is never read for it (vanilla zeroes that field for Deerclops' ice spikes before the hit lands).
 
 Difficulty is already inside `npc.damage` (vanilla bakes it in at spawn); it is **not** inside a hostile projectile's damage. Against the player the character mod then applies its own factors: damage variance; for projectiles x2 and the game-mode multiplier (Classic 1, Expert 2, Master 3); and the elemental shares on top (each element adds `dmg x share% / 100`; a phase 3 boss hit is `dmg x 1.48` in raw total).
 
 **Defense** (computed on every read):
 
 ```
-def = trunc(vanilla current defense x defMult)
-def = def + trunc(def x rarityDef% / 100)
-def = def + trunc(def x durable / 100)
+def = trunc(vanilla current defense x defMult x (1 + rarityDef% / 100 + durable / 100))
 Fight members: def = trunc(vanilla current defense x defMult), nothing else.
 ```
 
@@ -216,7 +214,7 @@ The weight column is chosen by **counting flags**, one each for: King Slime down
 
 Columns reached at the checkpoints: EoC 1, WoF 2, Destroyer 4, Plantera fight 5, after Plantera 6, after Golem 7.
 
-Stat bonuses, applied after the level multiplier:
+Stat bonuses, added together with the modifier bonuses into one factor `1 + bonus` that multiplies the level multiplier (§5.3):
 
 | Rarity | HP | Defense | Damage |
 |---|---|---|---|
@@ -276,21 +274,21 @@ Magnitude ranges by row (uniform inside the range):
 | ChaosResistant | 9-10 | 8-9 | 8 | 7 | 6-7 | 5-6 | 5 | 4 | 3-4 | 3 |
 | ChaosPenetrating | 18-20 | 17-18 | 15-16 | 14-15 | 12-13 | 11-12 | 9-10 | 8-9 | 6-7 | 5-6 |
 
-**What they do** (`m` is the magnitude; every step truncates to an integer):
+**What they do** (`m` is the magnitude; the stat bonuses add to the rarity's bonus and to each other, and the stat truncates once, §5.3):
 
 | Modifier | Effect |
 |---|---|
-| Colossal | scale = 1 + m/100; max life += life x m/150 |
-| Tiny | scale = 1 - m/100; max life -= life x m/200 |
-| Strong | damage += damage x m/100 |
-| Durable | defense += defense x m/100 |
+| Colossal | scale = 1 + m/100; life bonus + m/150 |
+| Tiny | scale = 1 - m/100; life bonus - m/200 |
+| Strong | damage bonus + m/100 |
+| Durable | defense bonus + m/100 |
 | Flaming, Glacial, Charged, ChaosInfused | +m% of the hit as that element's damage |
 | Fire/Cold/Lightning/Chaos Resistant | +m percentage points on that element's raw resistance (§7.1.1) |
 | Searing, Shattering, Conductive, ChaosPenetrating | +m to that element's penetration |
 | Sundering | +m% Sundering (cuts the player's defense by that share) |
 | SoulDrinker | no stat change; each contact or projectile hit drains m mana from the player |
 
-Colossal and Tiny change the sprite and the life, **not the hitbox**. The scale override is absolute, so a variant whose vanilla scale is not 1 has it replaced. If both roll, the last one rolled sets the scale and both life changes apply.
+Colossal and Tiny change the sprite and the life, **not the hitbox**. The scale override is absolute, so a variant whose vanilla scale is not 1 has it replaced. If both roll, the last one rolled sets the scale and both life bonuses add (Colossal 30 with Tiny 20 is +0.20 - 0.10 = +10% life).
 
 ---
 
@@ -368,22 +366,19 @@ HP spread from the fight level roll alone, at the live world levels (`N = 19`): 
 
 ### 5.3 Order of operations
 
-Level first, then rarity (Regulars), then each modifier in roll order. Every step truncates toward zero. (`EnemyProfile.cs:74-81`, `Common/Scaling/EnemyScaling.cs`)
+The level multiplier, then one factor `1 + bonus`, where `bonus` is the rarity's bonus for the stat (Regulars) plus every modifier's bonus to it, summed once when the profile is built. The stat truncates toward zero once, at the end; nothing compounds. (`EnemyProfile.ApplyStats`, `EnemyScaling.AddStatBonus`, `Common/Scaling/`)
 
 **Max life (written once at spawn)**
 1. Start from vanilla's max life after vanilla's own difficulty, Expert tweaks, multiplayer balance, and this mod's player-count scaling (§9.1).
-2. x HP multiplier.
-3. + rarity HP%.
-4. Colossal + life x m/150, Tiny - life x m/200.
-5. At least 1. Life is set to the new max.
+2. x HP multiplier x (1 + rarity HP% + Colossal m/150 - Tiny m/200), truncated.
+3. At least 1. Life is set to the new max.
 
 **Damage (computed at read time)**
-1. vanilla's *current* `npc.damage` (difficulty already inside) or `projectile.damage` (difficulty not inside; the character mod adds it, §8) x damage multiplier.
-2. + rarity damage%.
-3. Strong + damage x m/100.
+1. vanilla's *current* `npc.damage` (difficulty already inside) or `projectile.damage` (difficulty not inside; the character mod adds it, §8).
+2. x damage multiplier x (1 + rarity damage% + Strong m/100), truncated. The multiplier is `EnemyProfile.DamageFactor`, which the hurt pipeline also uses on its own as the source scale.
 
 **Defense (computed at read time)**
-- vanilla's *current* `npc.defense` x defense multiplier, + rarity defense%, then Durable + defense x m/100.
+- vanilla's *current* `npc.defense` x defense multiplier x (1 + rarity defense% + Durable m/100), truncated.
 - Fight members: vanilla defense x defense multiplier, nothing else.
 - Negative defense stays negative and grows in magnitude with rarity.
 
@@ -401,7 +396,7 @@ Rows are indexed by the rolled level, which is what the formula sees; see §4.2 
 |---|---|---|---|---|---|
 | 10 | 0 | Common | 43 | 14 | 6 |
 | 21 | 0 | Common | 49 | 15 | 6 |
-| 22 | 0 | Legend | 100 | 22 | 10 |
+| 22 | 0 | Legend | 100 | 23 | 10 |
 | 141 | 3 | Common | 688 | 30 | 6 |
 | 189 | 3 | Common | 946 | 53 | 6 |
 
@@ -416,7 +411,7 @@ Expert doubles the raw life and damage before this mod runs, and Expert hardmode
 | 137 | 2 | 2142 | 84 | 30 |
 | 189 | 3 | 5470 | 152 | 32 |
 
-With rarity, at level 105 (defense 29 after scaling): Elite 40 defense, Legend 49, Legend with Durable 60: 78.
+With rarity, at level 105 (defense multiplier 1.0529, so 28 x 1.0529 = 29.5): Elite 29.5 x 1.4 = 41 defense, Legend 29.5 x 1.7 = 50, Legend with Durable 60: 29.5 x (1 + 0.7 + 0.6) = 67.
 
 **Bosses** (Expert solo raw, at the Phase 4 ladder levels, `N = 18`; the live `N = 19` levels are about 5% lower, §2.2):
 
@@ -466,7 +461,7 @@ With `h = 80`:
 | -160 | 200% | -100% |
 
 Effective defense, on the character mod side, in this order:
-1. `d = EnemyStats.Defense(target)` (vanilla current defense times the level defense multiplier, then rarity and Durable).
+1. `d = EnemyStats.Defense(target)` (vanilla current defense times the level defense multiplier times one factor for rarity and Durable, §5.3).
 2. If `d > 0`: `d x= 1 - min(1, percent pen)`. Percent pen is the weapon and player percent armour penetration, plus vanilla's "ignore all positive defense" cases counted as 100%: the Lightning Aura sentry (not against the Dungeon Guardian) and Flymeal against town-type NPCs.
 3. `d -= flat pen`, with no floor. Flat pen is the sum of weapon and player flat armour penetration, vanilla projectile armour penetration, +5 for Strong Bees wasps, and Ichor / Betsy's Curse. A direct strike (no item or projectile) uses the player's total plus the weapon's own penetration. Armour penetration that comes from vanilla (the weapon's and projectile's own, accessories and buffs such as the Sharpening Station, Strong Bees) counts at one third (`ScalingDefaults.VanillaArmorPenScale`), because vanilla sized those numbers for a rule where a point removes half a point of damage, while here a point of defense is worth about 0.87% of the damage that lands. Ichor and Betsy's Curse are cut to a third in `EnemyStats` itself (5 and 13).
 4. Apply the law, then the physical cap: `resistance = min(PhysCapPct, 100 x (1 - lands))`, `damage x (1 - resistance / 100)`.
@@ -483,7 +478,7 @@ Worked examples (`h = 80`, resistance %, defense as the formula sees it, after l
 | 50 | 35.2% | 30.5% | 27.4% |
 | 70 | 45.5% | 41.6% | 39.0% |
 
-Zombie with Ichor: defense 6 - 5 = 1, so lands 2^(-1/80) = 0.9914, 0.9% resistance. A Legend Armored Skeleton at level 105 (49 defense) resists 34.6%; with Durable 60 (78 defense), 49.1%. Above zero, every point of net armour multiplies what lands by the same ratio (2^(-1/80), 0.86% less at `h = 80`), so a point of penetration raises the damage by the same percentage (0.87%) whatever armour is left.
+Zombie with Ichor: defense 6 - 5 = 1, so lands 2^(-1/80) = 0.9914, 0.9% resistance. A Legend Armored Skeleton at level 105 (50 defense) resists 35.2%; with Durable 60 (67 defense), 44.0%. Above zero, every point of net armour multiplies what lands by the same ratio (2^(-1/80), 0.86% less at `h = 80`), so a point of penetration raises the damage by the same percentage (0.87%) whatever armour is left.
 
 ---
 
@@ -538,7 +533,7 @@ The character mod's hurt pipeline owns this; the enemy mod supplies the scaled d
 
 Note that the player's "half point" works differently from the enemy's armour halving (§6.2): the player curve is `cap x d / (d + h)`, so at 60 defense the player has 40% physical resistance (half of the 80 cap), while an enemy at 80 net armour takes half.
 
-So enemy damage against the player = level multiplier x rarity x Strong on vanilla's current raw value, for contact and projectiles alike, plus the elemental shares. Bosses gain about +34% / +41% / +48% raw from the package by tier.
+So enemy damage against the player = vanilla's current raw value x level multiplier x (1 + rarity + Strong bonus; the sum is `EnemyProfile.DamageFactor`), for contact and projectiles alike, plus the elemental shares. Bosses gain about +34% / +41% / +48% raw from the package by tier.
 
 ---
 

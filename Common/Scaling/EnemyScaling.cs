@@ -45,26 +45,27 @@ namespace ARPGEnemySystem.Common.Scaling
 
     public static class EnemyScaling
     {
-        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, int phase, float scalingExponent, EnemyKind kind)
-            => ApplyLevelScaling(ref s, level,
-                ScalingMath.HpMultiplier(level, phase, scalingExponent),
-                ScalingMath.DamageMultiplier(level, phase, scalingExponent, kind),
-                ScalingMath.DefenseMultiplier(level, phase, scalingExponent));
-
-        // Defense scales by level like life; rarity and modifiers follow.
-        public static void ApplyLevelScaling(ref EnemyStatBlock s, int level, float hpMultiplier, float damageMultiplier, float defenseMultiplier)
+        // The rarity and modifier bonuses as fractions to add to 1; EnemyProfile multiplies them in with the level multiplier.
+        public static void AddStatBonus(Rarity rarity, EnemyModifier[] modifiers, out float life, out float defense, out float damage)
         {
-            s.LifeMax = (int)(s.LifeMax * hpMultiplier);
-            s.Damage  = (int)(s.Damage  * damageMultiplier);
-            s.Defense = (int)(s.Defense * defenseMultiplier);
-        }
-
-        public static void ApplyRarityStats(ref EnemyStatBlock s, Rarity rarity)
-        {
-            var mag = RarityDatabase.rarityModifierDatabase[rarity];
-            s.LifeMax += (int)(s.LifeMax * mag[0] / 100f);
-            s.Defense += (int)(s.Defense * mag[1] / 100f);
-            s.Damage  += (int)(s.Damage  * mag[2] / 100f);
+            life = defense = damage = 0f;
+            if (rarity != Rarity.None)
+            {
+                var mag = RarityDatabase.rarityModifierDatabase[rarity];
+                life    += mag[0] / 100f;
+                defense += mag[1] / 100f;
+                damage  += mag[2] / 100f;
+            }
+            foreach (var m in modifiers)
+            {
+                switch (m.modifierType)
+                {
+                    case ModifierType.Colossal: life    += m.magnitude / 150f; break;
+                    case ModifierType.Tiny:     life    -= m.magnitude / 200f; break;
+                    case ModifierType.Strong:   damage  += m.magnitude / 100f; break;
+                    case ModifierType.Durable:  defense += m.magnitude / 100f; break;
+                }
+            }
         }
 
         public static void ApplyRarityElementals(ref EnemyStatBlock s, Rarity rarity)
@@ -85,23 +86,16 @@ namespace ARPGEnemySystem.Common.Scaling
             s.ChaosPen = RarityDatabase.rarityChaosPenDatabase[rarity];
         }
 
+        // Life, defense and damage bonuses are in AddStatBonus; this keeps the scale and the package.
         public static void ApplyModifier(ref EnemyStatBlock s, ModifierType type, int magnitude)
         {
             switch (type)
             {
                 case ModifierType.Colossal:
                     s.Scale = 1 + magnitude / 100f;
-                    s.LifeMax += (int)(s.LifeMax * magnitude / 150f);
                     break;
                 case ModifierType.Tiny:
                     s.Scale = 1 - magnitude / 100f;
-                    s.LifeMax -= (int)(s.LifeMax * magnitude / 200f);
-                    break;
-                case ModifierType.Strong:
-                    s.Damage += (int)(s.Damage * magnitude / 100f);
-                    break;
-                case ModifierType.Durable:
-                    s.Defense += (int)(s.Defense * magnitude / 100f);
                     break;
                 case ModifierType.Flaming:
                     s.FireDamagePct += magnitude;

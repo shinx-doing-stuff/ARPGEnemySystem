@@ -32,6 +32,14 @@ namespace ARPGEnemySystem.Common.Scaling
         private readonly float _damageMultiplier;
         private readonly float _defenseMultiplier;
 
+        // Rarity and modifier bonuses, summed; a fight member has none.
+        private readonly float _lifeBonus;
+        private readonly float _defenseBonus;
+        private readonly float _damageBonus;
+
+        // What ScaleDamage multiplies the raw damage by before it truncates.
+        public readonly float DamageFactor;
+
         public EnemyProfile(EnemyKind kind, int level, int phase, Rarity rarity, EnemyModifier[] modifiers, ScalingSettings settings)
         {
             Kind = kind;
@@ -44,6 +52,8 @@ namespace ARPGEnemySystem.Common.Scaling
             _hpMultiplier = ScalingMath.HpMultiplier(level, phase, settings.ScalingExponent);
             _damageMultiplier = ScalingMath.DamageMultiplier(level, phase, settings.ScalingExponent, kind);
             _defenseMultiplier = ScalingMath.DefenseMultiplier(level, phase, settings.ScalingExponent);
+            EnemyScaling.AddStatBonus(Rarity, Modifiers, out _lifeBonus, out _defenseBonus, out _damageBonus);
+            DamageFactor = _damageMultiplier * (1f + _damageBonus);
 
             var package = new EnemyStatBlock();
             if (kind == EnemyKind.FightMember)
@@ -72,14 +82,12 @@ namespace ARPGEnemySystem.Common.Scaling
             return true;
         }
 
-        // Level, then rarity, then modifiers, truncating at each stage.
+        // The level multiplier times 1 plus the summed rarity and modifier bonus, one truncation per stat.
         public void ApplyStats(ref EnemyStatBlock s)
         {
-            EnemyScaling.ApplyLevelScaling(ref s, Level, _hpMultiplier, _damageMultiplier, _defenseMultiplier);
-            if (Rarity != Rarity.None)
-                EnemyScaling.ApplyRarityStats(ref s, Rarity);
-            foreach (var m in Modifiers)
-                EnemyScaling.ApplyModifier(ref s, m.modifierType, m.magnitude);
+            s.LifeMax = (int)(s.LifeMax * _hpMultiplier * (1f + _lifeBonus));
+            s.Damage  = (int)(s.Damage * DamageFactor);
+            s.Defense = (int)(s.Defense * _defenseMultiplier * (1f + _defenseBonus));
         }
 
         public int ScaleDamage(int raw)
