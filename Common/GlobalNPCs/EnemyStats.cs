@@ -35,7 +35,7 @@ namespace ARPGEnemySystem.Common.GlobalNPCs
         public static float ArmourHalving(NPC npc)
             => ModContent.GetInstance<Config>().ArmourHalving;
 
-        // The life a Shock is measured against: a fight member's tier fraction of max life, everyone else all of it.
+        // The life a Shock is measured against: a fight member's boss ailment threshold (5.5% of max life), everyone else all of it.
         public static int ShockThreshold(NPC npc)
         {
             var p = Profile(npc);

@@ -152,12 +152,13 @@ namespace ARPGEnemySystem.Common.Scaling
         // ratings follow its defense, and of the resistance terms the package carries only the caps and the Shock threshold fraction.
         public static void ApplyBossElementals(ref EnemyStatBlock s, int tier)
         {
-            float[] shockThresholdFractions = { 1f, 0.025f, 0.0125f };
+            // One Shock threshold for every boss tier: 5.5% of the boss's max life (a regular's stays 1).
+            const float shockThresholdFraction = 0.055f;
             float[] damageValues  = { 10f, 12f, 14f };
             float[] penValues     = { 5f,  10f, 15f };
             float[] sunderingValues = { 15f, 30f, 45f };
 
-            s.ShockThresholdFraction = shockThresholdFractions[tier];
+            s.ShockThresholdFraction = shockThresholdFraction;
 
             s.FireDamagePct      = damageValues[tier];
             s.ColdDamagePct      = damageValues[tier];

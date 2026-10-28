@@ -504,13 +504,13 @@ effective      = max(100 x (1 - V), min(cap, raw - penetration %))
 
 ### 7.2 Fight members
 
-One package per tier, chosen by phase. Every boss deals all three elements plus Chaos at once, on purpose. A fight member has no resistance bonus: its resistances follow its defense (§7.1.1). The package carries the resistance caps (§7.3) and a Shock threshold fraction, the share of max life a Shock is measured against (`EnemyStats.ShockThreshold`: a fight member's fraction of max life, everyone else all of it). (`EnemyScaling.cs`, `ApplyBossElementals`)
+One package per tier, chosen by phase. Every boss deals all three elements plus Chaos at once, on purpose. A fight member has no resistance bonus: its resistances follow its defense (§7.1.1). The package carries the resistance caps (§7.3) and a Shock threshold fraction, the fraction of max life a Shock is measured against (`EnemyStats.ShockThreshold`: a fight member uses that fraction, everyone else all of its max life). The boss ailment threshold is one value for every tier, 0.055 (5.5% of the boss's max life), because player damage and boss life grow together, so a hit is about the same % of boss life at every stage. (`EnemyScaling.cs`, `ApplyBossElementals`)
 
 | Tier (phases) | F/C/L damage % (each) | Chaos damage % | F/C/L pen | Chaos pen | Sundering % | Shock threshold |
 |---|---|---|---|---|---|---|
-| 0 (phase 0) | 10 | 4 | 5 | 3 | 15 | 1 (all of max life) |
-| 1 (phases 1 and 2) | 12 | 5 | 10 | 5 | 30 | 0.025 |
-| 2 (phase 3) | 14 | 6 | 15 | 8 | 45 | 0.0125 |
+| 0 (phase 0) | 10 | 4 | 5 | 3 | 15 | 0.055 |
+| 1 (phases 1 and 2) | 12 | 5 | 10 | 5 | 30 | 0.055 |
+| 2 (phase 3) | 14 | 6 | 15 | 8 | 45 | 0.055 |
 
 ### 7.3 Enemy resistance caps; elemental penetration is percentage points
 
