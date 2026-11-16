@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Balance changes go through BalanceLab
 Combat and balance numbers are modelled in `../BalanceLab`. Propose balance changes there as a patch set first (`BalanceLab/patches/README.md`).
 After any combat or mechanic change in this mod, run the sync steps in `BalanceLab/CLAUDE.md` ("Syncing with the mods"), or tell the user the lab is behind.
+The lab's build planner (BalanceLab/planner/index.html) shows this mod's class trees, attributes, affixes and tooltip text; after changing any of them, the sync steps re-export its data.
 
 ## Build & Development
 
